@@ -7,5 +7,9 @@
     "test": "node tests/check.cjs",
     "build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1"
   },
-  "dependencies": { "fengari": "^0.1.5", "luaparse": "^0.3.1" }
+  "dependencies": {
+    "fengari": "^0.1.5",
+    "luaparse": "^0.3.1"
+  },
+  "license": "MIT"
 }

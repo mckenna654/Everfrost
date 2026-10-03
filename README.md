@@ -10,7 +10,9 @@ Everfrost is a lightweight, standalone Lua addon for **WoW Forever**. It display
 
 **Written with OpenAI Codex.** The project uses Codex for AI-assisted development, review, and documentation. Automated validation uses a simulated client; actual Forever client testing is still outstanding.
 
-[Download v0.4.0](https://github.com/mckenna654/Everfrost/releases/tag/v0.4.0) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
+[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.4.0](https://github.com/mckenna654/Everfrost/releases/tag/v0.4.0) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
+
+The initial CurseForge submission is a **v0.4.0 beta** for WoW Forever **1.60.1**, pending moderation. Third-party addon-manager distribution is enabled. GitHub releases remain available while CurseForge reviews the project.
 
 ## Project status
 
@@ -184,6 +186,10 @@ If a learned ability is missing, leave combat and run `/everfrost refresh`. Chec
 - Any Lua error and, for layout issues, a screenshot.
 
 Before treating a build as game-tested, verify login and trained icons, training and respec updates, level thresholds, role/AoE controls, cooldown sweeps, dragging, and persistence after reload or logout. Repeat on another class.
+
+## License
+
+Everfrost is licensed under the [MIT License](LICENSE). The same license is selected on CurseForge.
 
 ## Sources and acknowledgments
 
