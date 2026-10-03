@@ -146,6 +146,14 @@ It creates `dist/Everfrost-0.4.0.zip`, containing only the installable `Everfros
 
 When releasing a new version, update `addon/Everfrost/Everfrost.toc` and `package.json` together, keep lockfile metadata synchronized, run the tests, and verify the archive contents before uploading.
 
+### CurseForge automatic packaging
+
+CurseForge is configured to package tagged commits only. The repository's
+`.pkgmeta` selects the installable addon and excludes development files.
+The GitHub webhook connection still needs its CurseForge API token configured;
+automatic delivery is not active until that connection is complete.
+See [release instructions](docs/RELEASING.md) for version tags and validation.
+
 ### Repository layout
 
 ```text

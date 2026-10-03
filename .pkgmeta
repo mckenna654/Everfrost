@@ -1,0 +1,22 @@
+# Stage the repository separately, then promote only the installable addon.
+package-as: Everfrost-Source
+enable-nolib-creation: no
+
+ignore:
+  - AGENTS.md
+  - README.md
+  - LICENSE
+  - package.json
+  - package-lock.json
+  - scripts
+  - tests
+  - docs
+  - dist
+  - node_modules
+
+manual-changelog:
+  filename: addon/Everfrost/CHANGELOG.md
+  markup-type: markdown
+
+move-folders:
+  Everfrost-Source/addon/Everfrost: Everfrost
