@@ -1,5 +1,9 @@
 # Everfrost
 
+<p align="center">
+  <img src="docs/assets/everfrost-logo.png" alt="Everfrost logo: an icy E emblem above the Everfrost wordmark" width="640">
+</p>
+
 **Find your class rhythm. Forever.**
 
 Everfrost is a lightweight, standalone Lua addon for **WoW Forever**. It displays a compact, class-aware ability reference for **levels 1–30**, with profiles for all **nine classes and 27 talent trees**. Recommendations are informed by Icy Veins Forever guides and filtered against the spells your character has actually learned.
