@@ -1,0 +1,12 @@
+## Interface: 16001
+## Title: Everfrost
+## Notes: Class and talent-aware level 1-30 rotation reference with learned spells.
+## Author: Custom addon for Jake
+## Version: 0.4.0
+## SavedVariablesPerCharacter: EverfrostDB
+Profiles.lua
+Core.lua
+Main.lua
+
+
+

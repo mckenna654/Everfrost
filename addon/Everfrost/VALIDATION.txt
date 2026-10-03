@@ -1,0 +1,35 @@
+Validation completed October 3, 2026
+
+PASS: Lua 5.1 syntax for Profiles.lua, Core.lua and Main.lua.
+PASS: All 27 talent profiles plus nine baseline profiles across levels
+      1, 5, 6, 10, 19, 20, 21, 24, 25, 29, 30, 31; Single/AoE and damage/heal/bear/melee/ranged modes.
+PASS: Explicit Paladin level gates and learned-only filtering.
+PASS: Feral caster/Bear/Cat fallbacks and corresponding UI labels.
+PASS: Modern, legacy and wrapper talent API signatures; nil return holes;
+      unspent talents, tied talents, unavailable API and unsupported class.
+PASS: Learned spellbook scan excludes future, off-spec, passive and secret
+      entries; highest rank selected even when book slots are reversed.
+PASS: Mock login for every supported class, saved settings under the current addon identity,
+      show/hide, scale bounds, mode changes, manual/auto spec and reset.
+PASS: Level updates during combat, deferred spellbook refresh and native
+      cooldown duration forwarding with missing-API fallback.
+
+Harness: work/validation/check.cjs (development workspace, not runtime addon).
+Executed using luaparse (Lua 5.1 parser) and Fengari (simulated Lua runtime).
+
+These checks do not prove actual Forever API compatibility, spell metadata,
+visual rendering, or persistence after logout. In-game verification is still
+required. The package has not been installed into a WoW directory.
+
+v0.3.0 additional checks:
+PASS: Level 30 accepted; 31 shows the scope notice.
+PASS: Slam and Hellfire level boundaries; learned Insect Swarm level filtering.
+PASS: Holy Shock heal/damage views, Stormstrike, Swiftmend and Summon Hawk.
+PASS: Hemorrhage replaces earlier builders only in Subtlety; Rupture level gate.
+PASS: Conflagrate requires learned Immolate; Hellfire appears only in AoE mode.
+PASS: Survival ranged-to-melee transition at 30, explicit ranged override,
+      and return to ranged when Strider Kick is no longer learned.
+
+Version 0.4.0: Re-ran the harness using Everfrost folder, frame, saved-variable and slash-handler identifiers. Previous ForeverRetHelper settings are not migrated across the folder rename.
+
+

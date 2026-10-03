@@ -1,0 +1,11 @@
+{
+  "name": "everfrost",
+  "version": "0.4.0",
+  "private": true,
+  "description": "Class-aware WoW Forever rotation reference inspired by Icy Veins guides",
+  "scripts": {
+    "test": "node tests/check.cjs",
+    "build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1"
+  },
+  "dependencies": { "fengari": "^0.1.5", "luaparse": "^0.3.1" }
+}
