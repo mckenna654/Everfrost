@@ -1,4 +1,4 @@
-# Everfrost — v0.4.0
+# Everfrost — v0.4.1
 
 A compact class-aware rotation reference for WoW Forever, covering levels 1–30. Detects your class, level, dominant talent tree, and learned spell ranks. Includes all nine classes and 27 talent trees, with a general leveling profile before you spend talents.
 

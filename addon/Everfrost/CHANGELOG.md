@@ -1,10 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.4.1 — Beta
 
 - Show the Everfrost logo in the in-game AddOns list.
 - Configure CurseForge packaging for tagged commits.
-- Include the MIT license in future addon packages.
+- Include the MIT license in addon packages.
 
 ## 0.4.0
 

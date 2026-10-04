@@ -10,7 +10,7 @@ Everfrost is a lightweight, standalone Lua addon for **WoW Forever**. It display
 
 **Written with OpenAI Codex.** The project uses Codex for AI-assisted development, review, and documentation. Automated validation uses a simulated client; actual Forever client testing is still outstanding.
 
-[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.4.0](https://github.com/mckenna654/Everfrost/releases/tag/v0.4.0) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
+[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.4.1 beta](https://github.com/mckenna654/Everfrost/releases/tag/v0.4.1-beta.1) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
 
 The initial CurseForge submission is a **v0.4.0 beta** for WoW Forever **1.60.1**, pending moderation. Third-party addon-manager distribution is enabled. GitHub releases remain available while CurseForge reviews the project.
 
@@ -18,7 +18,7 @@ The initial CurseForge submission is a **v0.4.0 beta** for WoW Forever **1.60.1*
 
 | Item | Current status |
 | --- | --- |
-| Addon version | **0.4.0** |
+| Addon version | **0.4.1 (beta)** |
 | Supported levels | **1–30** |
 | Class coverage | Nine classes, 27 talent trees, and nine general leveling profiles |
 | Target interface | `16001` — compatibility with the actual Forever client remains unverified |
@@ -46,7 +46,7 @@ Everfrost does not evaluate combat resources, proc buffs, target health, enemy c
 
 ## Installation
 
-1. Download **`Everfrost-0.4.0.zip`** from the [v0.4.0 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.4.0).
+1. Download **`Everfrost-0.4.1.zip`** from the [v0.4.1 beta release](https://github.com/mckenna654/Everfrost/releases/tag/v0.4.1-beta.1).
 2. Exit WoW Forever.
 3. Extract the archive's `Everfrost` folder into your Forever client's `Interface/AddOns` directory.
 4. Confirm the resulting path is `Interface/AddOns/Everfrost/Everfrost.toc`.
@@ -142,7 +142,7 @@ The current packaging command requires **Windows PowerShell**, available as `pow
 npm run build
 ```
 
-It creates `dist/Everfrost-0.4.0.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release. On macOS and Linux, tests can run with Node.js, but the existing build command requires an appropriate PowerShell environment; packaging is not currently cross-platform.
+It creates `dist/Everfrost-0.4.1.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release. On macOS and Linux, tests can run with Node.js, but the existing build command requires an appropriate PowerShell environment; packaging is not currently cross-platform.
 
 When releasing a new version, update `addon/Everfrost/Everfrost.toc` and `package.json` together, keep lockfile metadata synchronized, run the tests, and verify the archive contents before uploading.
 
