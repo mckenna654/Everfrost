@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Show the Everfrost logo in the in-game AddOns list.
 - Configure CurseForge packaging for tagged commits.
 - Include the MIT license in future addon packages.
 
