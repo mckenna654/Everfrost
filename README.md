@@ -150,8 +150,9 @@ When releasing a new version, update `addon/Everfrost/Everfrost.toc` and `packag
 
 CurseForge is configured to package tagged commits only. The repository's
 `.pkgmeta` selects the installable addon and excludes development files.
-The GitHub webhook connection still needs its CurseForge API token configured;
-automatic delivery is not active until that connection is complete.
+An active GitHub push webhook connects this repository to CurseForge. Ordinary
+branch commits are excluded by the tag-only setting. The first new tagged build
+still needs end-to-end verification, including ZIP layout and game version.
 See [release instructions](docs/RELEASING.md) for version tags and validation.
 
 ### Repository layout
