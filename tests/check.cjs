@@ -1,4 +1,5 @@
 const fs = require('fs');
+const assert = require('node:assert/strict');
 const path = require('path');
 const parser = require('luaparse');
 const {lua, lauxlib, lualib, to_luastring, to_jsstring} = require('fengari');
@@ -200,3 +201,51 @@ print('Level 21-30 additions, rank level gates, spec isolation, talent removal a
 `);
 
 
+
+run(`
+local function learned(...) local t={}; for _,name in ipairs({...}) do t[name]={id=1,level=1} end; return t end
+local function rows(class,spec,known,mode,role,level)
+ return keys(NS.BuildRows(class,spec,level or 30,known,mode or 'single',role or 'damage'))
+end
+local mage=learned('Frostbolt','Arcane Blast','Arcane Missiles','Fire Blast','Blizzard','Cone of Cold','Arcane Explosion','Flamestrike','Blast Wave','Ice Lance','Frost Nova')
+assert(rows('MAGE',1,mage)=='Frostbolt,Arcane Blast,Arcane Missiles,Fire Blast')
+mage['Arcane Blast']=nil
+assert(rows('MAGE',1,mage)=='Frostbolt,Arcane Missiles')
+assert(rows('MAGE',3,mage,'aoe')=='Cone of Cold,Ice Lance,Frost Nova,Blizzard,Arcane Explosion')
+assert(rows('MAGE',3,learned('Arcane Explosion'),'aoe')=='Arcane Explosion')
+assert(rows('MAGE',2,learned('Pyroblast','Fireball','Fire Blast'))=='Pyroblast,Fireball,Fire Blast')
+local rogue=learned('Backstab','Sinister Strike','Mutilate','Blade Flurry','Riposte')
+assert(rows('ROGUE',1,rogue)=='Mutilate')
+rogue.Mutilate=nil
+assert(rows('ROGUE',1,rogue)=='Backstab,Sinister Strike')
+assert(rows('ROGUE',2,rogue)=='Blade Flurry,Riposte,Backstab,Sinister Strike')
+local priest=learned('Smite','Mind Blast','Devouring Plague','Shadow Word: Pain','Mind Flay','Holy Nova')
+assert(rows('PRIEST',3,priest)=='Mind Blast,Devouring Plague,Shadow Word: Pain,Mind Flay')
+priest['Mind Flay']=nil
+assert(rows('PRIEST',3,priest)=='Smite,Mind Blast,Devouring Plague,Shadow Word: Pain')
+assert(rows('PRIEST',2,priest,'single','heal')=='Holy Nova')
+assert(rows('PRIEST',1,priest,'single','heal')=='')
+assert(rows('WARRIOR',2,learned('Victory Rush','Rend','Overpower'))=='Victory Rush,Rend,Overpower')
+assert(rows('WARRIOR',3,learned('Revenge','Rend','Shield Block'))=='Revenge,Rend,Shield Block')
+assert(rows('WARLOCK',1,learned('Bane of Agony','Siphon Life','Corruption'))=='Bane of Agony,Siphon Life,Corruption')
+assert(rows('WARLOCK',2,learned('Siphon Life'))=='')
+local shaman=learned('Searing Totem','Flametongue Totem','Magma Totem')
+assert(rows('SHAMAN',2,shaman)=='Flametongue Totem')
+assert(rows('SHAMAN',2,shaman,'aoe')=='Flametongue Totem,Magma Totem')
+shaman['Flametongue Totem']=nil
+assert(rows('SHAMAN',2,shaman)=='Searing Totem')
+local hunter=learned('Summon Hawk','Disengage','Arcane Shot')
+for spec=1,3 do assert(rows('HUNTER',spec,hunter):find('Disengage,Arcane Shot')) end
+for _,row in ipairs(NS.BuildRows('HUNTER',1,30,hunter,'single','ranged')) do
+ if row.key=='Arcane Shot' then assert(row.hint:find('six seconds')) end
+ if row.key=='Disengage' then assert(row.hint:find('threat')) end
+end
+print('October 15 guide audit: talent fallbacks, priorities, AoE/healing branches and hunter conditions: passed')
+`);
+
+const packageVersion = require('../package.json').version;
+for (const toc of ['addon/Everfrost/Everfrost.toc', 'Everfrost-Source.toc']) {
+  const metadata = require('fs').readFileSync(toc, 'utf8');
+  assert(metadata.includes('## Version: ' + packageVersion));
+  assert(metadata.includes('## Interface: 16001'));
+}

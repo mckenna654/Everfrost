@@ -17,7 +17,8 @@ repository, screenshots, release notes, or logs.
 
 ## Before pushing a new tag
 
-1. Update `Everfrost.toc`, `package.json`, and lockfile versions together.
+1. Update `addon/Everfrost/Everfrost.toc`, the metadata-only root
+   `Everfrost-Source.toc`, `package.json`, and lockfile versions together.
 2. Update `addon/Everfrost/CHANGELOG.md` for the release.
 3. Run `npm ci` and `npm test`. Report actual client testing separately.
 4. Commit the release files and push the commit.
@@ -37,3 +38,7 @@ run before releasing.
 
 The first new tagged build must be checked on CurseForge before calling this
 pipeline verified end to end. Project moderation can delay file availability.
+
+The root `Everfrost-Source.toc` supplies version/interface metadata for native
+CurseForge detection before folder relocation. It is excluded from packages.
+The installable source of truth remains `addon/Everfrost`.

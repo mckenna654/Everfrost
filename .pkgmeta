@@ -3,6 +3,7 @@ package-as: Everfrost-Source
 enable-nolib-creation: no
 
 ignore:
+  - Everfrost-Source.toc
   - AGENTS.md
   - README.md
   - LICENSE

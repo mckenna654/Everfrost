@@ -1,4 +1,4 @@
-Validation completed October 3, 2026
+Validation completed October 15, 2026
 
 PASS: Lua 5.1 syntax for Profiles.lua, Core.lua and Main.lua.
 PASS: All 27 talent profiles plus nine baseline profiles across levels
@@ -14,7 +14,7 @@ PASS: Mock login for every supported class, saved settings under the current add
 PASS: Level updates during combat, deferred spellbook refresh and native
       cooldown duration forwarding with missing-API fallback.
 
-Harness: work/validation/check.cjs (development workspace, not runtime addon).
+Harness: tests/check.cjs (repository tooling, not runtime addon).
 Executed using luaparse (Lua 5.1 parser) and Fengari (simulated Lua runtime).
 
 These checks do not prove actual Forever API compatibility, spell metadata,
@@ -33,3 +33,6 @@ PASS: Survival ranged-to-melee transition at 30, explicit ranged override,
 Version 0.4.0: Re-ran the harness using Everfrost folder, frame, saved-variable and slash-handler identifiers. Previous ForeverRetHelper settings are not migrated across the folder rename.
 
 
+
+v0.4.2: All checks rerun. Guide-audit regressions cover Mage AoE, talent
+fallbacks, Priest healing/damage, tank ordering, Shaman totems and Hunter hints.

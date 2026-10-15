@@ -1,4 +1,4 @@
-# Everfrost — v0.4.1
+# Everfrost — v0.4.2
 
 A compact class-aware rotation reference for WoW Forever, covering levels 1–30. Detects your class, level, dominant talent tree, and learned spell ranks. Includes all nine classes and 27 talent trees, with a general leveling profile before you spend talents.
 
@@ -48,7 +48,7 @@ This is a conditional priority reference, not a live next-cast queue. The list c
 
 ## Sources and verification
 
-Adapted from the Icy Veins WoW Forever PvE guides, reviewed October 3, 2026. See SOURCES.md for all links. These are concise leveling adaptations of guide priorities, with general ability hints where needed, rather than complete reproductions or an automatically updated guide feed. Unofficial; not affiliated with Icy Veins or Blizzard.
+Adapted from the Icy Veins WoW Forever PvE guides, reviewed October 15, 2026. See SOURCES.md for all links. These are concise leveling adaptations of guide priorities, with general ability hints where needed, rather than complete reproductions or an automatically updated guide feed. Unofficial; not affiliated with Icy Veins or Blizzard.
 
 Local Lua syntax and simulated-client checks passed; see VALIDATION.txt. No third-party addon libraries are required. Actual game rendering and Forever API behavior remain unverified.
 

@@ -1,7 +1,8 @@
 # Guide sources
 
-Icy Veins WoW Forever PvE guides, reviewed October 3, 2026. The addon adapts early learned abilities for levels 1–30. The Arcane page was partially accessible; its Arcane Blast and Missile Barrage guidance was checked through indexed guide excerpts.
+Icy Veins WoW Forever PvE guides, reviewed October 15, 2026. All 27 linked guides were accessible, including the full Arcane guide. This audit compares the current rotation and relevant leveling sections with the addon's learned-spell-aware references for levels 1–30. It does not reproduce gearing, professions or full talent builds.
 
+Guide conditions remain manual hints: Everfrost does not evaluate procs, resources, enemy counts or target debuffs in combat.
 - [holy paladin healer](https://www.icy-veins.com/wow-forever/holy-paladin-healer-pve-guide)
 - [protection paladin tank](https://www.icy-veins.com/wow-forever/protection-paladin-tank-pve-guide)
 - [retribution paladin melee dps](https://www.icy-veins.com/wow-forever/retribution-paladin-melee-dps-pve-guide)
@@ -33,5 +34,27 @@ Icy Veins WoW Forever PvE guides, reviewed October 3, 2026. The addon adapts ear
 API reference: [Blizzard UI source mirror](https://github.com/Gethe/wow-ui-source/tree/live/Interface/AddOns/Blizzard_APIDocumentationGenerated) and [Vanilla specialization compatibility wrapper](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_DeprecatedSpecialization/Deprecated_Specialization_Vanilla.lua).
 
 
-Level-30 review: all linked rotation sections were rechecked for v0.3.0. Several pages retain older level-20 wording or gear sections. Arcane remained unavailable as a full page (HTTP 403); its indexed Forever guide excerpts confirm Arcane Blast and Missile Barrage/Arcane Missiles. Existing Arcane priorities were retained. Guide conditions are concise manual references, not runtime proc evaluation.
+## October 15 audit
 
+All nine classes and 27 trees were checked. Changes include corrections to existing adaptations as well as information on recently updated pages; a page's update date alone does not identify when a particular recommendation changed.
+
+| Class / trees reviewed | Result |
+| --- | --- |
+| Paladin: Holy, Protection, Retribution | Kept healing and tank priorities. Refined shared damage-seal selection for weapon on-hit effects and Command Judgement's stun interaction. |
+| Hunter: Beast Mastery, Marksmanship, Survival | Added the ranged Disengage threat reminder. Preserved Beast Master's two-hawk mana condition and Survival's learned melee build at 30. |
+| Mage: Arcane, Fire, Frost | Restored early Missiles and Frostbolt pulling after learning Blast; added stack-clearing Fire Blast. Split Arcane/Frost AoE from Fire's template. Corrected Fireball/Fire Blast ordering and clarified Frostbite versus Fingers of Frost. |
+| Warrior: Arms, Fury, Protection | Corrected Fury's Rend/Overpower order. Added Protection's Charge, Rend and Shield Block; retained Arms' Slam timing and Spearing Strike conditions. Added Bloodrage preparation reminders. |
+| Rogue: Assassination, Combat, Subtlety | Added Mutilate with builder fallbacks; Combat's Garrote alternative, Blade Flurry and Riposte. Clarified five-point Slice and Dice and poison preparation. Subtlety's Hemorrhage/Rupture rules still agree. |
+| Priest: Discipline, Holy, Shadow | Discipline still agrees. Added Holy's conditional Searing Light/Holy Nova healing reminder; Shadow's Plague and Smite fallback before Mind Flay. |
+| Warlock: Affliction, Demonology, Destruction | Added Affliction's Siphon Life; incorporated Amplify Curse in the Agony hint to preserve the compact row limit. Clarified Immolate pre-casting, Destruction's opening Bolt and shard-cap Shadowburn, plus safe Life Tap reminders. |
+| Druid: Balance, Feral, Restoration | Core priorities still agree. Clarified Bear's preferred Omen of Clarity spender. |
+| Shaman: Elemental, Enhancement, Restoration | Elemental and Restoration still agree. Updated Enhancement's Rank 1 pull, group shocks, threat alternative and fire-totem choices. |
+
+### Source ambiguities and limits
+
+- Arcane's spell explanations say 1–2 Blasts while its rotation says 2–3 before Fire Blast. The hint therefore says a short burst rather than asserting a universal stack threshold.
+- Protection Warrior's priority list says Victory Rush is learned at 30, while its own utility section and the other Warrior guides say 20. The existing level-20 minimum remains, with actual learned-spell/rank checks still required.
+- Frost's general explanation says to finish Frostbolt on a target freeze, but separately distinguishes Fingers of Frost as an on-cast proc requiring prompt interruption of the next cast. Hints preserve that distinction.
+- Some pages retain earlier level-cap wording. Learned spells remain authoritative for availability; a guide mention never makes an unlearned ability appear.
+- This is a compact reference, not an exhaustive spellbook or automatic next-cast queue. Totem preparation, resource management and some utility remain in notes/hints.
+- Lua regression tests and mocked APIs do not establish Forever client compatibility. Actual client testing remains outstanding, including localization aliases and new spell icons.

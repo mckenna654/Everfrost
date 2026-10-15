@@ -42,6 +42,10 @@ function NS.DetectSpec(class)
 end
 -- IDs localize names only; learned IDs and ranks are read from the spellbook.
 NS.baseIDs={
+ ["Blizzard"]=10,["Cone of Cold"]=120,["Shield Block"]=2565,
+ ["Mutilate"]=1329,["Garrote"]=703,["Blade Flurry"]=13877,["Riposte"]=14251,
+ ["Devouring Plague"]=2944,["Siphon Life"]=18265,
+ ["Frost Shock"]=8056,["Flametongue Totem"]=8227,["Magma Totem"]=8190,
  ["Curse of the Elements"]=1490,["Curse of Recklessness"]=704,
  ["Seal of the Crusader"]=21082,["Holy Shock"]=20473,["Seal of Light"]=20165,
  ["Raptor Strike"]=2973,["Mongoose Bite"]=1495,["Disengage"]=781,
