@@ -36,8 +36,15 @@ run before releasing.
 
 ## Setup verification
 
-The first new tagged build must be checked on CurseForge before calling this
-pipeline verified end to end. Project moderation can delay file availability.
+Verified on October 15, 2026 with tag `v0.4.2`, commit `03ba40a`,
+CurseForge build #362675 and file #9189652. The new revision completed and
+created a Release for WoW Forever 1.60.1. The downloaded ZIP contains all ten
+addon files under `Everfrost/`, matching the release source (allowing newline
+normalization). The excluded metadata TOC is absent. An empty
+`Everfrost-Source/addon/` directory remains, containing no files.
+
+The file was initially Processing; moderation is separate from successful
+packaging and may delay public availability.
 
 The root `Everfrost-Source.toc` supplies version/interface metadata for native
 CurseForge detection before folder relocation. It is excluded from packages.
