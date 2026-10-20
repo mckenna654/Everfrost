@@ -30,6 +30,24 @@ CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distributio
 
 Everfrost is an independent project. It is not an official Icy Veins, Blizzard, or OpenAI addon and is not affiliated with or endorsed by those organizations.
 
+## Screenshots
+
+Captured in WoW Forever on a level-18 Elemental Shaman.
+
+| Rotation reference | Spell hover guidance |
+| --- | --- |
+| ![Compact Elemental Shaman rotation reference with native WoW styling](docs/assets/screenshots/rotation-panel.png) | ![Searing Totem tooltip showing the spell and Everfrost's usage guidance](docs/assets/screenshots/spell-guidance-tooltip.png) |
+
+**Gear upgrade comparison:** an estimated upgrade is labelled in the tooltip, alongside its score and stat priority. The carried staff is highlighted in the bag.
+
+![Everfrost upgrade tooltip and highlighted staff in the bag](docs/assets/screenshots/gear-upgrade-tooltip.png)
+
+| Specialization | Rotation Panel | Gear Upgrades |
+| --- | --- | --- |
+| ![Specialization settings detecting Elemental talents at 9 / 0 / 0](docs/assets/screenshots/specialization-settings.png) | ![Rotation Panel settings with size and opacity sliders](docs/assets/screenshots/rotation-panel-settings.png) | ![Gear Upgrades settings showing Elemental stat priorities](docs/assets/screenshots/gear-upgrade-settings.png) |
+
+Open any screenshot for its full-size view. Use `/everfrost` to open these settings.
+
 ## What Everfrost does
 
 - Detects your class, level, and dominant talent tree, with a manual specialization override.
