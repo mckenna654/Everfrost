@@ -1,32 +1,34 @@
 # Changelog
 
-## 0.5.2
+## 0.6.0 — Settings, clearer upgrades and talent detection
 
-- Compare carried one-hand/off-hand pairs with an equipped two-hander using combined estimated stat scores.
-- Highlight estimated pair upgrades and identify the required companion in bag and loot-roll tooltips.
-- Enforce usable hand combinations, learned Dual Wield, tank shields, physical-copy identity and exposed unique-equipped limits.
-- Refresh pair hints after partner loading/removal and defer comparisons during combat.
+- Add a compact native-style settings window with Specialization, Rotation Panel and Gear Upgrades tabs. Open it with /everfrost, /everfrost settings, /everfrost config, the minimap button or the game's AddOns settings launcher.
+- Add a draggable minimap logo: left-click opens settings, right-click toggles the rotation panel. Save guide, role, encounter, panel and minimap preferences per character; adjust panel size with a 60%–200% slider.
+- Fix passive gear being rejected as unusable. Give estimated upgrades a brighter outline and synchronized dim-to-bright pulse in the item's rarity colour.
+- Add a clear UPGRADE heading in item tooltips, preserve it through native tooltip refreshes and retain companion requirements for weapon-pair upgrades.
+- Start stat priorities and gear hints at level 10, with a clear notice in settings and tooltips. Spell reference guides still cover levels 1–30.
+- Keep Leveling's general spell guide while using the active talent group's dominant tree for gear from level 10. Manual spec choices override detection; tied, unspent or unavailable talents leave Leveling gear unscored.
+- Fix Forever talent detection to read the same trait-group currency totals as the native talent window, rather than specialization fields that can incorrectly return zero. Refresh after talent/config changes outside combat.
+- Show the detected point split in Specialization settings, such as Elemental (9 / 0 / 0), and include cached totals and their source in /everfrost status.
 
-Pair scoring does not simulate weapon speed, dual-wield penalties or special effects. Actual Forever client validation remains outstanding.
+Includes all 0.5.1 features: guide selection, complete weapon-pair comparisons and standard bag/Need/Greed guidance. No rotation priorities were changed in this release; Everfrost remains a learned-spell-aware reference panel, not a combat-driven next-cast queue.
 
-## 0.5.1
+Validation: all seven Lua files pass Lua 5.1 parsing; rotation, native trait detection, settings, combat deferral, gear, tooltip and glow regressions pass in the simulated client. The addon-only ZIP is verified against all 14 source files. The user confirmed the passive-equipment fix, rarity pulse and settings layout in game; the latest talent-detection fix and complete Forever compatibility still need client verification.
 
-- Release the guide selector with a distinct version so addon managers can identify the update.
-- Click the panel title or arrow to select Automatic, Leveling, or a class spec.
-- Preserve saved selections, detection details, gear-scoring hints, and combat-deferred changes.
-- Includes all gear upgrade borders and Need/Greed guidance from 0.5.0.
+## 0.5.1 — Guide selection and complete weapon comparisons
 
-Lua 5.1 syntax and simulated-client tests pass. Actual Forever client rendering and API verification remains outstanding.
+- Click the rotation panel title to choose Automatic, Leveling or a class specialization. See the detected tree, saved selection and gear-scoring availability.
+- Dismiss the selector with Escape, an outside click or its close button. Changes during combat apply after combat ends.
+- Compare carried one-hand/off-hand pairs against an equipped two-hander using their combined estimated stat scores.
+- Highlight estimated pair upgrades in bags and apply the same comparison to standard Need/Greed hints. Tooltips name the required partner; equip both items for the comparison to apply.
+- Respect class, level, hand, shield, learned Dual Wield, physical-copy identity and exposed unique-equipped restrictions. Incomplete or unresolved pairs remain unscored.
+- Refresh after partner removal or item-data loading; defer comparisons during combat.
+
+This consolidated release combines the second 0.5.0 package, the original 0.5.1 and the former 0.5.2. The first 0.5.0 remains the original gear-guidance release. All earlier rotation references, 27 gear profiles and Need/Greed guidance are included.
+
+Validation: Lua 5.1 syntax, simulated-client regression checks and addon-only archive verification passed. Complete Forever client compatibility remains unverified. Gear scores are estimates; weapon speed, dual-wield penalties, procs and other special effects are not simulated.
 
 ## 0.5.0
-
-### Guide selector refresh
-
-- Click the panel title to choose Automatic, Leveling, or a class specialization.
-- Show automatic detection, the saved selection, and gear-scoring availability.
-- Dismiss with Escape, an outside click, or the close button; preserve header dragging.
-- Save explicit Leveling selection and defer combat changes safely.
-- Refresh the existing 0.5.0 package without changing its addon version.
 
 - Add guide-based gear priorities for all nine classes and 27 talent trees, checked October 20, 2026.
 - Highlight estimated bag upgrades with a pulsing gold border.

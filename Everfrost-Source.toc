@@ -1,4 +1,4 @@
 # Metadata only for CurseForge version detection; runtime source is addon/Everfrost.
 ## Interface: 16001
 ## Title: Everfrost packaging metadata
-## Version: 0.5.2
+## Version: 0.6.0

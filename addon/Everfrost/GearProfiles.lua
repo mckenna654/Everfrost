@@ -1,4 +1,6 @@
 local _, NS = ...
+NS.gearMinLevel=10
+NS.gearLevelNote="Stat priorities and upgrade hints start at level 10."
 -- Stat orders reviewed against all 27 Icy Veins Forever guides, 2026-10-20.
 -- These ordinal weights are Everfrost estimates, not published simulation weights.
 NS.gearProfiles = {}

@@ -37,6 +37,14 @@ assert(NS.GearProfile('HUNTER',3,'ranged')==NS.gearProfiles.HUNTER[2])
 local equipment=empty(); local c=ctx('WARRIOR',1)
 equipment[5]=item(1,nil,{ITEM_MOD_STRENGTH_SHORT=4,ITEM_MOD_STAMINA_SHORT=2})
 assert(G.Compare(item(2,nil,{ITEM_MOD_STRENGTH_SHORT=8}),equipment,c).kind=='need')
+local young=ctx('WARRIOR',1)
+for level=1,9 do
+ young.level=level
+ local unscored=G.Compare(item(2,nil,{ITEM_MOD_STRENGTH_SHORT=8}),equipment,young)
+ assert(unscored.kind=='unknown' and unscored.reason==NS.gearLevelNote)
+end
+young.level=10
+assert(G.Compare(item(2,nil,{ITEM_MOD_STRENGTH_SHORT=8}),equipment,young).kind=='need')
 assert(G.Compare(item(3,nil,{ITEM_MOD_STRENGTH_SHORT=2}),equipment,c).kind=='greed')
 assert(G.Compare(item(4,nil,{ITEM_MOD_INTELLECT_SHORT=20,ITEM_MOD_STAMINA_SHORT=10}),equipment,c).kind=='greed')
 assert(G.Compare(item(5,nil,{ITEM_MOD_STRENGTH_SHORT=4,ITEM_MOD_STAMINA_SHORT=2}),equipment,c).kind=='greed')
@@ -146,6 +154,11 @@ local mace={item=item(61,'INVTYPE_WEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=5.7,
 local spiritOrb={item=item(62,'INVTYPE_HOLDABLE',{ITEM_MOD_INTELLECT_SHORT=3},4,0)}
 local pictured=G.Compare(mace.item,equipment,ctx('SHAMAN',2),{mace,spiritOrb},mace)
 assert(pictured.kind=='greed' and pictured.companion==spiritOrb.item.link)
+-- The newer screenshots use Elemental: the staff beats the mace and orb.
+local elemental=ctx('SHAMAN',1); elemental.level=18
+assert(G.Compare(mace.item,equipment,elemental,{mace,spiritOrb},mace).kind=='greed')
+local equippedPair=empty(); equippedPair[16]=mace.item; equippedPair[17]=spiritOrb.item
+assert(G.Compare(equipment[16],equippedPair,elemental).kind=='need')
 equipment=empty(); equipment[16]=item(34,'INVTYPE_WEAPON',{},2,7)
 assert(G.Compare(two,equipment,c).kind=='unknown')
 -- A stat stick cannot get weapon-DPS credit for Hunter; gear can still supply Agility.
@@ -164,8 +177,16 @@ function methods:SetScript(name,fn) self.scripts[name]=fn end
 function methods:HookScript(name,fn) self.hooks[name]=fn end
 function methods:RegisterEvent(name) self.events[name]=true end
 function methods:CreateTexture() local t=widget(); t.owner=self; return t end
-function methods:CreateAnimationGroup() return widget() end
-function methods:CreateAnimation() return widget() end
+function methods:CreateAnimationGroup() local g=widget(); g.owner=self; return g end
+function methods:CreateAnimation() local a=widget(); self.animation=a; return a end
+function methods:SetFromAlpha(value) self.from=value end
+function methods:SetToAlpha(value) self.to=value end
+function methods:SetDuration(value) self.duration=value end
+function methods:SetLooping(value) self.looping=value end
+function methods:SetVertexColor(r,g,b,a) self.vertex={r,g,b,a} end
+function methods:IsPlaying() return self.playing==true end
+function methods:Play() self.playing=true; self.plays=(self.plays or 0)+1 end
+function methods:Stop() self.playing=false end
 function methods:IsShown() return self.shown~=false end
 function methods:IsEnabled() return self.enabled~=false end
 function methods:Show() self.shown=true end
@@ -173,7 +194,12 @@ function methods:Hide() self.shown=false end
 function methods:GetID() return self.id end
 function methods:GetBagID() return self.bag end
 function methods:GetName() return self.name end
+function methods:GetOwner() return self.owner end
 function methods:AddLine(line) self.lines[#self.lines+1]=line end
+function methods:ClearLines()
+ self.lines={}
+ if self.hooks.OnTooltipCleared then self.hooks.OnTooltipCleared(self) end
+end
 function widget(name) return setmetatable({name=name,scripts={},hooks={},events={},lines={}},{__index=function(t,k) if k:find('^Everfrost') or k:find('^[a-z]') then return nil end; return methods[k] or function() end end}) end
 function CreateFrame() local f=widget(); frames[#frames+1]=f; return f end
 function hooksecurefunc(target,name,fn)
@@ -193,7 +219,17 @@ function getInfo(link)
  return table.unpack(itemInfo[link],1,13)
 end
 function getStats(link) assert(not combat); metadataCalls=metadataCalls+1; return rawStats[link] end
-C_Item={GetItemInfo=getInfo,GetItemStats=getStats,IsUsableItem=function() assert(not combat); return true end,GetItemUniqueness=function() return 0,0 end}
+itemUseCalls=0
+qualityCalls=0
+local rarityColors={[0]={0.62,0.62,0.62},[1]={1,1,1},[2]={0.12,1,0},[3]={0,0.44,0.87},[4]={0.64,0.21,0.93}}
+function qualityColor(q)
+ assert(not combat); qualityCalls=qualityCalls+1
+ local color=rarityColors[q] or {1,1,1}; return table.unpack(color)
+end
+C_Item={GetItemInfo=getInfo,GetItemStats=getStats,
+ IsUsableItem=function() itemUseCalls=itemUseCalls+1; return false,false end,
+ GetItemQualityColor=qualityColor,
+ IsEquippableItem=function() assert(not combat); return true end,GetItemUniqueness=function() return 0,0 end}
 C_Container={GetContainerNumSlots=function(bag) assert(not combat); return bag==0 and 2 or bag==1 and extraBagLink and 1 or 0 end,
  GetContainerItemLink=function(bag,slot) assert(not combat); if bag==0 then return bagLinks[slot] else return extraBagLink end end}
 function GetLootRollItemLink(id) assert(not combat); return rollLinks[id] end
@@ -206,6 +242,11 @@ fixture('item:101',{ITEM_MOD_STRENGTH_SHORT=9})
 fixture('item:102',{ITEM_MOD_INTELLECT_SHORT=20})
 inventory[5]='item:100'; bagLinks[1]='item:101'; bagLinks[2]='item:102'
 EverfrostDB={}; GameTooltip=widget()
+tooltipRegistrations=0
+Enum={TooltipDataType={Item=0}}
+TooltipDataProcessor={AddTooltipPostCall=function(kind,fn)
+ assert(kind==0); tooltipRegistrations=tooltipRegistrations+1; itemTooltipPostCall=fn
+end}
 GroupLootFrame1=widget('GroupLootFrame1'); GroupLootFrame1.NeedButton=widget(); GroupLootFrame1.GreedButton=widget(); GroupLootFrame1.rollID=1
 rollLinks[1]='item:101'
 function GroupLootFrame_OnShow() end
@@ -218,15 +259,58 @@ local G=NS.Gear
 G.SetContext('WARRIOR',1,30,'damage',{})
 fire('PLAYER_LOGIN'); tick()
 assert(G.equipment[1]==false and G.equipment[5].link=='item:100')
+-- Passive equipment can be equippable while its item-use action is unavailable.
+assert(G.ReadItem('item:101').usable==true and itemUseCalls==0)
+assert(G.bags[0][1].result.kind=='need')
 local bag=widget(); G.TrackBag(bag,0,1)
 assert(bag.EverfrostGearGlow and bag.EverfrostGearGlow:IsShown())
+assert(#bag.EverfrostGearEdges==4)
+for _,edge in ipairs(bag.EverfrostGearEdges) do assert(edge:IsShown()) end
+local function assertColor(button,r,g,b)
+ for _,layer in ipairs({button.EverfrostGearGlow,table.unpack(button.EverfrostGearEdges)}) do
+  assert(layer.vertex[1]==r and layer.vertex[2]==g and layer.vertex[3]==b)
+ end
+end
+assertColor(bag,0.12,1,0)
+assert(#bag.EverfrostGearPulses==5)
+for _,pulse in ipairs(bag.EverfrostGearPulses) do
+ assert(pulse:IsPlaying() and pulse.looping=='BOUNCE')
+ assert(pulse.animation.from==0.18 and pulse.animation.to==1 and pulse.animation.duration==0.7)
+end
+local plays=bag.EverfrostGearPulses[1].plays; local calls=qualityCalls
+G.PaintBag(bag); assert(bag.EverfrostGearPulses[1].plays==plays and qualityCalls==calls)
+-- Reused buttons pick up new rarity colors, with safe neutral missing-data fallbacks.
+itemInfo['item:101'][3]=3; G.Refresh(); assertColor(bag,0,0.44,0.87)
+itemInfo['item:101'][3]=4; G.Refresh(); assertColor(bag,0.64,0.21,0.93)
+itemInfo['item:101'][3]=secret; G.Refresh(); assertColor(bag,1,1,1)
+assert(G.bags[0][1].result.kind=='need')
+itemInfo['item:101'][3]=2; C_Item.GetItemQualityColor=function() return secret,1,1 end
+G.Refresh(); assertColor(bag,1,1,1)
+C_Item.GetItemQualityColor=nil; G.Refresh(); assertColor(bag,1,1,1)
+C_Item.GetItemQualityColor=qualityColor; G.Refresh(); assertColor(bag,0.12,1,0)
+-- Native tooltip rebuilds keep the label, without duplicate OnEnter additions.
+GameTooltip.owner=bag; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
+assert(table.concat(GameTooltip.lines,'|'):find('Everfrost: UPGRADE',1,true))
+assert(table.concat(GameTooltip.lines,'|'):find(NS.gearLevelNote,1,true))
+local lineCount=#GameTooltip.lines; bag.hooks.OnEnter(bag); assert(#GameTooltip.lines==lineCount)
+GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
+assert(#GameTooltip.lines==lineCount and tooltipRegistrations==1)
 G.TrackBag(bag,0,2); assert(not bag.EverfrostGearGlow:IsShown())
+for _,edge in ipairs(bag.EverfrostGearEdges) do assert(not edge:IsShown()) end
+for _,pulse in ipairs(bag.EverfrostGearPulses) do assert(not pulse:IsPlaying()) end
+GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
+assert(table.concat(GameTooltip.lines,'|'):find('Everfrost: No upgrade',1,true))
 G.TrackBag(bag,0,1); assert(bag.EverfrostGearGlow:IsShown())
 G.TrackBag(bag,-1,1); assert(not bag.EverfrostGearGlow:IsShown())
 G.TrackBag(bag,0,1); bag.hooks.OnEnter(bag); assert(#GameTooltip.lines>0)
 fire('START_LOOT_ROLL',1); tick()
 local frame=GroupLootFrame1
 assert(frame.NeedButton.EverfrostGearGlow:IsShown())
+assertColor(frame.NeedButton,0.12,1,0)
+local rollPlays=frame.NeedButton.EverfrostGearPulses[1].plays
+G.PaintRoll(frame); assert(frame.NeedButton.EverfrostGearPulses[1].plays==rollPlays)
+itemInfo['item:101'][3]=3; fire('START_LOOT_ROLL',1); tick()
+assertColor(frame.NeedButton,0,0.44,0.87)
 rollLinks[1]='item:102'; fire('START_LOOT_ROLL',1); tick()
 assert(not frame.NeedButton.EverfrostGearGlow:IsShown() and frame.GreedButton.EverfrostGearGlow:IsShown())
 rollLinks[1]='item:101'; rollEligibility[1]={false,true}; fire('START_LOOT_ROLL',1); tick()
@@ -238,6 +322,8 @@ assert(frame.NeedButton.EverfrostGearGlow:IsShown())
 -- Combat events do not read item APIs or modify protected roll actions.
 local before=metadataCalls; combat=true; fire('PLAYER_REGEN_DISABLED'); fire('BAG_UPDATE',0); tick()
 assert(G.pending and metadataCalls==before and not bag.EverfrostGearGlow:IsShown())
+for _,edge in ipairs(bag.EverfrostGearEdges) do assert(not edge:IsShown()) end
+GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip); assert(#GameTooltip.lines==0)
 assert(not frame.NeedButton.EverfrostGearGlow:IsShown())
 combat=false; fire('PLAYER_REGEN_ENABLED'); tick(); assert(frame.NeedButton.EverfrostGearGlow:IsShown())
 fire('CANCEL_LOOT_ROLL',1); tick()
@@ -260,11 +346,14 @@ G.SetContext('MAGE',2,30,'damage',{}); tick()
 local offBag=widget(); G.TrackBag(offBag,1,1)
 assert(bag.EverfrostGearGlow:IsShown() and offBag.EverfrostGearGlow:IsShown())
 assert(G.bags[0][1].result.companion=='item:202' and G.bags[1][1].result.companion=='item:201')
-GameTooltip.lines={}; bag.hooks.OnEnter(bag)
+GameTooltip:ClearLines(); bag.hooks.OnEnter(bag)
 assert(table.concat(GameTooltip.lines,'|'):find('Pair with: Item',1,true))
+assert(table.concat(GameTooltip.lines,'|'):find('UPGRADE (equip both)',1,true))
 -- Loot hints use the same carried partners and react to partner removal/loading.
 frame.rollID=2; rollLinks[2]='item:201'; fire('START_LOOT_ROLL',2); tick()
 assert(frame.NeedButton.EverfrostGearGlow:IsShown() and G.rolls[2].result.companion=='item:202')
+GameTooltip:ClearLines(); frame.NeedButton.hooks.OnEnter(frame.NeedButton)
+assert(table.concat(GameTooltip.lines,'|'):find('UPGRADE (equip both) / Need',1,true))
 extraBagLink=nil; fire('BAG_UPDATE',1); tick()
 assert(G.bags[0][1].result.kind=='unknown' and not bag.EverfrostGearGlow:IsShown())
 assert(not offBag.EverfrostGearGlow:IsShown() and not frame.NeedButton.EverfrostGearGlow:IsShown())
@@ -275,6 +364,15 @@ assert(bag.EverfrostGearGlow:IsShown() and offBag.EverfrostGearGlow:IsShown() an
 local pairCalls=metadataCalls; combat=true; fire('PLAYER_REGEN_DISABLED'); tick()
 assert(metadataCalls==pairCalls and not bag.EverfrostGearGlow:IsShown() and not offBag.EverfrostGearGlow:IsShown())
 combat=false; fire('PLAYER_REGEN_ENABLED'); tick(); assert(bag.EverfrostGearGlow:IsShown())
+G.SetContext('MAGE',2,9,'damage',{}); tick()
+assert(G.bags[0][1].result.reason==NS.gearLevelNote and not bag.EverfrostGearGlow:IsShown())
+GameTooltip:ClearLines(); bag.hooks.OnEnter(bag)
+local notes=0
+for _,line in ipairs(GameTooltip.lines) do
+ if line==NS.gearLevelNote then notes=notes+1 end
+ assert(not line:find('Priority:',1,true))
+end
+assert(notes==1)
 EverfrostDB.gear=false; G.Refresh(); assert(not bag.EverfrostGearGlow:IsShown())
 print('Gear UI: bag reuse, loot eligibility, async item data, secret rejection, combat deferral, cancellation and legacy APIs passed')
 `);

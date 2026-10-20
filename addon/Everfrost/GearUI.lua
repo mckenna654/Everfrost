@@ -14,10 +14,11 @@ end
 local function hide(button)
  if button and button.EverfrostGearGlow then
   button.EverfrostGearGlow:Hide()
-  if button.EverfrostGearPulse then button.EverfrostGearPulse:Stop() end
+  for _,edge in ipairs(button.EverfrostGearEdges or {}) do edge:Hide() end
+  for _,pulse in ipairs(button.EverfrostGearPulses or {}) do pulse:Stop() end
  end
 end
-local function glow(button, shown)
+local function glow(button, shown, item)
  if not button then return end
  if not shown then hide(button); return end
  -- Never create or hook widgets in combat; pre-existing cosmetic glows are safe.
@@ -25,33 +26,63 @@ local function glow(button, shown)
   if InCombatLockdown() then return end
   local texture=button:CreateTexture(nil,"OVERLAY",nil,7)
   texture:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-  texture:SetBlendMode("ADD"); texture:SetVertexColor(1,0.82,0.22,1)
-  texture:SetPoint("TOPLEFT",button,"TOPLEFT",-9,9)
-  texture:SetPoint("BOTTOMRIGHT",button,"BOTTOMRIGHT",9,-9)
+  texture:SetBlendMode("ADD")
+  texture:SetPoint("TOPLEFT",button,"TOPLEFT",-12,12)
+  texture:SetPoint("BOTTOMRIGHT",button,"BOTTOMRIGHT",12,-12)
   button.EverfrostGearGlow=texture
-  if texture.CreateAnimationGroup then
-   local group=texture:CreateAnimationGroup()
+  -- Animate every layer together, so the outline also fades visibly.
+  button.EverfrostGearEdges={}
+  button.EverfrostGearPulses={}
+  local function pulse(layer)
+   if not layer.CreateAnimationGroup then return end
+   local group=layer:CreateAnimationGroup()
    local alpha=group:CreateAnimation("Alpha")
-   alpha:SetFromAlpha(0.4); alpha:SetToAlpha(1); alpha:SetDuration(0.85)
-   group:SetLooping("BOUNCE"); button.EverfrostGearPulse=group
+   alpha:SetFromAlpha(0.18); alpha:SetToAlpha(1); alpha:SetDuration(0.7)
+   group:SetLooping("BOUNCE")
+   button.EverfrostGearPulses[#button.EverfrostGearPulses+1]=group
   end
+  pulse(texture)
+  local function edge(from,x1,y1,to,x2,y2,horizontal)
+   local line=button:CreateTexture(nil,"OVERLAY",nil,7)
+   line:SetColorTexture(1,1,1,1)
+   line:SetPoint(from,button,from,x1,y1); line:SetPoint(to,button,to,x2,y2)
+   if horizontal then line:SetHeight(3) else line:SetWidth(3) end
+   button.EverfrostGearEdges[#button.EverfrostGearEdges+1]=line
+   pulse(line)
+  end
+  edge("TOPLEFT",-1,1,"TOPRIGHT",1,1,true)
+  edge("BOTTOMLEFT",-1,-1,"BOTTOMRIGHT",1,-1,true)
+  edge("TOPLEFT",-1,1,"BOTTOMLEFT",-1,-1,false)
+  edge("TOPRIGHT",1,1,"BOTTOMRIGHT",1,-1,false)
  end
+ local color=item and item.color or {1,1,1}
+ button.EverfrostGearGlow:SetVertexColor(color[1],color[2],color[3],1)
  button.EverfrostGearGlow:Show()
- if button.EverfrostGearPulse then button.EverfrostGearPulse:Play() end
+ for _,edge in ipairs(button.EverfrostGearEdges) do
+  edge:SetVertexColor(color[1],color[2],color[3],1); edge:Show()
+ end
+ for _,pulse in ipairs(button.EverfrostGearPulses) do
+  if not pulse:IsPlaying() then pulse:Play() end
+ end
 end
-function G.Tooltip(tooltip,result)
+function G.Tooltip(tooltip,result,roll)
  if not tooltip or not result then return end
+ roll=roll==true
+ if tooltip.EverfrostGearResult==result and tooltip.EverfrostGearRoll==roll then return end
+ tooltip.EverfrostGearResult=result; tooltip.EverfrostGearRoll=roll
  tooltip:AddLine(" ")
- local label=result.kind=="need" and "Upgrade / Need" or result.kind=="greed" and "Greed" or "Not scored"
+ local label=result.kind=="need" and (result.combined and "UPGRADE (equip both)" or "UPGRADE") or result.kind=="greed" and "No upgrade" or "Not scored"
+ if roll and result.kind~="unknown" then label=label..(result.kind=="need" and " / Need" or " / Greed") end
  tooltip:AddLine("Everfrost: "..label,1,0.82,0.22)
  tooltip:AddLine(result.reason,0.85,0.9,1,true)
+ if result.reason~=NS.gearLevelNote then tooltip:AddLine(NS.gearLevelNote,0.75,0.82,0.92,true) end
  if result.combined then
   tooltip:AddLine("Pair with: "..result.companionName,1,0.82,0.22,true)
   tooltip:AddLine("Combined pair compared with your equipped two-hander; equip both items.",0.85,0.9,1,true)
  end
  if result.delta then tooltip:AddLine(string.format("Estimated score: %.1f vs %.1f (%+.1f)",result.score,result.previous,result.delta),0.85,0.9,1,true) end
  local c=G.context
- local p=c and NS.GearProfile(c.class,c.spec,c.role)
+ local p=c and c.level>=NS.gearMinLevel and NS.GearProfile(c.class,c.spec,c.role)
  if p then tooltip:AddLine("Priority: "..NS.GearPriorityText(p),0.75,0.82,0.92,true) end
  tooltip:AddLine("Guide-based stat estimate. Check effects, weapon setup and group loot rules.",0.65,0.72,0.82,true)
  tooltip:Show()
@@ -60,7 +91,7 @@ function G.PaintBag(button)
  local entry=bags[button]
  if not entry then return end
  local cached=G.bags[entry.bag] and G.bags[entry.bag][entry.slot]
- glow(button,G.enabled and not G.pending and cached and cached.result.kind=="need" or false)
+ glow(button,G.enabled and not G.pending and cached and cached.result.kind=="need" or false,cached and cached.item)
 end
 function G.TrackBag(button,bag,slot)
  if not button then return end
@@ -109,11 +140,10 @@ function G.PaintRoll(frame)
  if not frame then return end
  local need=frame.NeedButton or (frame.GetName and _G[(frame:GetName() or "").."NeedButton"])
  local greed=frame.GreedButton or (frame.GetName and _G[(frame:GetName() or "").."GreedButton"])
- hide(need); hide(greed)
  local id=frame.rollID
- if not G.enabled or G.pending or not public(id,"number") then return end
+ if not G.enabled or G.pending or not public(id,"number") then hide(need); hide(greed); return end
  local data=G.rolls[id]
- if not data then return end
+ if not data then hide(need); hide(greed); return end
  local result=data.result
  local function available(button)
   if not button then return false end
@@ -122,8 +152,8 @@ function G.PaintRoll(frame)
   return public(enabled,"boolean") and enabled and public(shown,"boolean") and shown
  end
  -- A disabled Need option never changes an upgrade into a Greed recommendation.
- if result.kind=="need" and data.canNeed and available(need) then glow(need,true)
- elseif result.kind=="greed" and data.canGreed and available(greed) then glow(greed,true) end
+ glow(need,result.kind=="need" and data.canNeed and available(need),data.item)
+ glow(greed,result.kind=="greed" and data.canGreed and available(greed),data.item)
 end
 function G.TrackRoll(frame)
  if not frame then return end
@@ -143,7 +173,7 @@ function G.TrackRoll(frame)
    if button and button.HookScript then
     button:HookScript("OnEnter",function()
      local id=frame.rollID
-     if G.enabled and not G.pending and public(id,"number") and G.rolls[id] then G.Tooltip(GameTooltip,G.rolls[id].result) end
+     if G.enabled and not G.pending and public(id,"number") and G.rolls[id] then G.Tooltip(GameTooltip,G.rolls[id].result,true) end
     end)
    end
   end
@@ -157,7 +187,7 @@ local function readRoll(id)
  local info=NS.Call(GetLootRollItemInfo,id)
  if not public(link,"string") or not info then return end
  if not public(info[6],"boolean") or not public(info[7],"boolean") then return end
- G.rolls[id]={link=link,result=G.Evaluate(link),canNeed=info[6],canGreed=info[7]}
+ G.rolls[id]={link=link,item=G.ReadItem(link),result=G.Evaluate(link),canNeed=info[6],canGreed=info[7]}
 end
 function G.Paint()
  for button in pairs(bags) do G.PaintBag(button) end
@@ -165,6 +195,29 @@ function G.Paint()
 end
 local function installHooks()
  if InCombatLockdown() or not hooksecurefunc then return end
+ if GameTooltip and not hooked.tooltipClear and GameTooltip.HookScript then
+  GameTooltip:HookScript("OnTooltipCleared",function(tooltip)
+   tooltip.EverfrostGearResult=nil; tooltip.EverfrostGearRoll=nil
+  end)
+  hooked.tooltipClear=true
+ end
+ -- Native bags rebuild their tooltip while hovered, after the first OnEnter.
+ -- Append after each item build so the upgrade line survives those refreshes.
+ if not hooked.bagTooltip then
+  local function append(tooltip)
+   if not G.enabled or G.pending then return end
+   local owner=first(tooltip.GetOwner,tooltip)
+   local key=owner and bags[owner]
+   local entry=key and G.bags[key.bag] and G.bags[key.bag][key.slot]
+   if entry then G.Tooltip(tooltip,entry.result) end
+  end
+  if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum and Enum.TooltipDataType and Enum.TooltipDataType.Item then
+   TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item,append)
+   hooked.bagTooltip=true
+  elseif GameTooltip and type(GameTooltip.SetBagItem)=="function" then
+   hooksecurefunc(GameTooltip,"SetBagItem",append); hooked.bagTooltip=true
+  end
+ end
  local function hook(name,fn)
   if not hooked[name] and type(_G[name])=="function" then
    hooksecurefunc(name,fn); hooked[name]=true

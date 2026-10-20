@@ -50,3 +50,13 @@ selection pass simulated checks. In-game rendering remains unverified.
 
 0.5.1: Version metadata synchronized; selector and gear regression suites
 rerun before packaging. Runtime behavior matches the refreshed 0.5.0 build.
+
+0.6.0: All seven Lua files pass Lua 5.1 parsing. Simulated regressions cover
+Forever native trait currencies (including 9/0/0 despite zero legacy fields),
+active groups, missing/staged/secret data, settings and minimap entry points,
+combat deferral, the level-10 gear cutoff, passive equipment, complete weapon
+pairs, persistent UPGRADE tooltips and synchronized rarity-colour pulses.
+All 14 packaged addon files match the release source.
+User in-game checks confirmed passive-equipment highlighting, the rarity
+pulse and settings layout. The latest native talent fix, cross-class API
+behavior and complete client compatibility still need in-game verification.

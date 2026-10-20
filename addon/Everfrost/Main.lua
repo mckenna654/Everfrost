@@ -2,6 +2,8 @@ local _, NS=...
 local frame,db,known=nil,nil,{}
 local class,className,level,spec,status="","",1,0,""
 local detectedSpec,detectedStatus=0,""
+local detectedPoints,detectedSource=nil,nil
+local gearSpec,gearReason=0,nil
 local pending,scanError=false,nil
 local tiles={}
 local function say(s) print("|cffb8c6d9Everfrost:|r "..s) end
@@ -15,9 +17,21 @@ local function tip(owner,title,description)
 end
 local function refresh()
  if InCombatLockdown() then pending=true; return end
- detectedSpec,detectedStatus=NS.DetectSpec(class)
+ local talentPointsAvailable
+ detectedSpec,detectedStatus,talentPointsAvailable,detectedPoints,detectedSource=NS.DetectSpec(class)
  spec,status=detectedSpec,detectedStatus
  if db.spec==0 or (NS.trees[class] and NS.trees[class][db.spec]) then spec,status=db.spec,"Manual" end
+ gearSpec,gearReason=spec,nil
+ if level<NS.gearMinLevel then
+  gearSpec=0; gearReason=NS.gearLevelNote
+ elseif spec==0 then
+  if not talentPointsAvailable then
+   gearReason="Talent points are unavailable. Choose a specialization on the Guide page to score gear."
+  elseif detectedSpec>0 then gearSpec=detectedSpec
+  elseif detectedStatus=="Hybrid" then
+   gearReason="Your talent trees are tied. Spend more points or choose a specialization to score gear."
+  else gearReason="No talent points spent yet. Spend a talent point or choose a specialization to score gear." end
+ end
  local spells,err=NS.ScanSpells(class)
  if spells then known=spells end
  scanError=err; pending=false
@@ -41,8 +55,8 @@ local function selectGuide(value)
  if frame.guideMenu then frame.guideMenu:Hide() end
  refresh(); render()
 end
-local function effectiveRole()
- local p=NS.profiles[class] and NS.profiles[class][spec]
+local function effectiveRole(selectedSpec)
+ local p=NS.profiles[class] and NS.profiles[class][selectedSpec or spec]
  if not p then return "damage" end
  if p.melee then
   if level>=30 and known["Strider Kick"] and db.role~="ranged" then return "melee" end
@@ -54,6 +68,13 @@ local function effectiveRole()
   return known["Cat Form"] and "damage" or "caster"
  end
  return "damage"
+end
+local function toggleRole()
+ local p=NS.profiles[class] and NS.profiles[class][spec]
+ if p and p.melee then db.role=effectiveRole()=="melee" and "ranged" or "melee"
+ elseif p and p.healing then db.role=effectiveRole()=="heal" and "damage" or "heal"
+ else db.role=effectiveRole()=="bear" and "damage" or "bear" end
+ render()
 end
 local function makeTile(index)
  local tile=CreateFrame("Frame",nil,frame); tile:SetSize(44,44); tile:EnableMouse(true)
@@ -73,7 +94,7 @@ render=function()
  if not frame then return end
  frame:SetShown(not db.hidden)
  local role=effectiveRole()
- if NS.Gear then NS.Gear.SetContext(class,spec,level,role,known) end
+ if NS.Gear then NS.Gear.SetContext(class,gearSpec,level,effectiveRole(gearSpec),known) end
  local list,note,profile=NS.BuildRows(class,spec,level,known,db.aoe and "aoe" or "single",role)
  local specName=NS.trees[class] and NS.trees[class][spec] or "Leveling"
  frame.title:SetText(specName.."  "..className)
@@ -100,6 +121,7 @@ render=function()
  frame.caption:SetText(frame.defaultCaption); frame:SetHeight(106+height)
  frame.info=note or ""; frame.profile=profile; cooldowns()
  if frame.guideMenu and frame.guideMenu:IsShown() then updateGuideMenu() end
+ if NS.Settings then NS.Settings:Refresh() end
 end
 local function resetPosition()
  frame:ClearAllPoints(); frame:SetPoint("CENTER",UIParent,"CENTER",0,-190)
@@ -158,11 +180,16 @@ local function createGuideMenu()
    if index==1 then
     local name=NS.trees[class] and NS.trees[class][detectedSpec]
     detail=name and ("Detected: "..name) or detectedStatus=="Hybrid" and "Tied talents; uses Leveling" or detectedStatus=="Unspent" and "No talents spent; uses Leveling" or "No spec detected; uses Leveling"
-   elseif index==2 then detail="General class guide; gear is unscored"
-   else detail="Ability guide and gear priorities" end
+   elseif index==2 then detail="Gear uses talents from level 10"
+   else detail=level<NS.gearMinLevel and "Gear priorities start at level 10" or "Ability guide and gear priorities" end
    row.detail:SetText(detail)
   end
-  menu.footer:SetText(InCombatLockdown() and "Guide changes apply after combat." or spec==0 and "Choose a spec for gear highlights." or "Your choice is saved for this character.")
+  local footer="Your choice is saved for this character."
+  if level<NS.gearMinLevel then footer="Stat priorities start at level 10."
+  elseif spec==0 then
+   footer=gearSpec>0 and ("Gear: "..NS.trees[class][gearSpec].." (from talents)") or level<10 and "Gear follows talents from level 10." or "Choose a spec or spend talent points."
+  end
+  menu.footer:SetText(InCombatLockdown() and "Guide changes apply after combat." or footer)
  end
  menu:SetScript("OnHide",function() catcher:Hide() end)
  catcher:SetScript("OnClick",function() menu:Hide() end)
@@ -186,7 +213,7 @@ local function createUI()
  drag:SetScript("OnDragStop",function()
   frame:StopMovingOrSizing(); local p,_,rp,x,y=frame:GetPoint(); db.point,db.relativePoint,db.x,db.y=p,rp,x,y
  end)
- drag:SetScript("OnEnter",function(self) tip(self,"Everfrost",frame.info.."\n\nReference priorities, not a live next-cast queue.\nDrag to move. /everfrost help for settings.") end)
+ drag:SetScript("OnEnter",function(self) tip(self,"Everfrost",frame.info.."\n\n"..NS.gearLevelNote.."\nReference priorities, not a live next-cast queue.\nDrag to move. /everfrost for settings.") end)
  drag:SetScript("OnLeave",function() GameTooltip:Hide() end)
  frame.guide=CreateFrame("Button",nil,drag)
  frame.guide:SetPoint("TOPLEFT",8,-7); frame.guide:SetPoint("TOPRIGHT",-8,-7); frame.guide:SetHeight(23)
@@ -198,7 +225,7 @@ local function createUI()
  frame.guide:RegisterForDrag("LeftButton")
  frame.guide:SetScript("OnDragStart",function() if not db.locked then frame:StartMoving() end end)
  frame.guide:SetScript("OnDragStop",drag:GetScript("OnDragStop"))
- frame.guide:SetScript("OnEnter",function(self) tip(self,"Choose a guide","Automatic, Leveling, or a class specialization.\nDrag to move the panel.") end)
+ frame.guide:SetScript("OnEnter",function(self) tip(self,"Choose a guide","Automatic, Leveling, or a class specialization.\n"..NS.gearLevelNote.."\nDrag to move the panel.") end)
  frame.guide:SetScript("OnLeave",function() GameTooltip:Hide() end)
  frame.guide:SetScript("OnClick",function()
   GameTooltip:Hide()
@@ -212,12 +239,7 @@ local function createUI()
  frame.mode=chip(drag,52); frame.mode:SetPoint("TOPRIGHT",-14,-31)
  frame.mode:SetScript("OnClick",function() db.aoe=not db.aoe; render() end)
  frame.role=chip(drag,56); frame.role:SetPoint("RIGHT",frame.mode,"LEFT",-5,0)
- frame.role:SetScript("OnClick",function()
-  local p=NS.profiles[class] and NS.profiles[class][spec]
-  if p and p.melee then db.role=effectiveRole()=="melee" and "ranged" or "melee"
-  elseif p and p.healing then db.role=effectiveRole()=="heal" and "damage" or "heal" else db.role=effectiveRole()=="bear" and "damage" or "bear" end
-  render()
- end)
+ frame.role:SetScript("OnClick",toggleRole)
  frame.caption=text(frame,10); frame.caption:SetTextColor(0.6,0.67,0.76)
  frame.empty=text(frame,12); frame.empty:SetPoint("TOPLEFT",14,-67); frame.empty:SetWidth(282)
  createGuideMenu()
@@ -229,10 +251,16 @@ SLASH_EVERFROST3="/frh"
 SlashCmdList.EVERFROST=function(message)
  if not frame then return end
  local command,arg=message:lower():match("^%s*(%S*)%s*(.-)%s*$")
- if command=="" or command=="show" then db.hidden=false
+ if command=="" or command=="settings" or command=="config" then
+  if NS.Settings then NS.Settings:Open() end
+  return
+ elseif command=="show" then db.hidden=false
  elseif command=="hide" then db.hidden=true
  elseif command=="lock" then db.locked=true
  elseif command=="unlock" then db.locked=false
+ elseif command=="minimap" then
+  if arg=="on" or arg=="off" then db.minimap=arg=="on"
+  else say("/everfrost minimap on | off") end
  elseif command=="aoe" then db.aoe=true
  elseif command=="single" then db.aoe=false
  elseif command=="heal" or command=="damage" or command=="bear" or command=="cat" or command=="melee" or command=="ranged" then db.role=command=="cat" and "damage" or command
@@ -249,32 +277,55 @@ SlashCmdList.EVERFROST=function(message)
    db.gear=arg=="on"
    if NS.Gear then NS.Gear.enabled=db.gear; NS.Gear.pending=true; NS.Gear.Paint(); NS.Gear.Schedule() end
   elseif NS.Gear then
-   local p=NS.GearProfile(class,spec,effectiveRole())
-   say((db.gear==false and "Gear highlights OFF. " or "Gear highlights ON. ")..(p and ("Stat order: "..NS.GearPriorityText(p)..". Estimated weights; inspect special effects.") or "Select a talent tree to score gear."))
+   local p=NS.GearProfile(class,gearSpec,effectiveRole(gearSpec))
+   local name=gearSpec>0 and NS.trees[class][gearSpec] or nil
+   say((db.gear==false and "Gear highlights OFF. " or "Gear highlights ON. ")..(p and ((spec==0 and (name.." talents. ") or "").."Stat order: "..NS.GearPriorityText(p)..". Estimated weights; inspect special effects.") or gearReason or "Select a talent tree to score gear."))
   end
  elseif command=="reset" then resetPosition(); db.scale=1; frame:SetScale(1); db.hidden=false
  elseif command=="scale" then
   local n=tonumber(arg); if n and n>=0.6 and n<=2 then db.scale=n; frame:SetScale(n) else say("Scale must be 0.6-2.") end
  elseif command=="source" then say(frame.profile and frame.profile.source or "No profile for this class.")
- elseif command=="status" then say(class.." / "..spec.." / "..level.." / "..status..(scanError and " / "..scanError or ""))
- else say("/everfrost show | hide | lock | unlock | single | aoe | heal | damage | bear | cat | ranged | melee | spec auto/1/2/3 | gear on/off | scale 1 | reset | refresh | source | status") end
+ elseif command=="status" then
+  say(class.." / "..spec.." / "..level.." / "..status..(detectedPoints and (" / Talents: "..table.concat(detectedPoints," / ")) or "")..(detectedSource and (" / "..detectedSource) or "")..(scanError and " / "..scanError or ""))
+ else say("/everfrost settings | show | hide | lock | unlock | single | aoe | heal | damage | bear | cat | ranged | melee | spec auto/1/2/3 | gear on/off | minimap on/off | scale 1 | reset | refresh | source | status") end
  render()
 end
 local events=CreateFrame("Frame")
 for _,event in ipairs({"PLAYER_LOGIN","PLAYER_ENTERING_WORLD","PLAYER_LEVEL_UP","SPELLS_CHANGED","LEARNED_SPELL_IN_TAB",
  "PLAYER_TALENT_UPDATE","CHARACTER_POINTS_CHANGED","ACTIVE_TALENT_GROUP_CHANGED","PLAYER_SPECIALIZATION_CHANGED",
- "PLAYER_REGEN_ENABLED","SPELL_UPDATE_COOLDOWN","SPELL_DATA_LOAD_RESULT"}) do
+ "ACTIVE_PLAYER_SPECIALIZATION_CHANGED","ACTIVE_COMBAT_CONFIG_CHANGED","TRAIT_CONFIG_UPDATED","TRAIT_CONFIG_LIST_UPDATED","TRAIT_TREE_CHANGED","TRAIT_TREE_CURRENCY_INFO_UPDATED",
+ "PLAYER_REGEN_ENABLED","PLAYER_REGEN_DISABLED","SPELL_UPDATE_COOLDOWN","SPELL_DATA_LOAD_RESULT"}) do
  pcall(events.RegisterEvent,events,event)
 end
 events:SetScript("OnEvent",function(_,event,value)
  if event=="PLAYER_LOGIN" then
   EverfrostDB=type(EverfrostDB)=="table" and EverfrostDB or {}
   db=EverfrostDB; db.scale=type(db.scale)=="number" and math.max(0.6,math.min(2,db.scale)) or 1
-  className,class=UnitClass("player"); level=UnitLevel("player"); refresh(); createUI(); render()
+  className,class=UnitClass("player"); level=UnitLevel("player"); refresh(); createUI()
+  if NS.CreateSettings then
+   NS.CreateSettings({DB=function() return db end,Command=function(value) SlashCmdList.EVERFROST(value) end,
+    SelectGuide=selectGuide,ToggleRole=toggleRole,CloseGuide=function() frame.guideMenu:Hide() end,
+    State=function()
+     local p=NS.profiles[class] and NS.profiles[class][spec]
+     local gear=NS.GearProfile(class,gearSpec,effectiveRole(gearSpec))
+     local gearName=gearSpec>0 and (NS.trees[class] or {})[gearSpec] or nil
+     local role=effectiveRole()
+     local roleLabel=role=="damage" and (p and p.bear and "Cat" or "Damage") or role:sub(1,1):upper()..role:sub(2)
+     return {class=class,className=className,level=level,pending=pending,
+      detected=((NS.trees[class] or {})[detectedSpec] or detectedStatus)..(detectedPoints and (" ("..table.concat(detectedPoints," / ")..")") or ""),
+      hasRole=p and (p.melee or p.healing or p.bear) and true or false,roleLabel=roleLabel,
+      priority=gear and NS.GearPriorityText(gear) or nil,gearReason=gearReason,
+      gearTitle=gearName and ("Stat priority: "..gearName..(spec==0 and " (talents)" or "")) or nil,
+      levelingHint=NS.gearLevelNote.." Leveling uses your dominant talent tree for gear."}
+    end})
+  end
+  render()
  elseif not frame then return
+ elseif event=="PLAYER_REGEN_DISABLED" then if NS.Settings then NS.Settings:Refresh() end
  elseif event=="SPELL_UPDATE_COOLDOWN" then cooldowns()
  elseif event=="PLAYER_LEVEL_UP" then level=value; refresh(); render()
- elseif event=="PLAYER_REGEN_ENABLED" then if pending then refresh(); render() end
+ elseif event=="PLAYER_REGEN_ENABLED" then
+  if pending then refresh(); render() elseif NS.Settings then NS.Settings:Refresh() end
  else refresh(); render() end
 end)
 

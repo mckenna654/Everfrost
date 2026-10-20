@@ -88,13 +88,29 @@ function G.ReadItem(link)
  end
  if not public(info[9],"string") or not public(info[5],"number") then return nil end
  local item={link=link,id=tonumber(link:match("item:(%d+)")),name=info[1],level=info[5],loc=info[9],classID=info[12],subclassID=info[13]}
+ -- Cosmetic rarity metadata is cached outside combat, independently of scoring.
+ item.color={1,1,1}
+ local quality=info[3]
+ if public(quality,"number") and quality>=0 and quality<=8 and quality==math.floor(quality) then
+  item.quality=quality
+  local color=NS.Call(itemAPI("GetItemQualityColor"),quality)
+  local valid=color~=nil
+  if color then
+   for i=1,3 do
+    if not public(color[i],"number") or not (color[i]>=0 and color[i]<=1) then valid=false; break end
+   end
+  end
+  if valid then item.color={color[1],color[2],color[3]} end
+ end
  if not slots[item.loc] then item.unsupported=true; G.items[link]=item; return item end
  if not public(item.classID,"number") or not public(item.subclassID,"number") then return nil end
  local raw=first(itemAPI("GetItemStats"),link)
  item.stats=G.Normalize(raw)
  if not item.stats then return nil end
- -- Item eligibility is read only outside combat and cached with the item.
- local usable=NS.Call(itemAPI("IsUsableItem"),link)
+ -- IsUsableItem checks an item's use action, not whether it is equipment.
+ -- Native Forever bags expose separate Use and Equip actions. Class/level
+ -- restrictions are checked below; do not reject passive gear with no use action.
+ local usable=NS.Call(itemAPI("IsEquippableItem"),link)
  if usable and not NS.Public(usable[1]) then return nil end
  if usable and public(usable[1],"boolean") then item.usable=usable[1] end
  local unique=NS.Call(itemAPI("GetItemUniqueness"),link)
@@ -233,7 +249,8 @@ local function comparePair(item, equipped, context, p, carried, candidate)
  return unknown("Carry a usable one-hand weapon and off-hand to compare with your two-hander")
 end
 function G.Compare(item, equipped, context, carried, candidate)
- if not context or context.level<1 or context.level>NS.maxLevel then return unknown("Gear guide supports levels 1-30") end
+ if not context or context.level<1 or context.level>NS.maxLevel then return unknown("Gear guide supports levels 10-30") end
+ if context.level<NS.gearMinLevel then return unknown(NS.gearLevelNote) end
  local p=NS.GearProfile(context.class,context.spec,context.role)
  if not p then return unknown("Select a talent tree to compare gear") end
  if not item then return unknown("Waiting for item data") end

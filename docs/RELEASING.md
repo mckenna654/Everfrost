@@ -82,3 +82,14 @@ two-handers. CurseForge automatically created Release file #9263868
 all 13 addon files against the release source, allowing newline normalization.
 Initial status: Under Review. The public project description now includes
 pair comparisons and the requirement to equip both companion items.
+
+## October 20 release consolidation
+
+The user requested restoring the original 0.5.0 (875a5f5), consolidating the
+second 0.5.0, original 0.5.1 and former 0.5.2 into 0.5.1, then publishing the
+settings, gear presentation and native talent-detection fixes as 0.6.0.
+Older verification entries above describe the pre-consolidation history.
+Restore the original 0.5.0 asset/tag without creating a duplicate CurseForge
+package, retain its first file #9262577, archive superseded files, and
+re-enable tag-only packaging for the rebuilt 0.5.1 and new 0.6.0 tags.
+The current CurseForge project description is maintained in docs/CURSEFORGE.md.

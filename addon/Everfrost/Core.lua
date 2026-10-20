@@ -19,12 +19,86 @@ function NS.SelectTree(points)
  if amount==0 then return 0,"Unspent" end
  return best,"Auto"
 end
+local function public(value,kind) return NS.Public(value) and type(value)==kind end
+local function nonnegative(value)
+ return public(value,"number") and value>=0 and value<math.huge and value==math.floor(value)
+end
+local function first(fn,...)
+ local result=call(fn,...); return result and result[1]
+end
+local function traitPoints(api,group)
+ local traits=C_Traits
+ local configGetter=api.GetCombatConfigIDForSpecGroup
+ local activeGetter=C_ClassTalents and C_ClassTalents.GetActiveConfigID
+ if not traits or (type(configGetter)~="function" and type(activeGetter)~="function") then return nil,false end
+ if type(traits.GetConfigInfo)~="function" or type(traits.GetGroupDisplayInfoByTreeID)~="function" or type(traits.GetGroupCurrencyInfo)~="function" then return nil,true end
+ local configID
+ if type(configGetter)=="function" then
+  if not nonnegative(group) or group<1 then return nil,true end
+  configID=first(configGetter,group)
+ else configID=first(activeGetter) end
+ if not nonnegative(configID) or configID<1 then return nil,true end
+ -- Do not let an uncommitted respec change the active gear guide.
+ if type(traits.ConfigHasStagedChanges)=="function" then
+  local staged=first(traits.ConfigHasStagedChanges,configID)
+  if not public(staged,"boolean") or staged then return nil,true end
+ end
+ local info=first(traits.GetConfigInfo,configID)
+ if not public(info,"table") or not public(info.treeIDs,"table") then return nil,true end
+ local selected
+ for _,treeID in ipairs(info.treeIDs) do
+  if not nonnegative(treeID) or treeID<1 then return nil,true end
+  local display=first(traits.GetGroupDisplayInfoByTreeID,treeID)
+  if not public(display,"table") then return nil,true end
+  if #display==3 then
+   -- Match the group order and currency field used by Forever's native headers.
+   local ids,seen={},{}
+   for index=1,3 do
+    local groupInfo=display[index]
+    if not public(groupInfo,"table") or not nonnegative(groupInfo.groupID) then return nil,true end
+    local id=groupInfo.groupID
+    if seen[id] then return nil,true end
+    ids[index]=id; seen[id]=true
+   end
+   local currencies=first(traits.GetGroupCurrencyInfo,configID,ids)
+   if not public(currencies,"table") then return nil,true end
+   local totals={}
+   for _,groupInfo in ipairs(currencies) do
+    if not public(groupInfo,"table") or not nonnegative(groupInfo.traitNodeGroupID) then return nil,true end
+    local id=groupInfo.traitNodeGroupID
+    if seen[id] then
+     if totals[id]~=nil or not public(groupInfo.currencyInfos,"table") then return nil,true end
+     local currency=groupInfo.currencyInfos[1]
+     if not public(currency,"table") or not nonnegative(currency.spent) then return nil,true end
+     totals[id]=currency.spent
+    end
+   end
+   local points={}
+   for index,id in ipairs(ids) do
+    -- Native headers display zero for a group omitted from a valid currency list.
+    points[index]=totals[id] or 0
+   end
+   if selected then return nil,true end
+   selected=points
+  end
+ end
+ return selected,true
+end
 function NS.DetectSpec(class)
  if not NS.trees[class] then return 0,"Unsupported" end
+ if InCombatLockdown and InCombatLockdown() then return 0,"Spec unavailable",false end
  local api=C_SpecializationInfo or {}
- local group=call(api.GetActiveSpecGroup or GetActiveTalentGroup)
- group=group and group[1] or 1
- local points,hasPoints={},false
+ local groupGetter=api.GetActiveSpecGroup or GetActiveTalentGroup
+ local group=1
+ if type(groupGetter)=="function" then group=first(groupGetter) end
+ if not nonnegative(group) or group<1 then return 0,"Spec unavailable",false end
+ local traitTotals,handled=traitPoints(api,group)
+ if handled then
+  if not traitTotals then return 0,"Spec unavailable",false,nil,"Trait currency" end
+  local tree,status=NS.SelectTree(traitTotals)
+  return tree,status,true,traitTotals,"Trait currency"
+ end
+ local points,hasPoints,count={},false,0
  for i=1,3 do
   local data=call(api.GetSpecializationInfo,i,false,false,nil,nil,group)
   local n=data and data[7]
@@ -32,13 +106,16 @@ function NS.DetectSpec(class)
    data=call(GetTalentTabInfo,i,false,false,group)
    if data then n=type(data[1])=="number" and data[5] or data[3] end
   end
-  if NS.Public(n) and type(n)=="number" then points[i]=n; hasPoints=true end
+  if NS.Public(n) and type(n)=="number" and n>=0 and n<math.huge then points[i]=n; hasPoints=true; count=count+1 end
  end
- if hasPoints then return NS.SelectTree(points) end
+ if hasPoints then
+  local tree,status=NS.SelectTree(points)
+  return tree,status,count==3,count==3 and points or nil,"Specialization points"
+ end
  local active=call(api.GetSpecialization or GetSpecialization)
  local i=active and active[1]
- if NS.Public(i) and type(i)=="number" and NS.trees[class][i] then return i,"Auto" end
- return 0,"Spec unavailable"
+ if NS.Public(i) and type(i)=="number" and NS.trees[class][i] then return i,"Auto",false,nil,"Active specialization" end
+ return 0,"Spec unavailable",false
 end
 -- IDs localize names only; learned IDs and ranks are read from the spellbook.
 NS.baseIDs={
