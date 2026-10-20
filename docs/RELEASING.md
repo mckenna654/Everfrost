@@ -74,3 +74,11 @@ October 20, 2026: published v0.5.1 as the latest GitHub release (commit
 5bfbb27), superseding the same-version refresh. CurseForge automatically
 created Release file #9262832 for Forever 1.60.1. All 13 downloaded files
 match the release source after newline normalization. Status: Under Review.
+
+October 20, 2026: published v0.5.2 as the latest GitHub release (commit
+5bfe11d) with complete one-hand/off-hand pair comparisons against equipped
+two-handers. CurseForge automatically created Release file #9263868
+(`Everfrost-Source-v0.5.2.zip`) for Forever 1.60.1. Downloaded and verified
+all 13 addon files against the release source, allowing newline normalization.
+Initial status: Under Review. The public project description now includes
+pair comparisons and the requirement to equip both companion items.
