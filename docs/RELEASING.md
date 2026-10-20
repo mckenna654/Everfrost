@@ -51,3 +51,11 @@ packaging and may delay public availability.
 The root `Everfrost-Source.toc` supplies version/interface metadata for native
 CurseForge detection before folder relocation. It is excluded from packages.
 The installable source of truth remains `addon/Everfrost`.
+
+October 20, 2026: `v0.5.0` generated CurseForge file #9262577
+(`Everfrost-Source-v0.5.0.zip`) as a Release for Forever 1.60.1.
+Downloaded and verified all 13 addon files, including GearProfiles.lua,
+Gear.lua and GearUI.lua, against release commit 875a5f5 (allowing newline
+normalization). Initial status: Processing. GitHub latest release, project
+description, README heading and the public CurseForge name/description now
+include gear upgrades and Need/Greed hints.
