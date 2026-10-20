@@ -43,3 +43,12 @@ Unreleased native talent detection fix: user screenshot shows Elemental Combat 9
 Native implementation reference: https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_PlayerSpells/Camelot/ClassTalents/Blizzard_ClassTalentsFrame.lua (RefreshTreeHeaders, GetFallbackConfigID, SetTab and ClassTalentTreeHeaderMixin:Setup). API definitions: https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/SharedTraitsDocumentation.lua.
 
 October 20, 2026 release consolidation requested by user: retain original 0.5.0 at 875a5f5, combine the guide-selector refresh/original 0.5.1/former 0.5.2 into a rebuilt 0.5.1 with synchronized metadata, and publish all subsequent local fixes/settings/talent detection as 0.6.0. Earlier entries above record the original sequence; the combined changelog is the current public release history. Superseded CurseForge files are to be archived, preserving the first 0.5.0. Git commit history remains intact. User explicitly authorized GitHub/CurseForge releases and description updates.
+
+Completed consolidation/publication: 0.5.0 restored to original 875a5f5;
+0.5.1 rebuilt at 093d6a4; 0.6.0 released at ab361cd and marked GitHub latest.
+CurseForge automatically generated approved 1.60.1 files #9264544 (0.5.1)
+and #9264545 (0.6.0), downloaded and verified against all 13/14 source files
+respectively. Redundant files #9262809/#9262832/#9263868 are archived, with
+the original #9262577 retained. Updated both descriptions, combined current
+changelog entries and synchronized metadata. Both release test suites pass;
+latest native talent detection still needs user confirmation in game.

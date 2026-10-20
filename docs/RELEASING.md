@@ -93,3 +93,16 @@ Restore the original 0.5.0 asset/tag without creating a duplicate CurseForge
 package, retain its first file #9262577, archive superseded files, and
 re-enable tag-only packaging for the rebuilt 0.5.1 and new 0.6.0 tags.
 The current CurseForge project description is maintained in docs/CURSEFORGE.md.
+
+Consolidation verified: original 0.5.0 tag restored to 875a5f5 and GitHub
+asset verified by SHA-256. Consolidated 0.5.1 is commit 093d6a4; native
+CurseForge file #9264544 contains all 13 matching addon files and version
+0.5.1. Latest 0.6.0 is commit ab361cd; native CurseForge file #9264545
+contains all 14 matching addon files and version 0.6.0. Both target Forever
+1.60.1 and are Approved. Comparisons allow only newline normalization.
+CurseForge files #9262809 (second 0.5.0), #9262832 (original 0.5.1) and
+#9263868 (former 0.5.2) were archived with Restore available. The first
+0.5.0 file #9262577 remains approved. The GitHub 0.5.2 release/tag was
+removed after consolidation; git commit history remains intact. GitHub
+latest is 0.6.0, both project descriptions are updated, and tag-only
+automatic packaging is enabled. No game-folder installation performed.
