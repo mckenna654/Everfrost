@@ -60,3 +60,11 @@ All 14 packaged addon files match the release source.
 User in-game checks confirmed passive-equipment highlighting, the rarity
 pulse and settings layout. The latest native talent fix, cross-class API
 behavior and complete client compatibility still need in-game verification.
+
+0.6.1: All seven Lua files parse as Lua 5.1. Simulated checks pass for
+opacity limits, bad input/saved values, live slider updates, persistence,
+redraws, combat changes, reset behavior and independent menu/settings alpha.
+Existing class/rotation, native talent, gear and settings regressions pass.
+Native dialog backdrop, standard buttons/fonts and quickslot borders are
+used. Actual new panel rendering and opacity need Forever client checks.
+Addon-only archive verified against all 14 release source files.

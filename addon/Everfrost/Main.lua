@@ -7,9 +7,9 @@ local gearSpec,gearReason=0,nil
 local pending,scanError=false,nil
 local tiles={}
 local function say(s) print("|cffb8c6d9Everfrost:|r "..s) end
-local function text(parent,size)
- local t=parent:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
- t:SetFont(STANDARD_TEXT_FONT,size); t:SetJustifyH("LEFT"); return t
+local function text(parent,size,font)
+ local t=parent:CreateFontString(nil,"OVERLAY",font or (size>=12 and "GameFontHighlight" or "GameFontHighlightSmall"))
+ t:SetJustifyH("LEFT"); t:SetJustifyV("TOP"); return t
 end
 local function tip(owner,title,description)
  GameTooltip:SetOwner(owner,"ANCHOR_BOTTOM"); GameTooltip:SetText(title,1,1,1)
@@ -26,7 +26,7 @@ local function refresh()
   gearSpec=0; gearReason=NS.gearLevelNote
  elseif spec==0 then
   if not talentPointsAvailable then
-   gearReason="Talent points are unavailable. Choose a specialization on the Guide page to score gear."
+   gearReason="Talent points are unavailable. Choose a specialization on the Specialization page to score gear."
   elseif detectedSpec>0 then gearSpec=detectedSpec
   elseif detectedStatus=="Hybrid" then
    gearReason="Your talent trees are tied. Spend more points or choose a specialization to score gear."
@@ -79,6 +79,8 @@ end
 local function makeTile(index)
  local tile=CreateFrame("Frame",nil,frame); tile:SetSize(44,44); tile:EnableMouse(true)
  tile.icon=tile:CreateTexture(nil,"ARTWORK"); tile.icon:SetAllPoints(); tile.icon:SetTexCoord(0.07,0.93,0.07,0.93)
+ tile.border=tile:CreateTexture(nil,"OVERLAY")
+ tile.border:SetTexture("Interface\\Buttons\\UI-Quickslot2"); tile.border:SetSize(76,76); tile.border:SetPoint("CENTER")
  tile.cd=CreateFrame("Cooldown",nil,tile,"CooldownFrameTemplate"); tile.cd:SetAllPoints(); tile.cd:SetDrawEdge(false)
  tile:SetScript("OnEnter",function(self)
   if self.spellID then
@@ -100,25 +102,23 @@ render=function()
  frame.title:SetText(specName.."  "..className)
  frame.meta:SetText("LEVEL "..level.."   /   "..status:upper())
  if pending then frame.meta:SetText("LEVEL "..level.."   /   PENDING") end
- local color=RAID_CLASS_COLORS and RAID_CLASS_COLORS[class] or {r=0.6,g=0.7,b=0.9}
- frame.accent:SetColorTexture(color.r,color.g,color.b,1)
- frame.mode.label:SetText(db.aoe and "AOE" or "SINGLE")
+ frame.mode:SetText(db.aoe and "AoE" or "Single")
  frame.role:SetShown(profile and (profile.healing or profile.bear or profile.melee) and true or false)
- frame.role.label:SetText(role=="melee" and "MELEE" or role=="ranged" and "RANGED" or role=="heal" and "HEAL" or role=="bear" and "BEAR" or role=="caster" and "CASTER" or (profile and profile.bear and "CAT" or "DAMAGE"))
+ frame.role:SetText(role=="melee" and "Melee" or role=="ranged" and "Ranged" or role=="heal" and "Heal" or role=="bear" and "Bear" or role=="caster" and "Caster" or (profile and profile.bear and "Cat" or "Damage"))
  for _,tile in ipairs(tiles) do tile:Hide(); tile.cd:Clear(); tile.spellID=nil end
  local columns=math.min(6,math.max(1,#list))
- local width=math.max(310,28+columns*52-8); frame:SetWidth(width)
+ local width=math.max(320,40+columns*52-8); frame:SetWidth(width)
  for i,entry in ipairs(list) do
   local tile=tiles[i] or makeTile(i)
-  tile:ClearAllPoints(); tile:SetPoint("TOPLEFT",14+((i-1)%6)*52,-62-math.floor((i-1)/6)*52)
+  tile:ClearAllPoints(); tile:SetPoint("TOPLEFT",20+((i-1)%6)*52,-70-math.floor((i-1)/6)*52)
   tile.icon:SetTexture(entry.spell.icon or 134400); tile.spellID=entry.spell.id; tile.hint=entry.hint; tile:Show()
  end
  local height=math.ceil(#list/6)*52; frame.empty:SetShown(#list==0)
  if #list==0 then height=40; frame.empty:SetText(not profile and note or level>NS.maxLevel and ("Level 1-"..NS.maxLevel.." guide") or scanError or "Train a spell to get started") end
- frame.caption:ClearAllPoints(); frame.caption:SetPoint("TOPLEFT",14,-65-height)
- frame.caption:SetWidth(width-28); frame.caption:SetHeight(30)
+ frame.caption:ClearAllPoints(); frame.caption:SetPoint("TOPLEFT",20,-73-height)
+ frame.caption:SetWidth(width-40); frame.caption:SetHeight(30)
  frame.defaultCaption=scanError or (pending and "Updates after combat") or "Hover a spell for its place in the rotation"
- frame.caption:SetText(frame.defaultCaption); frame:SetHeight(106+height)
+ frame.caption:SetText(frame.defaultCaption); frame:SetHeight(116+height)
  frame.info=note or ""; frame.profile=profile; cooldowns()
  if frame.guideMenu and frame.guideMenu:IsShown() then updateGuideMenu() end
  if NS.Settings then NS.Settings:Refresh() end
@@ -128,11 +128,7 @@ local function resetPosition()
  db.point,db.relativePoint,db.x,db.y=nil,nil,nil,nil
 end
 local function chip(parent,width)
- local b=CreateFrame("Button",nil,parent); b:SetSize(width,20)
- local bg=b:CreateTexture(nil,"BACKGROUND"); bg:SetAllPoints(); bg:SetColorTexture(1,1,1,0.07)
- b.label=text(b,9); b.label:SetPoint("CENTER"); b.label:SetTextColor(0.8,0.85,0.92)
- b:SetScript("OnEnter",function() bg:SetColorTexture(1,1,1,0.14) end)
- b:SetScript("OnLeave",function() bg:SetColorTexture(1,1,1,0.07) end)
+ local b=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate"); b:SetSize(width,22)
  return b
 end
 local function createGuideMenu()
@@ -201,13 +197,11 @@ end
 local function createUI()
  frame=CreateFrame("Frame","EverfrostFrame",UIParent,"BackdropTemplate")
  frame:SetFrameStrata("MEDIUM"); frame:SetClampedToScreen(true); frame:SetMovable(true)
- frame:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
- frame:SetBackdropColor(0.035,0.045,0.065,0.93); frame:SetBackdropBorderColor(0.3,0.35,0.43,0.5)
- frame:SetScale(db.scale)
+ frame:SetBackdrop(BACKDROP_DIALOG_32_32 or {bgFile="Interface\\DialogFrame\\UI-DialogBox-Background",edgeFile="Interface\\DialogFrame\\UI-DialogBox-Border",tile=true,tileEdge=true,tileSize=32,edgeSize=32,insets={left=11,right=12,top=12,bottom=11}})
+ frame:SetBackdropColor(1,1,1,0.95); frame:SetBackdropBorderColor(1,1,1,1)
+ frame:SetScale(db.scale); frame:SetAlpha(db.opacity)
  if db.point and db.relativePoint and type(db.x)=="number" and type(db.y)=="number" then frame:SetPoint(db.point,UIParent,db.relativePoint,db.x,db.y) else resetPosition() end
- frame.accent=frame:CreateTexture(nil,"OVERLAY"); frame.accent:SetPoint("TOPLEFT",1,-1)
- frame.accent:SetPoint("TOPRIGHT",-1,-1); frame.accent:SetHeight(2)
- local drag=CreateFrame("Frame",nil,frame); drag:SetPoint("TOPLEFT"); drag:SetPoint("TOPRIGHT"); drag:SetHeight(58)
+ local drag=CreateFrame("Frame",nil,frame); drag:SetPoint("TOPLEFT",12,-8); drag:SetPoint("TOPRIGHT",-12,-8); drag:SetHeight(54)
  drag:EnableMouse(true); drag:RegisterForDrag("LeftButton")
  drag:SetScript("OnDragStart",function() if not db.locked then frame:StartMoving() end end)
  drag:SetScript("OnDragStop",function()
@@ -216,11 +210,11 @@ local function createUI()
  drag:SetScript("OnEnter",function(self) tip(self,"Everfrost",frame.info.."\n\n"..NS.gearLevelNote.."\nReference priorities, not a live next-cast queue.\nDrag to move. /everfrost for settings.") end)
  drag:SetScript("OnLeave",function() GameTooltip:Hide() end)
  frame.guide=CreateFrame("Button",nil,drag)
- frame.guide:SetPoint("TOPLEFT",8,-7); frame.guide:SetPoint("TOPRIGHT",-8,-7); frame.guide:SetHeight(23)
- local guideHover=frame.guide:CreateTexture(nil,"HIGHLIGHT"); guideHover:SetAllPoints(); guideHover:SetColorTexture(1,1,1,0.06)
+ frame.guide:SetPoint("TOPLEFT",2,-2); frame.guide:SetPoint("TOPRIGHT",-2,-2); frame.guide:SetHeight(25)
+ frame.guide:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight","ADD")
  frame.guide.arrow=frame.guide:CreateTexture(nil,"ARTWORK"); frame.guide.arrow:SetSize(16,16)
  frame.guide.arrow:SetPoint("RIGHT",-3,0); frame.guide.arrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
- frame.title=text(frame.guide,12); frame.title:SetPoint("LEFT",6,0); frame.title:SetPoint("RIGHT",frame.guide.arrow,"LEFT",-6,0)
+ frame.title=text(frame.guide,12,"GameFontNormal"); frame.title:SetPoint("LEFT",6,0); frame.title:SetPoint("RIGHT",frame.guide.arrow,"LEFT",-6,0)
  frame.title:SetWordWrap(false)
  frame.guide:RegisterForDrag("LeftButton")
  frame.guide:SetScript("OnDragStart",function() if not db.locked then frame:StartMoving() end end)
@@ -235,13 +229,13 @@ local function createUI()
   frame.guideMenu:ClearAllPoints(); frame.guideMenu:SetPoint("TOPLEFT",frame.guide,"BOTTOMLEFT",-4,-3)
   frame.guideCatcher:Show(); frame.guideMenu:Show()
  end)
- frame.meta=text(drag,9); frame.meta:SetPoint("TOPLEFT",14,-37); frame.meta:SetWidth(160); frame.meta:SetWordWrap(false); frame.meta:SetTextColor(0.5,0.58,0.68)
- frame.mode=chip(drag,52); frame.mode:SetPoint("TOPRIGHT",-14,-31)
+ frame.meta=text(drag,11); frame.meta:SetPoint("TOPLEFT",8,-35); frame.meta:SetWidth(130); frame.meta:SetWordWrap(false); frame.meta:SetTextColor(0.75,0.75,0.75)
+ frame.mode=chip(drag,64); frame.mode:SetPoint("TOPRIGHT",-6,-29)
  frame.mode:SetScript("OnClick",function() db.aoe=not db.aoe; render() end)
- frame.role=chip(drag,56); frame.role:SetPoint("RIGHT",frame.mode,"LEFT",-5,0)
+ frame.role=chip(drag,66); frame.role:SetPoint("RIGHT",frame.mode,"LEFT",-4,0)
  frame.role:SetScript("OnClick",toggleRole)
- frame.caption=text(frame,10); frame.caption:SetTextColor(0.6,0.67,0.76)
- frame.empty=text(frame,12); frame.empty:SetPoint("TOPLEFT",14,-67); frame.empty:SetWidth(282)
+ frame.caption=text(frame,11); frame.caption:SetTextColor(0.8,0.8,0.8)
+ frame.empty=text(frame,12); frame.empty:SetPoint("TOPLEFT",20,-75); frame.empty:SetWidth(280)
  createGuideMenu()
  frame:SetScript("OnHide",function() frame.guideMenu:Hide() end)
 end
@@ -284,10 +278,13 @@ SlashCmdList.EVERFROST=function(message)
  elseif command=="reset" then resetPosition(); db.scale=1; frame:SetScale(1); db.hidden=false
  elseif command=="scale" then
   local n=tonumber(arg); if n and n>=0.6 and n<=2 then db.scale=n; frame:SetScale(n) else say("Scale must be 0.6-2.") end
+ elseif command=="opacity" then
+  local n=tonumber(arg)
+  if n and n>=10 and n<=100 then db.opacity=n/100; frame:SetAlpha(db.opacity) else say("Opacity must be 10-100 percent.") end
  elseif command=="source" then say(frame.profile and frame.profile.source or "No profile for this class.")
  elseif command=="status" then
   say(class.." / "..spec.." / "..level.." / "..status..(detectedPoints and (" / Talents: "..table.concat(detectedPoints," / ")) or "")..(detectedSource and (" / "..detectedSource) or "")..(scanError and " / "..scanError or ""))
- else say("/everfrost settings | show | hide | lock | unlock | single | aoe | heal | damage | bear | cat | ranged | melee | spec auto/1/2/3 | gear on/off | minimap on/off | scale 1 | reset | refresh | source | status") end
+ else say("/everfrost settings | show | hide | lock | unlock | single | aoe | heal | damage | bear | cat | ranged | melee | spec auto/1/2/3 | gear on/off | minimap on/off | scale 1 | opacity 100 | reset | refresh | source | status") end
  render()
 end
 local events=CreateFrame("Frame")
@@ -301,6 +298,8 @@ events:SetScript("OnEvent",function(_,event,value)
  if event=="PLAYER_LOGIN" then
   EverfrostDB=type(EverfrostDB)=="table" and EverfrostDB or {}
   db=EverfrostDB; db.scale=type(db.scale)=="number" and math.max(0.6,math.min(2,db.scale)) or 1
+  local opacity=db.opacity
+  db.opacity=NS.Public(opacity) and type(opacity)=="number" and opacity==opacity and opacity~=math.huge and opacity~=-math.huge and math.max(0.1,math.min(1,opacity)) or 1
   className,class=UnitClass("player"); level=UnitLevel("player"); refresh(); createUI()
   if NS.CreateSettings then
    NS.CreateSettings({DB=function() return db end,Command=function(value) SlashCmdList.EVERFROST(value) end,

@@ -4,7 +4,12 @@
 
 A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1–30, nine classes and 27 talent trees**. Written with **OpenAI Codex**. No third-party addon libraries are required.
 
-## What's new in 0.6.0
+## What's new in 0.6.1
+
+- **Adjustable panel opacity:** open `/everfrost` → Rotation Panel and choose 10%–100%. Changes apply immediately and save per character. `/everfrost opacity 60` sets 60%; settings, guide menus and tooltips stay readable.
+- **Native WoW styling:** the compact rotation reference now uses WoW dialog textures, gold title text, standard buttons and quickslot spell borders. Position, size and guide choices are preserved; Reset position & size retains opacity.
+
+## Included from 0.6.0
 
 - **Native-style settings:** type `/everfrost` or use the minimap button or the game's AddOns settings launcher. Specialization, Rotation Panel and Gear Upgrades tabs keep the controls together.
 - **Clearer upgrade hints:** a prominent border fades in and out in the item's rarity colour. Tooltips show **UPGRADE**, the estimated score change and any required weapon partner. Passive equipment is no longer rejected for lacking a usable action.
@@ -43,9 +48,9 @@ Left-click the minimap logo for settings, right-click to toggle the reference pa
 
 ## Releases and verification
 
-The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes.
+The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling.
 
-Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse and settings layout; the latest talent-detection fix and complete Forever compatibility still need in-game verification. English guidance; some Forever-specific spells depend on English spellbook names.
+Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse and settings layout; the latest talent-detection fix, new panel styling/opacity and complete Forever compatibility still need in-game verification. English guidance; some Forever-specific spells depend on English spellbook names.
 
 **MIT licensed. Third-party addon-manager distribution is enabled.** Everfrost is independent and is not affiliated with or endorsed by Blizzard, Icy Veins or OpenAI.
 

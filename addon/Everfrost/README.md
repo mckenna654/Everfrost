@@ -1,4 +1,4 @@
-# Everfrost — v0.6.0
+# Everfrost — v0.6.1
 
 A compact class-aware rotation reference for WoW Forever, covering levels 1–30. Detects your class, level, dominant talent tree, and learned spell ranks. Includes all nine classes and 27 talent trees, with a general leveling profile before you spend talents.
 
@@ -39,6 +39,8 @@ The Specialization page chooses Automatic, Leveling, a specialization, encounter
 
 The compact window uses native WoW framing, inset content and top tabs. Panel size uses a 60%–200% slider. Stat text is aligned below its heading, and the level-10 notice stays visible.
 
+Rotation Panel also offers an opacity slider from 10% to 100%, saved per character. It fades the entire reference panel while settings, guide menus and tooltips stay fully readable. `/everfrost opacity 60` sets 60%. Reset position & size keeps your opacity choice. The reference panel now uses WoW dialog textures, native fonts/buttons and quickslot icon borders.
+
 Left-click the minimap button for settings, right-click to show/hide the panel, and drag to reposition it. `/everfrost minimap on` restores a hidden button. Actual native settings integration and rendering still need in-game testing.
 
 ## Commands
@@ -57,6 +59,7 @@ Left-click the minimap button for settings, right-click to show/hide the panel, 
 | `/everfrost spec auto` / `/everfrost spec 1` / `2` / `3` | Automatic or manual spec |
 | `/everfrost lock` / `/everfrost unlock` | Lock or unlock dragging |
 | `/everfrost scale 1.2` | Scale between 0.6 and 2 |
+| `/everfrost opacity 60` | Panel opacity from 10% to 100% |
 | `/everfrost reset` | Reset position and scale; show panel |
 | `/everfrost refresh` | Rescan outside combat |
 | `/everfrost source` | Print the selected guide URL |

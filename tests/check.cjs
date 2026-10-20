@@ -161,6 +161,8 @@ function methods:SetScript(e,cb) self.scripts[e]=cb end
 function methods:GetScript(e) return self.scripts[e] end
 function methods:GetFrameLevel() return 1 end
 function methods:SetScale(v) self.scale=v end
+function methods:SetAlpha(v) self.alpha=v end
+function methods:SetBackdrop(v) self.backdrop=v end
 function methods:GetScale() return self.scale or 1 end
 function methods:RegisterEvent(e) self.events[e]=true end
 function methods:Show() self.shown=true end
@@ -221,7 +223,10 @@ run(`
 fire('PLAYER_LOGIN'); local f=EverfrostFrame
 assert(f.title.text=='Retribution  PALADIN' and f.meta.text:find('5'))
 assert(EverfrostDB.scale==1.2 and EverfrostDB.x==100)
-assert(visibleSpells()==1 and f.width==310)
+assert(visibleSpells()==1 and f.width==320)
+assert(EverfrostDB.opacity==1 and f.alpha==1)
+assert(f.backdrop.edgeFile=='Interface'..string.char(92)..'DialogFrame'..string.char(92)..'UI-DialogBox-Border')
+assert(f.mode.template=='UIPanelButtonTemplate' and f.role.template=='UIPanelButtonTemplate')
 assert(lastGearContext[1]=='PALADIN' and lastGearContext[2]==0)
 local cmd=SlashCmdList.EVERFROST
 local settings=NS.Settings; local window=settings.window
@@ -241,6 +246,19 @@ panel.slider:SetValue(1.3); assert(EverfrostDB.scale==1.3)
 panel.slider:SetValue(0.1); assert(EverfrostDB.scale==0.6)
 panel.slider:SetValue(3); assert(EverfrostDB.scale==2)
 panel.slider:SetValue(1.2); assert(EverfrostDB.scale==1.2)
+-- Live opacity applies to the reference frame only, survives redraws and rejects bad commands.
+assert(panel.opacitySlider.minimum==10 and panel.opacitySlider.maximum==100 and panel.opacity.text=='100%')
+panel.opacitySlider:SetValue(60); assert(EverfrostDB.opacity==0.6 and f.alpha==0.6 and panel.opacity.text=='60%')
+assert(rawget(window,'alpha')==nil and rawget(f.guideMenu,'alpha')==nil and rawget(GameTooltip,'alpha')==nil)
+cmd('aoe'); assert(f.alpha==0.6); cmd('single')
+cmd('opacity 0'); cmd('opacity 101'); cmd('opacity nonsense'); assert(EverfrostDB.opacity==0.6 and f.alpha==0.6)
+panel.opacitySlider:SetValue(1); assert(EverfrostDB.opacity==0.1 and f.alpha==0.1)
+panel.opacitySlider:SetValue(200); assert(EverfrostDB.opacity==1 and f.alpha==1)
+combat=true; panel.opacitySlider:SetValue(65); assert(EverfrostDB.opacity==0.65 and f.alpha==0.65); combat=false
+cmd('reset'); assert(EverfrostDB.opacity==0.65 and f.alpha==0.65)
+local savedOpacityDB=EverfrostDB
+fire('PLAYER_LOGIN'); f=EverfrostFrame; assert(EverfrostDB==savedOpacityDB and f.alpha==0.65 and panel.opacity.text=='65%')
+cmd('opacity 100')
 panel.minimap:SetChecked(false); panel.minimap.scripts.OnClick(panel.minimap); assert(not settings.minimap:IsShown())
 cmd('minimap on'); assert(settings.minimap:IsShown())
 window.close.scripts.OnClick(); settings.minimap.scripts.OnClick(settings.minimap,'LeftButton'); assert(window:IsShown())
@@ -298,6 +316,11 @@ fire('PLAYER_LEVEL_UP',30); assert(visibleSpells()>0); fire('PLAYER_LEVEL_UP',31
 local talentCalls=0
 local talentPoints={0,2,0}
 GetTalentTabInfo=function(i) assert(not combat); talentCalls=talentCalls+1; return 'Tree',nil,talentPoints[i] end
+for _,value in ipairs({'bad',false,0/0,math.huge,-math.huge}) do
+ EverfrostDB={opacity=value}; fire('PLAYER_LOGIN'); assert(EverfrostDB.opacity==1 and EverfrostFrame.alpha==1)
+end
+EverfrostDB={opacity=-1}; fire('PLAYER_LOGIN'); assert(EverfrostDB.opacity==0.1)
+EverfrostDB={opacity=2}; fire('PLAYER_LOGIN'); assert(EverfrostDB.opacity==1)
 currentClass='SHAMAN'; currentLevel=9; EverfrostDB={spec=0}; fire('PLAYER_LOGIN')
 assert(EverfrostFrame.title.text=='Leveling  SHAMAN' and lastGearContext[2]==0)
 assert(window.pages.Gear.priority.text=='Not active yet.')
@@ -359,8 +382,8 @@ end
 currentClass='DRUID'; currentLevel=10; GetTalentTabInfo=function(i) return 'Tree',nil,({0,1,0})[i] end
 book={{spellID=5487,name='Bear Form'},{spellID=6807,name='Maul'}}
 EverfrostDB={}; fire('PLAYER_LOGIN')
-assert(EverfrostFrame.role.label.text=='BEAR')
-book={}; fire('SPELLS_CHANGED'); assert(EverfrostFrame.role.label.text=='CASTER')
+assert(EverfrostFrame.role.text=='Bear')
+book={}; fire('SPELLS_CHANGED'); assert(EverfrostFrame.role.text=='Caster')
 print('Mock UI: all classes, migration, controls, talent override, leveling, combat refresh, cooldown fallback and feral labels: passed')
 print('Settings UI: slash/minimap/native entry points, guide selection, persistent controls, scale, minimap dragging, class changes and combat deferral: passed')
 print('Leveling gear: level-10 boundary, dominant talents, ties/unspent/unavailable/partial data, overrides, respec, combat caching, Survival roles and all classes: passed')
@@ -402,11 +425,11 @@ spells.Immolate=nil; assert(not has('WARLOCK',3,30,spells,'Conflagrate'))
 currentClass='HUNTER'; currentLevel=29; GetTalentTabInfo=function(i) return 'Tree',nil,({0,0,21})[i] end
 book={{spellID=1,name='Strider Kick'},{spellID=2,name='Raptor Strike'},{spellID=3,name='Auto Shot'}}
 EverfrostDB={}; fire('PLAYER_LOGIN')
-assert(EverfrostFrame.role.label.text=='RANGED')
-fire('PLAYER_LEVEL_UP',30); assert(EverfrostFrame.role.label.text=='MELEE')
-SlashCmdList.EVERFROST('ranged'); assert(EverfrostFrame.role.label.text=='RANGED')
-SlashCmdList.EVERFROST('melee'); assert(EverfrostFrame.role.label.text=='MELEE')
-book[1].future=true; fire('SPELLS_CHANGED'); assert(EverfrostFrame.role.label.text=='RANGED')
+assert(EverfrostFrame.role.text=='Ranged')
+fire('PLAYER_LEVEL_UP',30); assert(EverfrostFrame.role.text=='Melee')
+SlashCmdList.EVERFROST('ranged'); assert(EverfrostFrame.role.text=='Ranged')
+SlashCmdList.EVERFROST('melee'); assert(EverfrostFrame.role.text=='Melee')
+book[1].future=true; fire('SPELLS_CHANGED'); assert(EverfrostFrame.role.text=='Ranged')
 print('Level 21-30 additions, rank level gates, spec isolation, talent removal and Survival transition: passed')
 `);
 

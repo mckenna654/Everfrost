@@ -12,7 +12,7 @@ Everfrost is a lightweight, standalone Lua addon for **WoW Forever**. It display
 
 **Written with OpenAI Codex.** The project uses Codex for AI-assisted development, review, and documentation. Automated validation uses a simulated client. Early in-game checks confirmed the gear eligibility fix, rarity pulse and settings layout; the latest talent fix and broader client compatibility still need verification.
 
-[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.6.0](https://github.com/mckenna654/Everfrost/releases/tag/v0.6.0) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
+[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.6.1](https://github.com/mckenna654/Everfrost/releases/tag/v0.6.1) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
 
 CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distribution is enabled. New version tags trigger automatic packaging; file processing and moderation can delay availability.
 
@@ -20,7 +20,7 @@ CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distributio
 
 | Item | Current status |
 | --- | --- |
-| Addon version | **0.6.0** |
+| Addon version | **0.6.1** |
 | Supported levels | **1–30** |
 | Class coverage | Nine classes, 27 talent trees, and nine general leveling profiles |
 | Target interface | `16001` — compatibility with the actual Forever client remains unverified |
@@ -66,7 +66,7 @@ Use `/everfrost gear` to print your current stat order, `/everfrost gear off` to
 
 ## Installation
 
-1. Download **`Everfrost-0.6.0.zip`** from the [v0.6.0 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.6.0).
+1. Download **`Everfrost-0.6.1.zip`** from the [v0.6.1 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.6.1).
 2. Exit WoW Forever.
 3. Extract the archive's `Everfrost` folder into your Forever client's `Interface/AddOns` directory.
 4. Confirm the resulting path is `Interface/AddOns/Everfrost/Everfrost.toc`.
@@ -82,7 +82,7 @@ Earlier iterations were named **ForeverRetHelper** and **ForeverGuide**. Remove 
 
 Click the guide title (or its small down arrow) to open **Choose a guide**. Select **Automatic**, **Leveling**, or one of your class’s three specializations. Automatic shows the detected tree. Leveling retains the general spell guide and uses the tree with the most spent talent points for gear from level 10 onward. The selected row is marked with a check, and your choice is saved per character. Click outside the menu, its close button, or press Escape to dismiss it. Changes during combat show **PENDING** and apply after combat ends.
 
-The header displays your specialization, class, level, and detection status. Hover an ability to see its spell tooltip and usage guidance. Hover the header for general profile notes. Drag the header to move the panel, or lock it with `/everfrost lock`.
+The header displays your specialization, class, level, and detection status. Hover an ability to see its spell tooltip and usage guidance. Hover the header for general profile notes. The panel uses native WoW dialog textures, gold title text, standard buttons and quickslot spell borders. Drag the header to move it, or lock it with `/everfrost lock`. Adjust its opacity in Rotation Panel settings or with `/everfrost opacity 60`.
 
 | Control | Behavior |
 | --- | --- |
@@ -98,7 +98,7 @@ Survival defaults to the ranged approach before its melee requirements are met. 
 Type **`/everfrost`**, `/everfrost settings`, or `/everfrost config` to open the settings window. You can also left-click the Everfrost minimap button, or go to **Escape → Options → AddOns → Everfrost** and click **Open Everfrost settings**. Older clients use the Interface → AddOns category where that API is available.
 
 - **Specialization:** choose Automatic, Leveling, or a class specialization; switch single/multiple targets and any supported role view.
-- **Rotation Panel:** show or hide the reference panel, lock its position, change its size, reset position/size, and show or hide the minimap button.
+- **Rotation Panel:** show/hide or lock the panel, adjust size and opacity, reset position/size, and show/hide the minimap button. Opacity ranges from 10% to 100% and fades the complete reference panel, including icons and text; settings, guide menus and tooltips stay readable. The choice saves per character, and Reset position & size retains it.
 - **Gear Upgrades:** toggle upgrade hints, read the current stat order, and request a fresh bag scan outside combat.
 
 Settings apply immediately and save per character. Opening the window does not force a hidden reference panel to appear. Existing guide changes during combat still apply after combat ends; open the settings window outside combat. Escape or the close button dismisses the window. Drag its header to move it.
@@ -147,6 +147,7 @@ Several specializations share early-level priorities until their distinct abilit
 | `/everfrost spec 1`, `2`, or `3` | Select a talent tree manually |
 | `/everfrost lock` / `/everfrost unlock` | Lock or unlock panel dragging |
 | `/everfrost scale 1.2` | Set scale; accepted range is `0.6`–`2` |
+| `/everfrost opacity 60` | Set rotation panel opacity to 60%; accepted range is `10`–`100` |
 | `/everfrost reset` | Reset position and scale, and show the panel |
 | `/everfrost gear` | Show active gear stat priorities |
 | `/everfrost gear on` / `/everfrost gear off` | Enable or disable gear and loot highlights |
@@ -185,7 +186,7 @@ The packaging command uses Node.js and works on Windows, macOS and Linux:
 npm run build
 ```
 
-It creates `dist/Everfrost-0.6.0.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
+It creates `dist/Everfrost-0.6.1.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
 
 When releasing a new version, update `addon/Everfrost/Everfrost.toc` and `package.json` together, keep lockfile metadata synchronized, run the tests, and verify the archive contents before uploading.
 

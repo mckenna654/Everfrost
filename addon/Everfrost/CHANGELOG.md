@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.1 — Panel opacity and native WoW styling
+
+- Add a Rotation Panel opacity slider from 10% to 100%, applied immediately and saved per character. /everfrost opacity 60 sets 60%; settings, guide menus and tooltips remain fully readable.
+- Restyle the compact reference panel with native WoW dialog background/border, standard game fonts and gold title text, UIPanel buttons and quickslot icon frames. Remove the flat class-colour stripe and custom mode chips.
+- Preserve position, size, guide selection, learned-spell filtering and combat-deferred metadata refreshes. Reset position & size retains the chosen opacity.
+
 ## 0.6.0 — Settings, clearer upgrades and talent detection
 
 - Add a compact native-style settings window with Specialization, Rotation Panel and Gear Upgrades tabs. Open it with /everfrost, /everfrost settings, /everfrost config, the minimap button or the game's AddOns settings launcher.

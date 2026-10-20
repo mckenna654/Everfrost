@@ -52,3 +52,19 @@ respectively. Redundant files #9262809/#9262832/#9263868 are archived, with
 the original #9262577 retained. Updated both descriptions, combined current
 changelog entries and synchronized metadata. Both release test suites pass;
 latest native talent detection still needs user confirmation in game.
+
+Local follow-up after 0.6.0 publication: added db.opacity (default 1, normalized
+to 0.1–1) and /everfrost opacity 10–100, plus a live Rotation Panel slider.
+Alpha is applied only to EverfrostFrame; settings, the UIParent-owned guide
+menu and tooltips remain independent. The position/size reset retains opacity.
+Restyled the reference panel with native BACKDROP_DIALOG_32_32 (equivalent
+local fallback), gold GameFontNormal title, standard font objects, native
+UIPanelButtonTemplate controls and UI-Quickslot2 spell borders. Removed the
+flat class accent/chip backgrounds. Slightly increased internal padding while
+retaining six columns and the compact layout. No guide rules changed.
+Native backdrop verified against Gethe/wow-ui-source forever,
+Interface/AddOns/Blizzard_SharedXML/Backdrop.lua. Tests cover slider limits,
+invalid command/saved data, live alpha, persistence after login/redraw/reset,
+combat changes and opacity isolation; existing rotation/gear tests pass.
+Still local 0.6.0 metadata: no release, upload or game installation requested.
+Actual new panel appearance/opacity behavior needs client verification.
