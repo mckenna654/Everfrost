@@ -17,3 +17,5 @@ Published v0.4.2 on October 15, 2026 as the latest GitHub release. Fixed native 
 October 20, 2026: v0.5.0 adds guide-based gear profiles for all 27 specs, item comparisons and native bag/Need/Greed borders. See docs/GEAR.md for explicit scoring assumptions and scope. Comparisons defer during combat and never roll or equip items. Added gear regression coverage and Node-based cross-platform packaging. In-game item APIs and visual hooks still need verification.
 
 0.5.0 guide selector refresh (same version requested): click the title to choose Automatic, explicit Leveling (db.spec=0), or a class tree. Native tooltip-style menu, checked row, detected-tree detail, gear availability hint, outside-click/Escape dismissal and combat-deferred selection. No rotation data changed.
+
+October 20, 2026: user requested a distinct 0.5.1 release for reliable update discovery. Same guide-selector and gear behavior as refreshed 0.5.0; synchronized version metadata and current download documentation.

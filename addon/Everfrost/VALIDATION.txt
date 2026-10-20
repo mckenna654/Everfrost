@@ -47,3 +47,6 @@ Actual Forever rendering, item stat tokens and UI hook behavior are unverified.
 0.5.0 guide selector refresh: menu population, automatic/manual/leveling
 selection, saved overrides, outside-click dismissal, and combat-deferred guide
 selection pass simulated checks. In-game rendering remains unverified.
+
+0.5.1: Version metadata synchronized; selector and gear regression suites
+rerun before packaging. Runtime behavior matches the refreshed 0.5.0 build.

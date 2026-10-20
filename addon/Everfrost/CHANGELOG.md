@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.1
+
+- Release the guide selector with a distinct version so addon managers can identify the update.
+- Click the panel title or arrow to select Automatic, Leveling, or a class spec.
+- Preserve saved selections, detection details, gear-scoring hints, and combat-deferred changes.
+- Includes all gear upgrade borders and Need/Greed guidance from 0.5.0.
+
+Lua 5.1 syntax and simulated-client tests pass. Actual Forever client rendering and API verification remains outstanding.
+
 ## 0.5.0
 
 ### Guide selector refresh
