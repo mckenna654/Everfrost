@@ -69,3 +69,8 @@ CurseForge generated file #9262809 for Forever 1.60.1. Downloaded and checked
 all 13 files against the source, including the new title-button menu. Initial
 status: Processing. The previous approved 0.5.0 file remains available while
 the replacement is reviewed.
+
+October 20, 2026: published v0.5.1 as the latest GitHub release (commit
+5bfbb27), superseding the same-version refresh. CurseForge automatically
+created Release file #9262832 for Forever 1.60.1. All 13 downloaded files
+match the release source after newline normalization. Status: Under Review.
