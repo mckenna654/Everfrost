@@ -15,3 +15,5 @@ October 15, 2026: refreshed guide references across all 27 specs, including dist
 Published v0.4.2 on October 15, 2026 as the latest GitHub release. Fixed native CurseForge TOC discovery using an excluded metadata-only root TOC. Build #362675 completed for commit 03ba40a and generated Release file #9189652 for 1.60.1; downloaded runtime files match the source. Initial file status was Processing.
 
 October 20, 2026: v0.5.0 adds guide-based gear profiles for all 27 specs, item comparisons and native bag/Need/Greed borders. See docs/GEAR.md for explicit scoring assumptions and scope. Comparisons defer during combat and never roll or equip items. Added gear regression coverage and Node-based cross-platform packaging. In-game item APIs and visual hooks still need verification.
+
+0.5.0 guide selector refresh (same version requested): click the title to choose Automatic, explicit Leveling (db.spec=0), or a class tree. Native tooltip-style menu, checked row, detected-tree detail, gear availability hint, outside-click/Escape dismissal and combat-deferred selection. No rotation data changed.

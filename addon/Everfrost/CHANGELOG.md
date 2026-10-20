@@ -2,6 +2,14 @@
 
 ## 0.5.0
 
+### Guide selector refresh
+
+- Click the panel title to choose Automatic, Leveling, or a class specialization.
+- Show automatic detection, the saved selection, and gear-scoring availability.
+- Dismiss with Escape, an outside click, or the close button; preserve header dragging.
+- Save explicit Leveling selection and defer combat changes safely.
+- Refresh the existing 0.5.0 package without changing its addon version.
+
 - Add guide-based gear priorities for all nine classes and 27 talent trees, checked October 20, 2026.
 - Highlight estimated bag upgrades with a pulsing gold border.
 - Highlight Need for estimated loot upgrades or Greed for known non-upgrades and class-irrelevant items.

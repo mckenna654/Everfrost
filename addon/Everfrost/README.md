@@ -13,6 +13,8 @@ The folder, TOC, frame and saved-variable identifiers now use Everfrost. Because
 
 ## Using the panel
 
+Click the guide title or down arrow to choose Automatic, Leveling, or one of your class’s three specializations. The menu shows the automatically detected tree, marks your saved selection, and explains that Leveling leaves gear unscored. Close it with Escape, the close button, or an outside click. Changes during combat apply when combat ends.
+
 The header shows your spec, class, level and detection status. Read icons left to right, continuing on the next row. Hover an icon for its spell tooltip and the condition for using it. Hover the header for general rotation notes. Drag the header to move the panel.
 
 Click **SINGLE / AOE** to change encounter mode. Healing specs have a **HEAL / DAMAGE** switch, defaulting to healing. Feral has a **CAT / BEAR** switch; before Cat Form is learned it defaults to Bear, or caster spells before either form is learned. It does not automatically follow your current shapeshift form.
@@ -38,6 +40,7 @@ This is a conditional priority reference, not a live next-cast queue. The list c
 | `/everfrost heal` / `/everfrost damage` | Healing-spec view |
 | `/everfrost cat` / `/everfrost bear` | Feral view |
 | `/everfrost ranged` / `/everfrost melee` | Survival view (melee requires level 30 and Strider Kick) |
+| `/everfrost spec leveling` / `/everfrost spec 0` | General leveling guide |
 | `/everfrost spec auto` / `/everfrost spec 1` / `2` / `3` | Automatic or manual spec |
 | `/everfrost lock` / `/everfrost unlock` | Lock or unlock dragging |
 | `/everfrost scale 1.2` | Scale between 0.6 and 2 |

@@ -101,11 +101,15 @@ print('Learned-only scan, future/off-spec/passive/secret exclusion, rank selecti
 frames={}; currentLevel=5; currentClass='PALADIN'
 local methods={}
 function methods:SetScript(e,cb) self.scripts[e]=cb end
+function methods:GetScript(e) return self.scripts[e] end
+function methods:GetFrameLevel() return 1 end
+function methods:SetScale(v) self.scale=v end
+function methods:GetScale() return self.scale or 1 end
 function methods:RegisterEvent(e) self.events[e]=true end
 function methods:Show() self.shown=true end
-function methods:Hide() self.shown=false end
+function methods:Hide() if self.shown~=false then self.shown=false; if self.scripts.OnHide then self.scripts.OnHide(self) end end end
 function methods:IsShown() return self.shown~=false end
-function methods:SetShown(v) self.shown=v end
+function methods:SetShown(v) if v then self:Show() else self:Hide() end end
 function methods:SetText(v) self.text=v end
 function methods:SetWidth(v) self.width=v end
 function methods:SetHeight(v) self.height=v end
@@ -113,7 +117,7 @@ function methods:SetSize(w,h) self.width=w; self.height=h end
 function methods:GetPoint() return 'CENTER',UIParent,'CENTER',100,40 end
 function methods:SetCooldownFromDurationObject(v) assert(v==duration); self.duration=v end
 function methods:Clear() self.duration=nil end
-local function object() return setmetatable({scripts={},events={}},{__index=function(t,k) return methods[k] or function() end end}) end
+local function object() return setmetatable({scripts={},events={}},{__index=function(t,k) if k=="value" then return nil end; return methods[k] or function() end end}) end
 function methods:CreateFontString() return object() end
 function methods:CreateTexture() return object() end
 function CreateFrame(kind,name,parent,template) local f=object(); frames[#frames+1]=f; if name then _G[name]=f end; return f end
@@ -138,6 +142,22 @@ assert(EverfrostDB.scale==1.2 and EverfrostDB.x==100)
 assert(visibleSpells()==1 and f.width==310)
 assert(lastGearContext[1]=='PALADIN' and lastGearContext[2]==3)
 local cmd=SlashCmdList.EVERFROST
+assert(#f.guideMenu.rows==5 and not f.guideMenu:IsShown())
+f.guide.scripts.OnClick(); assert(f.guideMenu:IsShown() and f.guideCatcher:IsShown())
+assert(f.guideMenu.rows[1].check:IsShown() and f.guideMenu.rows[1].detail.text=='Detected: Retribution')
+f.guideMenu.rows[2].scripts.OnClick()
+assert(EverfrostDB.spec==0 and f.title.text=='Leveling  PALADIN' and lastGearContext[2]==0)
+assert(not f.guideMenu:IsShown() and not f.guideCatcher:IsShown())
+f.guide.scripts.OnClick(); assert(f.guideMenu.rows[2].check:IsShown())
+f.guideMenu.rows[3].scripts.OnClick(); assert(EverfrostDB.spec==1 and f.title.text=='Holy  PALADIN')
+f.guide.scripts.OnClick(); f.guideCatcher.scripts.OnClick(); assert(not f.guideMenu:IsShown())
+cmd('spec auto'); assert(EverfrostDB.spec==nil and f.title.text=='Retribution  PALADIN')
+combat=true; f.guide.scripts.OnClick(); f.guideMenu.rows[4].scripts.OnClick()
+assert(EverfrostDB.spec==2 and f.title.text=='Retribution  PALADIN' and f.meta.text:find('PENDING'))
+combat=false; fire('PLAYER_REGEN_ENABLED'); assert(f.title.text=='Protection  PALADIN' and lastGearContext[2]==2)
+cmd('spec leveling'); fire('PLAYER_ENTERING_WORLD')
+assert(f.title.text=='Leveling  PALADIN' and EverfrostDB.spec==0)
+cmd('spec auto')
 cmd('gear off'); assert(EverfrostDB.gear==false and gearScheduled)
 cmd('gear on'); assert(EverfrostDB.gear==true)
 cmd('gear')
@@ -155,6 +175,8 @@ fire('PLAYER_LEVEL_UP',30); assert(visibleSpells()>0); fire('PLAYER_LEVEL_UP',31
 for class in pairs(NS.profiles) do
  currentClass=class; currentLevel=10; EverfrostDB={}; fire('PLAYER_LOGIN')
  assert(EverfrostFrame.title.text:find(class))
+ assert(#EverfrostFrame.guideMenu.rows==5)
+ for index=1,3 do assert(EverfrostFrame.guideMenu.rows[index+2].label.text==NS.trees[class][index]) end
 end
 currentClass='DRUID'; currentLevel=10; GetTalentTabInfo=function(i) return 'Tree',nil,({0,1,0})[i] end
 book={{spellID=5487,name='Bear Form'},{spellID=6807,name='Maul'}}

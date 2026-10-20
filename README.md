@@ -55,7 +55,7 @@ On standard dungeon or raid group-loot windows, the same border highlights **Nee
 
 Stat orders were checked against all 27 Icy Veins Forever guides on **October 20, 2026**. Numeric scores are Everfrost's transparent estimates, not Icy Veins simulation weights or guaranteed best-in-slot results. Weapon speed, procs, set bonuses, on-use effects, sockets, enchants, professions and hit caps can change the real result. A one-hand item replacing a two-hand setup needs a complete loadout comparison and remains unscored. See [gear scoring and all 27 priorities](docs/GEAR.md) for the formula and limits.
 
-Metadata refreshes outside combat; changes and new loot during combat wait until combat ends. The feature supports the standard bag and group-loot frames, including modern combined bags and classic bags where those hooks exist. Custom inventory/loot replacements are not integrated. No selected tree, a hybrid/unspent tree, or levels outside 1–30 remain unscored; select a tree with `/everfrost spec 1`, `2`, or `3` when needed. Gear follows the selected spec; a healer's DAMAGE view keeps the healer gear profile. Survival's RANGED view uses ranged stat priorities.
+Metadata refreshes outside combat; changes and new loot during combat wait until combat ends. The feature supports the standard bag and group-loot frames, including modern combined bags and classic bags where those hooks exist. Custom inventory/loot replacements are not integrated. No selected tree, a hybrid/unspent tree, or levels outside 1–30 remain unscored; click the guide title to select a specialization, or use `/everfrost spec 1`, `2`, or `3` when needed. Gear follows the selected spec; a healer's DAMAGE view keeps the healer gear profile. Survival's RANGED view uses ranged stat priorities.
 
 Use `/everfrost gear` to print your current stat order, `/everfrost gear off` to disable highlights, and `/everfrost gear on` to enable them again. `/everfrost refresh` requests a new comparison outside combat. Hiding the rotation panel leaves gear hints enabled unless you switch them off separately.
 
@@ -74,6 +74,8 @@ Use the release asset for installation. GitHub's automatically generated source 
 Earlier iterations were named **ForeverRetHelper** and **ForeverGuide**. Remove those old addon folders before enabling Everfrost to avoid duplicate panels. The current addon uses `Everfrost`, `EverfrostDB`, and `/everfrost`; settings from the previous identities are not migrated. `/fguide` and `/frh` remain command aliases.
 
 ## Using the panel
+
+Click the guide title (or its small down arrow) to open **Choose a guide**. Select **Automatic**, **Leveling**, or one of your class’s three specializations. Automatic shows the detected tree; Leveling is the general class guide and leaves gear unscored. The selected row is marked with a check, and your choice is saved per character. Click outside the menu, its close button, or press Escape to dismiss it. Changes during combat show **PENDING** and apply after combat ends.
 
 The header displays your specialization, class, level, and detection status. Hover an ability to see its spell tooltip and usage guidance. Hover the header for general profile notes. Drag the header to move the panel, or lock it with `/everfrost lock`.
 
@@ -118,6 +120,7 @@ Several specializations share early-level priorities until their distinct abilit
 | `/everfrost heal` / `/everfrost damage` | Set the healing-specialization view |
 | `/everfrost cat` / `/everfrost bear` | Set the Feral view |
 | `/everfrost ranged` / `/everfrost melee` | Set the Survival view, subject to melee requirements |
+| `/everfrost spec leveling` / `/everfrost spec 0` | Select the general leveling guide |
 | `/everfrost spec auto` | Restore automatic talent-tree detection |
 | `/everfrost spec 1`, `2`, or `3` | Select a talent tree manually |
 | `/everfrost lock` / `/everfrost unlock` | Lock or unlock panel dragging |
@@ -147,7 +150,7 @@ npm ci
 npm test
 ```
 
-The harness parses all six Lua files as Lua 5.1 using `luaparse`, then executes regression checks with `fengari`. Coverage includes class/spec profiles, selected level boundaries, learned-rank filtering, talent API variants, combat deferral, role and encounter controls, Survival's level-30 transition, all 27 gear profiles, item eligibility, paired slots, async item data, and loot-roll highlights.
+The harness parses all six Lua files as Lua 5.1 using `luaparse`, then executes regression checks with `fengari`. Coverage includes class/spec profiles, selected level boundaries, learned-rank filtering, talent API variants, combat deferral, role and encounter controls, Survival's level-30 transition, guide-menu selection and combat deferral, all 27 gear profiles, item eligibility, paired slots, async item data, and loot-roll highlights.
 
 These tests simulate client APIs. A passing result does not prove compatibility with the Forever client, correct visual layout, or real secret-value handling.
 
