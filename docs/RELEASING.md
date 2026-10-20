@@ -31,8 +31,11 @@ repository, screenshots, release notes, or logs.
 7. Confirm the resulting file targets WoW Forever 1.60.1 (interface 16001),
    not Retail or Classic. Do not assume the packager infers this correctly.
 
-Normal branch commits must not create CurseForge files. Do not move existing
-release tags to trigger packaging. The existing manually uploaded 0.4.0 ZIP is
+Normal branch commits must not create CurseForge files. For ordinary new
+releases, do not move existing release tags to trigger packaging. When the user
+explicitly requests a same-version replacement, refresh the existing release
+asset and its source tag together, check the old tag ID with force-with-lease,
+and verify the newly generated CurseForge file. The existing manually uploaded 0.4.0 ZIP is
 unchanged. Native CurseForge packaging does not run `npm test`; tests must be
 run before releasing.
 
@@ -59,3 +62,10 @@ Gear.lua and GearUI.lua, against release commit 875a5f5 (allowing newline
 normalization). Initial status: Processing. GitHub latest release, project
 description, README heading and the public CurseForge name/description now
 include gear upgrades and Need/Greed hints.
+
+User-requested same-version guide-selector refresh: kept 0.5.0, refreshed the
+existing GitHub release (ID 417916471) and v0.5.0 source tag to commit ec01835.
+CurseForge generated file #9262809 for Forever 1.60.1. Downloaded and checked
+all 13 files against the source, including the new title-button menu. Initial
+status: Processing. The previous approved 0.5.0 file remains available while
+the replacement is reviewed.
