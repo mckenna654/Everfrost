@@ -45,6 +45,10 @@ function G.Tooltip(tooltip,result)
  local label=result.kind=="need" and "Upgrade / Need" or result.kind=="greed" and "Greed" or "Not scored"
  tooltip:AddLine("Everfrost: "..label,1,0.82,0.22)
  tooltip:AddLine(result.reason,0.85,0.9,1,true)
+ if result.combined then
+  tooltip:AddLine("Pair with: "..result.companionName,1,0.82,0.22,true)
+  tooltip:AddLine("Combined pair compared with your equipped two-hander; equip both items.",0.85,0.9,1,true)
+ end
  if result.delta then tooltip:AddLine(string.format("Estimated score: %.1f vs %.1f (%+.1f)",result.score,result.previous,result.delta),0.85,0.9,1,true) end
  local c=G.context
  local p=c and NS.GearProfile(c.class,c.spec,c.role)

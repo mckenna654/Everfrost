@@ -1,5 +1,5 @@
 local _, NS = ...
-local G = {items={}, bags={}, equipment={}, rolls={}, pending=true, enabled=true}
+local G = {items={}, bags={}, carried={}, equipment={}, rolls={}, pending=true, enabled=true}
 NS.Gear = G
 local function public(v, kind) return NS.Public(v) and type(v)==kind end
 local function itemAPI(name) return C_Item and C_Item[name] or _G[name] end
@@ -162,7 +162,77 @@ function G.Score(item, context, p)
  end
  return score,relevant>0
 end
-function G.Compare(item, equipped, context)
+local function fitsHand(item, hand, context, p)
+ if not item or not G.Eligible(item,context,p) then return false end
+ if hand==16 then return item.loc=="INVTYPE_WEAPON" or item.loc=="INVTYPE_WEAPONMAINHAND" end
+ if p.shield then return item.loc=="INVTYPE_SHIELD" end
+ return item.loc=="INVTYPE_SHIELD" or item.loc=="INVTYPE_HOLDABLE" or
+  (context.dual and (item.loc=="INVTYPE_WEAPON" or item.loc=="INVTYPE_WEAPONOFFHAND"))
+end
+local function validPair(main, off, equipped)
+ -- Test each exposed limit against the final loadout, including both new items.
+ for _,item in ipairs({main,off}) do
+  if item.unique and item.unique>0 and item.limit and item.limit>0 then
+   local count=0
+   for _,other in ipairs({main,off}) do if other.unique==item.unique then count=count+1 end end
+   for slot=1,19 do
+    local worn=equipped[slot]
+    if slot~=16 and slot~=17 and worn and worn.unique==item.unique then count=count+1 end
+   end
+   if count>item.limit then return false end
+  end
+ end
+ return true
+end
+local function comparePair(item, equipped, context, p, carried, candidate)
+ local previous=G.Score(equipped[16],context,p)
+ if previous==nil or equipped[17]==nil then return unknown("Waiting for equipped weapon data") end
+ if equipped[17] then
+  local score=G.Score(equipped[17],context,p)
+  if score==nil then return unknown("Waiting for equipped off-hand data") end
+  previous=previous+score
+ end
+ local best,waiting
+ for _,hand in ipairs({16,17}) do
+  if fitsHand(item,hand,context,p) then
+   local otherHand=hand==16 and 17 or 16
+   for _,entry in ipairs(carried or {}) do
+    -- Entries identify physical bag slots: one item cannot occupy both hands.
+    -- A loot candidate is a separate copy and has no carried entry to exclude.
+    if entry~=candidate then
+     local partner=entry.item
+     if not partner then waiting=true
+     elseif fitsHand(partner,otherHand,context,p) then
+      local main=hand==16 and item or partner
+      local off=hand==17 and item or partner
+      if validPair(main,off,equipped) then
+       local score,relevant=G.Score(item,context,p)
+       local partnerScore,partnerRelevant=G.Score(partner,context,p)
+       if score==nil or partnerScore==nil then waiting=true
+       elseif relevant or partnerRelevant then
+        local delta=score+partnerScore-previous
+        if not best or delta>best.delta then
+         best={score=score+partnerScore,previous=previous,delta=delta,slot=hand,
+          companion=partner.link,companionName=partner.name or partner.link,companionSlot=otherHand,
+          combined=true,source=p.source}
+        end
+       end
+      end
+     end
+    end
+   end
+  end
+ end
+ if best and best.delta>0.01 then
+  best.kind="need"; best.reason="Estimated upgrade only when equipped together"; return best
+ end
+ if waiting then return unknown("Waiting for carried weapon/off-hand data") end
+ if best then
+  best.kind="greed"; best.reason="No estimated upgrade from the available weapon/off-hand pairs"; return best
+ end
+ return unknown("Carry a usable one-hand weapon and off-hand to compare with your two-hander")
+end
+function G.Compare(item, equipped, context, carried, candidate)
  if not context or context.level<1 or context.level>NS.maxLevel then return unknown("Gear guide supports levels 1-30") end
  local p=NS.GearProfile(context.class,context.spec,context.role)
  if not p then return unknown("Select a talent tree to compare gear") end
@@ -171,6 +241,13 @@ function G.Compare(item, equipped, context)
  if not eligible then return greed(reason) end
  local score,relevant=G.Score(item,context,p)
  if not score then return unknown("Weapon or item stats are unavailable") end
+ if (slots[item.loc][1]==16 or slots[item.loc][1]==17) and equipped[16]==nil then
+  return unknown("Waiting for equipped main-hand data")
+ end
+ if equipped[16] and equipped[16].loc=="INVTYPE_2HWEAPON" and
+  (fitsHand(item,16,context,p) or fitsHand(item,17,context,p)) then
+  return comparePair(item,equipped,context,p,carried,candidate)
+ end
  if not relevant then return greed("No useful stats for your current specialization") end
  local choices=slots[item.loc]
  if item.loc=="INVTYPE_WEAPON" and context.dual then choices={16,17} end
@@ -230,7 +307,7 @@ end
 function G.Refresh()
  if InCombatLockdown() then G.pending=true; return false end
  G.enabled=not EverfrostDB or EverfrostDB.gear~=false
- G.items={}; G.bags={}; G.equipment={}
+ G.items={}; G.bags={}; G.carried={}; G.equipment={}
  for slot=1,19 do
   local result=NS.Call(GetInventoryItemLink,"player",slot)
   if result and NS.Public(result[1]) then
@@ -247,15 +324,20 @@ function G.Refresh()
   if public(n,"number") then
    for slot=1,n do
     local link=first(getLink,bag,slot)
-    if public(link,"string") then G.bags[bag][slot]={link=link,result=G.Compare(G.ReadItem(link),G.equipment,G.context)} end
+    if public(link,"string") then
+     local entry={link=link,item=G.ReadItem(link)}
+     G.bags[bag][slot]=entry; G.carried[#G.carried+1]=entry
+    end
    end
   end
  end
+ -- Read every carried item before comparing, so partners in later slots/bags count.
+ for _,entry in ipairs(G.carried) do entry.result=G.Compare(entry.item,G.equipment,G.context,G.carried,entry) end
  G.pending=false
  if G.Paint then G.Paint() end
  return true
 end
 function G.Evaluate(link)
  if G.pending or not G.enabled then return unknown(G.enabled and "Updates after combat or item data refresh" or "Gear highlights are disabled") end
- return G.Compare(G.ReadItem(link),G.equipment,G.context)
+ return G.Compare(G.ReadItem(link),G.equipment,G.context,G.carried)
 end

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.2
+
+- Compare carried one-hand/off-hand pairs with an equipped two-hander using combined estimated stat scores.
+- Highlight estimated pair upgrades and identify the required companion in bag and loot-roll tooltips.
+- Enforce usable hand combinations, learned Dual Wield, tank shields, physical-copy identity and exposed unique-equipped limits.
+- Refresh pair hints after partner loading/removal and defer comparisons during combat.
+
+Pair scoring does not simulate weapon speed, dual-wield penalties or special effects. Actual Forever client validation remains outstanding.
+
 ## 0.5.1
 
 - Release the guide selector with a distinct version so addon managers can identify the update.

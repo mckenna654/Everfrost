@@ -12,7 +12,7 @@ Everfrost is a lightweight, standalone Lua addon for **WoW Forever**. It display
 
 **Written with OpenAI Codex.** The project uses Codex for AI-assisted development, review, and documentation. Automated validation uses a simulated client; actual Forever client testing is still outstanding.
 
-[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.5.1](https://github.com/mckenna654/Everfrost/releases/tag/v0.5.1) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
+[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.5.2](https://github.com/mckenna654/Everfrost/releases/tag/v0.5.2) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
 
 CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distribution is enabled. New version tags trigger automatic packaging; file processing and moderation can delay availability.
 
@@ -20,7 +20,7 @@ CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distributio
 
 | Item | Current status |
 | --- | --- |
-| Addon version | **0.5.1** |
+| Addon version | **0.5.2** |
 | Supported levels | **1–30** |
 | Class coverage | Nine classes, 27 talent trees, and nine general leveling profiles |
 | Target interface | `16001` — compatibility with the actual Forever client remains unverified |
@@ -53,9 +53,11 @@ Everfrost does not evaluate combat resources, proc buffs, target health, enemy c
 
 Gear hints are enabled by default. Open the standard bags: a pulsing gold border marks equipment with a higher estimated stat score than its equipped replacement. Hover the item to see the score change and the detected specialization's priorities. Rings and trinkets compare against both equipped slots; two-handed weapons include the displaced off-hand in their comparison.
 
+**New in 0.5.2:** when replacing an equipped two-hander, Everfrost searches your carried bags for a usable one-hand/off-hand pair. Each candidate is compared together with its best valid partner; an estimated pair upgrade can highlight both bag items. The tooltip names the partner and makes clear that you must equip both. Loot candidates use partners you already carry. Shields, held off-hands and learned Dual Wield are supported; an incomplete or unresolved pair stays unscored.
+
 On standard dungeon or raid group-loot windows, the same border highlights **Need** for an estimated upgrade or **Greed** for a known non-upgrade, unusable item, or item irrelevant to the selected class/spec. Disabled roll options are respected. You still choose and click the roll, following your group's loot rules. Missing or restricted data produces no highlight.
 
-Stat orders were checked against all 27 Icy Veins Forever guides on **October 20, 2026**. Numeric scores are Everfrost's transparent estimates, not Icy Veins simulation weights or guaranteed best-in-slot results. Weapon speed, procs, set bonuses, on-use effects, sockets, enchants, professions and hit caps can change the real result. A one-hand item replacing a two-hand setup needs a complete loadout comparison and remains unscored. See [gear scoring and all 27 priorities](docs/GEAR.md) for the formula and limits.
+Stat orders were checked against all 27 Icy Veins Forever guides on **October 20, 2026**. Numeric scores are Everfrost's transparent estimates, not Icy Veins simulation weights or guaranteed best-in-slot results. Weapon speed, dual-wield damage penalties, procs, set bonuses, on-use effects, sockets, enchants, professions and hit caps can change the real result. See [gear scoring and all 27 priorities](docs/GEAR.md) for the formula and limits.
 
 Metadata refreshes outside combat; changes and new loot during combat wait until combat ends. The feature supports the standard bag and group-loot frames, including modern combined bags and classic bags where those hooks exist. Custom inventory/loot replacements are not integrated. No selected tree, a hybrid/unspent tree, or levels outside 1–30 remain unscored; click the guide title to select a specialization, or use `/everfrost spec 1`, `2`, or `3` when needed. Gear follows the selected spec; a healer's DAMAGE view keeps the healer gear profile. Survival's RANGED view uses ranged stat priorities.
 
@@ -63,7 +65,7 @@ Use `/everfrost gear` to print your current stat order, `/everfrost gear off` to
 
 ## Installation
 
-1. Download **`Everfrost-0.5.1.zip`** from the [v0.5.1 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.5.1).
+1. Download **`Everfrost-0.5.2.zip`** from the [v0.5.2 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.5.2).
 2. Exit WoW Forever.
 3. Extract the archive's `Everfrost` folder into your Forever client's `Interface/AddOns` directory.
 4. Confirm the resulting path is `Interface/AddOns/Everfrost/Everfrost.toc`.
@@ -164,7 +166,7 @@ The packaging command uses Node.js and works on Windows, macOS and Linux:
 npm run build
 ```
 
-It creates `dist/Everfrost-0.5.1.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
+It creates `dist/Everfrost-0.5.2.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
 
 When releasing a new version, update `addon/Everfrost/Everfrost.toc` and `package.json` together, keep lockfile metadata synchronized, run the tests, and verify the archive contents before uploading.
 

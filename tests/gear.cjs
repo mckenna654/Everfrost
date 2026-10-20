@@ -83,6 +83,69 @@ two.stats.dps=20; assert(G.Compare(two,equipment,c).kind=='need')
 assert(G.Compare(two,equipment,ctx('WARRIOR',3)).kind=='greed')
 equipment[16]=two; equipment[17]=false
 assert(G.Compare(item(33,'INVTYPE_WEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=100},2,7),equipment,c).kind=='unknown')
+-- A carried complete pair is scored together, in either candidate direction.
+local caster=ctx('MAGE',2)
+local staff=item(50,'INVTYPE_2HWEAPON',{ITEM_MOD_SPELL_POWER_SHORT=20},2,10)
+local sword=item(51,'INVTYPE_WEAPONMAINHAND',{ITEM_MOD_SPELL_POWER_SHORT=12},2,7)
+local orb=item(52,'INVTYPE_HOLDABLE',{ITEM_MOD_SPELL_POWER_SHORT=10},4,0)
+equipment=empty(); equipment[16]=staff
+local mainEntry={item=sword}; local offEntry={item=orb}; local carried={mainEntry,offEntry}
+local pair=G.Compare(sword,equipment,caster,carried,mainEntry)
+assert(pair.kind=='need' and pair.combined and pair.companion==orb.link and pair.slot==16)
+assert(pair.score==22*NS.gearProfiles.MAGE[2].weights.spell and pair.previous==20*NS.gearProfiles.MAGE[2].weights.spell)
+local reverse=G.Compare(orb,equipment,caster,carried,offEntry)
+assert(reverse.kind=='need' and reverse.companion==sword.link and reverse.slot==17 and reverse.delta==pair.delta)
+staff.stats.spell=22; assert(G.Compare(sword,equipment,caster,carried,mainEntry).kind=='greed')
+staff.stats.spell=30; assert(G.Compare(orb,equipment,caster,carried,offEntry).kind=='greed')
+staff.stats.spell=20
+assert(G.Compare(sword,equipment,caster,{mainEntry},mainEntry).kind=='unknown')
+assert(G.Compare(orb,equipment,caster,{offEntry},offEntry).kind=='unknown')
+-- Never use an ineligible companion or one that violates the final unique limit.
+orb.level=31; assert(G.Compare(sword,equipment,caster,carried,mainEntry).kind=='unknown'); orb.level=1
+orb.usable=false; assert(G.Compare(sword,equipment,caster,carried,mainEntry).kind=='unknown'); orb.usable=nil
+local badShield={item=item(53,'INVTYPE_SHIELD',{ITEM_MOD_SPELL_POWER_SHORT=100},4,6)}
+assert(G.Compare(sword,equipment,caster,{mainEntry,badShield},mainEntry).kind=='unknown')
+sword.unique=9; sword.limit=1; orb.unique=9; orb.limit=1
+assert(G.Compare(sword,equipment,caster,carried,mainEntry).kind=='unknown')
+orb.unique=nil; equipment[11]=item(54,'INVTYPE_FINGER',{}); equipment[11].unique=9
+assert(G.Compare(sword,equipment,caster,carried,mainEntry).kind=='unknown')
+equipment[11]=false; sword.unique=nil
+-- Prefer the best available partner, but unresolved data must not imply Greed.
+local weak={item=item(55,'INVTYPE_HOLDABLE',{ITEM_MOD_SPELL_POWER_SHORT=1},4,0)}
+assert(G.Compare(sword,equipment,caster,{mainEntry,weak,offEntry},mainEntry).companion==orb.link)
+assert(G.Compare(sword,equipment,caster,{mainEntry,weak,{}},mainEntry).kind=='unknown')
+assert(G.Compare(sword,equipment,caster,{mainEntry,offEntry,{}},mainEntry).kind=='need')
+equipment[16]=nil; assert(G.Compare(orb,equipment,caster,carried,offEntry).kind=='unknown'); equipment[16]=staff
+equipment[17]=nil; assert(G.Compare(sword,equipment,caster,carried,mainEntry).kind=='unknown'); equipment[17]=false
+-- Even a companion with no weighted stats completes a legal usable setup.
+local plain={item=item(56,'INVTYPE_HOLDABLE',{},4,0)}
+sword.stats.spell=25
+assert(G.Compare(sword,equipment,caster,{mainEntry,plain},mainEntry).kind=='need')
+sword.stats.spell=12
+-- Dual wield needs the learned skill and two physical copies, not one cached item twice.
+local warrior=ctx('WARRIOR',1)
+local weapon=item(57,'INVTYPE_WEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=12},2,7)
+local a={item=weapon}; local b={item=weapon}
+equipment[16]=item(58,'INVTYPE_2HWEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=20},2,8)
+assert(G.Compare(weapon,equipment,warrior,{a,b},a).kind=='unknown')
+warrior.dual=true
+assert(G.Compare(weapon,equipment,warrior,{a},a).kind=='unknown')
+assert(G.Compare(weapon,equipment,warrior,{a,b},a).kind=='need')
+-- Loot is a separate copy, so it can pair with an identical carried weapon.
+assert(G.Compare(weapon,equipment,warrior,{a}).kind=='need')
+weapon.unique=10; weapon.limit=1
+assert(G.Compare(weapon,equipment,warrior,{a}).kind=='unknown'); weapon.unique=nil
+local tank=ctx('WARRIOR',3); tank.dual=true
+assert(G.Compare(weapon,equipment,tank,{a,b},a).kind=='unknown')
+local shield={item=item(59,'INVTYPE_SHIELD',{ITEM_MOD_STRENGTH_SHORT=10},4,6)}
+weapon.stats.dps=21
+assert(G.Compare(weapon,equipment,tank,{a,shield},a).kind=='need')
+-- The screenshot's mace/orb pair is a known non-upgrade under Enhancement scoring.
+equipment[16]=item(60,'INVTYPE_2HWEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=15.2,ITEM_MOD_SPIRIT_SHORT=10,ITEM_MOD_SPELL_POWER_SHORT=26},2,10)
+local mace={item=item(61,'INVTYPE_WEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=5.7,ITEM_MOD_INTELLECT_SHORT=2,ITEM_MOD_SPELL_POWER_SHORT=10},2,4)}
+local spiritOrb={item=item(62,'INVTYPE_HOLDABLE',{ITEM_MOD_INTELLECT_SHORT=3},4,0)}
+local pictured=G.Compare(mace.item,equipment,ctx('SHAMAN',2),{mace,spiritOrb},mace)
+assert(pictured.kind=='greed' and pictured.companion==spiritOrb.item.link)
 equipment=empty(); equipment[16]=item(34,'INVTYPE_WEAPON',{},2,7)
 assert(G.Compare(two,equipment,c).kind=='unknown')
 -- A stat stick cannot get weapon-DPS credit for Hunter; gear can still supply Agility.
@@ -131,8 +194,8 @@ function getInfo(link)
 end
 function getStats(link) assert(not combat); metadataCalls=metadataCalls+1; return rawStats[link] end
 C_Item={GetItemInfo=getInfo,GetItemStats=getStats,IsUsableItem=function() assert(not combat); return true end,GetItemUniqueness=function() return 0,0 end}
-C_Container={GetContainerNumSlots=function(bag) assert(not combat); return bag==0 and 2 or 0 end,
- GetContainerItemLink=function(bag,slot) assert(not combat); return bagLinks[slot] end}
+C_Container={GetContainerNumSlots=function(bag) assert(not combat); return bag==0 and 2 or bag==1 and extraBagLink and 1 or 0 end,
+ GetContainerItemLink=function(bag,slot) assert(not combat); if bag==0 then return bagLinks[slot] else return extraBagLink end end}
 function GetLootRollItemLink(id) assert(not combat); return rollLinks[id] end
 function GetLootRollItemInfo(id) assert(not combat); local eligible=rollEligibility[id] or {true,true}; return 1,'Item',1,2,false,eligible[1],eligible[2] end
 function fixture(link,stat)
@@ -188,6 +251,30 @@ fixture('item:100',{ITEM_MOD_STRENGTH_SHORT=3})
 GetItemInfo=C_Item.GetItemInfo; GetItemStats=C_Item.GetItemStats; C_Item=nil
 GetContainerNumSlots=C_Container.GetContainerNumSlots; GetContainerItemLink=C_Container.GetContainerItemLink; C_Container=nil
 G.Refresh(); assert(G.bags[0][1].result.kind=='need')
+-- Scan the whole inventory before painting: a partner in a later bag counts.
+inventory[5]=nil; inventory[16]='item:200'; bagLinks[1]='item:201'; bagLinks[2]=nil; extraBagLink='item:202'
+fixture('item:200',{ITEM_MOD_SPELL_POWER_SHORT=20}); itemInfo['item:200'][9]='INVTYPE_2HWEAPON'; itemInfo['item:200'][12]=2; itemInfo['item:200'][13]=10
+fixture('item:201',{ITEM_MOD_SPELL_POWER_SHORT=12}); itemInfo['item:201'][9]='INVTYPE_WEAPONMAINHAND'; itemInfo['item:201'][12]=2; itemInfo['item:201'][13]=7
+fixture('item:202',{ITEM_MOD_SPELL_POWER_SHORT=10}); itemInfo['item:202'][9]='INVTYPE_HOLDABLE'; itemInfo['item:202'][13]=0
+G.SetContext('MAGE',2,30,'damage',{}); tick()
+local offBag=widget(); G.TrackBag(offBag,1,1)
+assert(bag.EverfrostGearGlow:IsShown() and offBag.EverfrostGearGlow:IsShown())
+assert(G.bags[0][1].result.companion=='item:202' and G.bags[1][1].result.companion=='item:201')
+GameTooltip.lines={}; bag.hooks.OnEnter(bag)
+assert(table.concat(GameTooltip.lines,'|'):find('Pair with: Item',1,true))
+-- Loot hints use the same carried partners and react to partner removal/loading.
+frame.rollID=2; rollLinks[2]='item:201'; fire('START_LOOT_ROLL',2); tick()
+assert(frame.NeedButton.EverfrostGearGlow:IsShown() and G.rolls[2].result.companion=='item:202')
+extraBagLink=nil; fire('BAG_UPDATE',1); tick()
+assert(G.bags[0][1].result.kind=='unknown' and not bag.EverfrostGearGlow:IsShown())
+assert(not offBag.EverfrostGearGlow:IsShown() and not frame.NeedButton.EverfrostGearGlow:IsShown())
+extraBagLink='item:202'; rawStats['item:202']=nil; fire('BAG_UPDATE',1); tick()
+assert(G.bags[0][1].result.kind=='unknown')
+rawStats['item:202']={ITEM_MOD_SPELL_POWER_SHORT=10}; fire('ITEM_DATA_LOAD_RESULT',202); tick()
+assert(bag.EverfrostGearGlow:IsShown() and offBag.EverfrostGearGlow:IsShown() and frame.NeedButton.EverfrostGearGlow:IsShown())
+local pairCalls=metadataCalls; combat=true; fire('PLAYER_REGEN_DISABLED'); tick()
+assert(metadataCalls==pairCalls and not bag.EverfrostGearGlow:IsShown() and not offBag.EverfrostGearGlow:IsShown())
+combat=false; fire('PLAYER_REGEN_ENABLED'); tick(); assert(bag.EverfrostGearGlow:IsShown())
 EverfrostDB.gear=false; G.Refresh(); assert(not bag.EverfrostGearGlow:IsShown())
 print('Gear UI: bag reuse, loot eligibility, async item data, secret rejection, combat deferral, cancellation and legacy APIs passed')
 `);

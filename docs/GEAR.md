@@ -58,7 +58,10 @@ Weapon guides also value damage per hit and often slower weapons. This first gea
 
 - Single-slot equipment compares with the equipped item in that slot. Rings/trinkets compare with both slots and use the best valid replacement.
 - An empty slot must be confirmed by the inventory API. Unavailable metadata for an occupied slot remains unknown and never becomes a free upgrade.
-- Two-handed weapons include both displaced main-hand and off-hand scores. A one-hand item replacing an equipped two-hander remains unknown: it needs a complete companion setup. Tank shield profiles reject two-handers and protect the shield slot.
+- Two-handed weapons include both displaced main-hand and off-hand scores. Tank shield profiles reject two-handers and protect the shield slot.
+- **New in 0.5.2:** against an equipped two-hander, one-hand/off-hand candidates search all carried bag slots for a legal partner. The two item scores are added and compared with the displaced setup. The best valid pair for each candidate is used, so both items in an estimated upgrade can glow. The tooltip identifies the partner and warns that both items must be equipped. A loot candidate can pair with an item already carried, but never with another unowned loot candidate.
+- Pair checks enforce level/class/usability, hand restrictions, learned Dual Wield, tank shields and exposed unique-equipped limits across the final loadout. A physical bag entry cannot supply both hands; two carried copies may, if eligible and not uniquely restricted. Missing partners remain unknown. Unloaded partner data prevents a non-upgrade verdict while a better pair could be unresolved; a fully known upgrade can still be shown.
+- Pair scores use the existing additive item-stat estimate. Weapon speed, dual-wield damage penalties and hit penalties are not simulated, so an estimated pair upgrade is not a prediction of actual damage.
 - Generic one-hand weapons can compare against both hands only with Dual Wield learned. Mutilate builds require daggers. Armor and weapon type checks use the nine classes' level-1–30 proficiency limits; shields and class relics are checked separately. Runtime item usability checks provide additional requirement filtering where available.
 - Unique-equipped categories and limits are checked when exposed by the item API.
 - Consumables, trade goods, unsupported slots and incompatible equipment receive a non-upgrade/irrelevant result. Missing or secret metadata produces an unknown result.
@@ -68,7 +71,7 @@ Weapon guides also value damage per hit and often slower weapons. This first gea
 - The standard backpack and carried bag slots are scanned; banks and other characters are excluded.
 - Estimated bag upgrades receive a pulsing gold border. Non-upgrades and unknown items have no added border.
 - Standard group-loot frames use the same border on Need for upgrades or Greed for known non-upgrades/irrelevant items. The option must be enabled and available. An unavailable Need option does not turn an upgrade into a Greed recommendation.
-- Tooltips show the estimate, comparison, priority order and a reminder to check effects and group rules.
+- Tooltips show the estimate, comparison, priority order and a reminder to check effects and group rules. Pair comparisons also show the required partner and combined score.
 - The addon never calls a roll or equip action. It decorates existing controls; all choices remain manual.
 - Item data, class/spec context and equipped comparisons refresh outside combat. Combat marks results pending and hides stale suggestions. New loot during combat waits until combat ends. No combat resources or proc values are inspected.
 - Item-data events retry unresolved comparisons. Bag refreshes, equipment changes, talent/spec changes, skill changes and role changes invalidate results.
@@ -80,7 +83,7 @@ Weapon guides also value damage per hit and often slower weapons. This first gea
 
 Proc/on-use effects, set bonuses, enchants, sockets, weapon speed, racial bonuses, caps, profession-specific scaling and unique item interactions are not scored. A stat-only estimate can disagree with the real better item. Respect group loot rules and inspect the item's effects before rolling.
 
-`npm test` covers eligibility, stat priorities changing the same comparison, paired slots, unique limits, complete displaced two-hand setup, missing stats, asynchronous item loading, secret-value rejection, combat deferral, reused bag buttons, canceled rolls and disabled Need options. `npm run build` uses Node's standard library to package only the addon folder; the archive is independently checked against source bytes.
+`npm test` covers eligibility, stat priorities changing the same comparison, paired slots, unique limits, weapon-pair upgrades/non-upgrades/ties, companion selection, physical-copy identity, Dual Wield and shield restrictions, complete displaced two-hand setup, partners in later bags, missing stats, asynchronous partner loading/removal, secret-value rejection, combat deferral, reused bag buttons, canceled rolls and disabled Need options. `npm run build` uses Node's standard library to package only the addon folder; the archive is independently checked against source bytes.
 
 These are simulated tests. Actual Forever item-stat tokens, native frame hooks, pulse rendering and behavior after login/training/reload still need verification in the game client. No game installation is performed by the build or tests.
 
