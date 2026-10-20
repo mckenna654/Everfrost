@@ -68,3 +68,11 @@ invalid command/saved data, live alpha, persistence after login/redraw/reset,
 combat changes and opacity isolation; existing rotation/gear tests pass.
 Still local 0.6.0 metadata: no release, upload or game installation requested.
 Actual new panel appearance/opacity behavior needs client verification.
+
+User requested publication of the panel opacity/native styling follow-up.
+Released as 0.6.1 at 65b955a so addon managers can discover it; synchronized
+both TOCs, package.json and lockfile. GitHub latest includes the verified
+installable ZIP. Automatic CurseForge package #9264703 targets Forever
+1.60.1; all 14 downloaded files match source after newline normalization.
+Initial status Under Review. Public description now includes the 10–100%
+opacity setting and native panel appearance. No game-folder install.

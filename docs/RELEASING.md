@@ -106,3 +106,15 @@ CurseForge files #9262809 (second 0.5.0), #9262832 (original 0.5.1) and
 removed after consolidation; git commit history remains intact. GitHub
 latest is 0.6.0, both project descriptions are updated, and tag-only
 automatic packaging is enabled. No game-folder installation performed.
+
+## 0.6.1 — October 20, 2026
+
+Published 65b955a as GitHub latest v0.6.1 with panel opacity and native WoW
+panel styling. Native CurseForge packaging generated Release file #9264703
+(Everfrost-Source-v0.6.1.zip) for Forever 1.60.1. Downloaded package version
+and all 14 addon files match the release source, allowing newline
+normalization. GitHub asset SHA-256 matches the locally verified ZIP:
+7aa62b6781e223b761067ad4d94c8e7d74b90dec44d866b123f05917fecdce13.
+Initial CurseForge status: Under Review. Updated the project description
+from docs/CURSEFORGE.md. Lua 5.1 syntax and simulated-client checks pass;
+actual rendering of the new panel/opacity still needs client verification.
