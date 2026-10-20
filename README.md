@@ -1,4 +1,4 @@
-# Everfrost — Rotation Guides & Gear Upgrades
+# Everfrost — Spell Rotation & Gear Upgrade Guidance
 
 <p align="center">
   <img src="docs/assets/everfrost-logo.png" alt="Everfrost logo: an icy E emblem above the Everfrost wordmark" width="640">
