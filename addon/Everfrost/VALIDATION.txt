@@ -50,3 +50,8 @@ selection pass simulated checks. In-game rendering remains unverified.
 
 0.5.1: Version metadata synchronized; selector and gear regression suites
 rerun before packaging. Runtime behavior matches the refreshed 0.5.0 build.
+
+Consolidated 0.5.1: includes the guide selector and complete weapon-pair
+comparisons previously released as the second 0.5.0, 0.5.1 and 0.5.2.
+Version metadata and combined changelog updated together. Simulated tests
+and addon-only package verification pass; full client testing is outstanding.

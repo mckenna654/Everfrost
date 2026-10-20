@@ -1,32 +1,19 @@
 # Changelog
 
-## 0.5.2
+## 0.5.1 — Guide selection and complete weapon comparisons
 
-- Compare carried one-hand/off-hand pairs with an equipped two-hander using combined estimated stat scores.
-- Highlight estimated pair upgrades and identify the required companion in bag and loot-roll tooltips.
-- Enforce usable hand combinations, learned Dual Wield, tank shields, physical-copy identity and exposed unique-equipped limits.
-- Refresh pair hints after partner loading/removal and defer comparisons during combat.
+- Click the rotation panel title to choose Automatic, Leveling or a class specialization. See the detected tree, saved selection and gear-scoring availability.
+- Dismiss the selector with Escape, an outside click or its close button. Changes during combat apply after combat ends.
+- Compare carried one-hand/off-hand pairs against an equipped two-hander using their combined estimated stat scores.
+- Highlight estimated pair upgrades in bags and apply the same comparison to standard Need/Greed hints. Tooltips name the required partner; equip both items for the comparison to apply.
+- Respect class, level, hand, shield, learned Dual Wield, physical-copy identity and exposed unique-equipped restrictions. Incomplete or unresolved pairs remain unscored.
+- Refresh after partner removal or item-data loading; defer comparisons during combat.
 
-Pair scoring does not simulate weapon speed, dual-wield penalties or special effects. Actual Forever client validation remains outstanding.
+This consolidated release combines the second 0.5.0 package, the original 0.5.1 and the former 0.5.2. The first 0.5.0 remains the original gear-guidance release. All earlier rotation references, 27 gear profiles and Need/Greed guidance are included.
 
-## 0.5.1
-
-- Release the guide selector with a distinct version so addon managers can identify the update.
-- Click the panel title or arrow to select Automatic, Leveling, or a class spec.
-- Preserve saved selections, detection details, gear-scoring hints, and combat-deferred changes.
-- Includes all gear upgrade borders and Need/Greed guidance from 0.5.0.
-
-Lua 5.1 syntax and simulated-client tests pass. Actual Forever client rendering and API verification remains outstanding.
+Validation: Lua 5.1 syntax, simulated-client regression checks and addon-only archive verification passed. Complete Forever client compatibility remains unverified. Gear scores are estimates; weapon speed, dual-wield penalties, procs and other special effects are not simulated.
 
 ## 0.5.0
-
-### Guide selector refresh
-
-- Click the panel title to choose Automatic, Leveling, or a class specialization.
-- Show automatic detection, the saved selection, and gear-scoring availability.
-- Dismiss with Escape, an outside click, or the close button; preserve header dragging.
-- Save explicit Leveling selection and defer combat changes safely.
-- Refresh the existing 0.5.0 package without changing its addon version.
 
 - Add guide-based gear priorities for all nine classes and 27 talent trees, checked October 20, 2026.
 - Highlight estimated bag upgrades with a pulsing gold border.

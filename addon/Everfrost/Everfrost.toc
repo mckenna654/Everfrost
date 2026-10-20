@@ -3,7 +3,7 @@
 ## IconTexture: Interface\AddOns\Everfrost\Media\Icon.tga
 ## Notes: Level 1-30 rotation guides, gear upgrades and Need/Greed highlights.
 ## Author: Custom addon for Jake
-## Version: 0.5.2
+## Version: 0.5.1
 ## SavedVariablesPerCharacter: EverfrostDB
 Profiles.lua
 Core.lua

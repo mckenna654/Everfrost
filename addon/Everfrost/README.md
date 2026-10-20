@@ -1,4 +1,4 @@
-# Everfrost — v0.5.2
+# Everfrost — v0.5.1
 
 A compact class-aware rotation reference for WoW Forever, covering levels 1–30. Detects your class, level, dominant talent tree, and learned spell ranks. Includes all nine classes and 27 talent trees, with a general leveling profile before you spend talents.
 
@@ -74,7 +74,7 @@ Enabled by default for levels 1–30. Standard bag items get a pulsing gold bord
 
 Use `/everfrost gear` to show the selected priorities, or `/everfrost gear on` / `off` to toggle the feature. The selected talent tree drives gear scoring; a healer's DAMAGE view still uses healing gear priorities. Hybrid/unspent trees need a manual spec selection. Survival's RANGED view uses ranged priorities.
 
-New in 0.5.2: one-hand weapons and off-hands can compare together against an equipped two-hander. Everfrost searches your carried bags for each item's best usable partner and highlights estimated pair upgrades. The tooltip names the partner: equip both items for the comparison to apply. Loot candidates use carried partners too. Shields, held off-hands and learned Dual Wield are supported. Missing partners or unresolved pair data remain unscored.
+Included in 0.5.1: one-hand weapons and off-hands can compare together against an equipped two-hander. Everfrost searches your carried bags for each item's best usable partner and highlights estimated pair upgrades. The tooltip names the partner: equip both items for the comparison to apply. Loot candidates use carried partners too. Shields, held off-hands and learned Dual Wield are supported. Missing partners or unresolved pair data remain unscored.
 
 Stat orders were checked against all 27 linked Icy Veins Forever guides on October 20, 2026. Everfrost converts those orders into approximate weights; it is not a simulator. Procs, set bonuses, weapon speed, dual-wield damage penalties, sockets, enchants, hit caps and other special effects are not modeled. Check the tooltip and your group's loot rules. Missing/restricted item data is also unscored. During combat, comparisons wait for combat to end. Custom bag and loot-window replacements are not integrated.
 
