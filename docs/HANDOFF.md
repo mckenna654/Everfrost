@@ -86,3 +86,9 @@ notices add a 24px footer. Selected check/highlight, saved choices, dismissal
 and deferred combat changes remain. npm test and addon-only build pass.
 Still local 0.6.1 metadata; no publication requested for this follow-up.
 Actual new menu rendering needs an in-game check.
+
+User requested publication of the compact spec menu. Released 0.6.2 at
+f23ed43 with synchronized TOCs/package/lockfile and GitHub latest ZIP.
+CurseForge automatically generated #9264796 for Forever 1.60.1; all 14
+downloaded addon files match source after newline normalization. Initial
+status Under Review. Public description updated. No game-folder install.

@@ -118,3 +118,15 @@ normalization. GitHub asset SHA-256 matches the locally verified ZIP:
 Initial CurseForge status: Under Review. Updated the project description
 from docs/CURSEFORGE.md. Lua 5.1 syntax and simulated-client checks pass;
 actual rendering of the new panel/opacity still needs client verification.
+
+## 0.6.2 — October 20, 2026
+
+Released the compact specialization picker at f23ed43 as GitHub latest
+v0.6.2. Native CurseForge packaging generated Release file #9264796
+(Everfrost-Source-v0.6.2.zip) for Forever 1.60.1. Downloaded and verified
+all 14 addon files and embedded version against source, allowing newline
+normalization. GitHub ZIP SHA-256 matches the verified local archive:
+4eac6068dd7baf1ccb6547962dd52d2162152dbe057b3e51ae11bcf68e0b6bcf.
+Initial CurseForge status: Under Review. Updated the public description
+for Choose a Spec and compact rows. Lua 5.1/simulated tests pass; actual
+compact-menu rendering still needs an in-game check.
