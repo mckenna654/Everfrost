@@ -1,6 +1,6 @@
 {
   "name": "everfrost",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "private": true,
   "description": "WoW Forever rotation guides, gear upgrades and Need/Greed highlights",
   "scripts": {

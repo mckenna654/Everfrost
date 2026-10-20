@@ -1,4 +1,4 @@
-# Everfrost — v0.6.1
+# Everfrost — v0.6.2
 
 A compact class-aware rotation reference for WoW Forever, covering levels 1–30. Detects your class, level, dominant talent tree, and learned spell ranks. Includes all nine classes and 27 talent trees, with a general leveling profile before you spend talents.
 
@@ -13,7 +13,7 @@ The folder, TOC, frame and saved-variable identifiers now use Everfrost. Because
 
 ## Using the panel
 
-Click the guide title or down arrow to choose Automatic, Leveling, or one of your class’s three specializations. The menu shows the automatically detected tree and marks your saved selection. Leveling retains the general spell guide but uses the dominant talent tree for gear from level 10 onward. Close it with Escape, the close button, or an outside click. Changes during combat apply when combat ends.
+Click the panel title or down arrow to open **Choose a Spec**, a compact menu with single-line Automatic, Leveling and specialization choices. Automatic shows the detected tree inline. The menu shows the automatically detected tree and marks your saved selection. Leveling retains the general spell guide but uses the dominant talent tree for gear from level 10 onward. Close it with Escape, the close button, or an outside click. Changes during combat apply when combat ends.
 
 The header shows your spec, class, level and detection status. Read icons left to right, continuing on the next row. Hover an icon for its spell tooltip and the condition for using it. Hover the header for general rotation notes. Drag the header to move the panel.
 

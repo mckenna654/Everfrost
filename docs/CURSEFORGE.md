@@ -4,7 +4,11 @@
 
 A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1–30, nine classes and 27 talent trees**. Written with **OpenAI Codex**. No third-party addon libraries are required.
 
-## What's new in 0.6.1
+## What's new in 0.6.2
+
+- **Cleaner specialization menu:** the panel title opens **Choose a Spec**, with compact single-line choices. Automatic shows the detected tree inline. Repeated descriptions and the generic saved-choice footer are removed; level-10 and combat notices appear only when relevant.
+
+## Included from 0.6.1
 
 - **Adjustable panel opacity:** open `/everfrost` → Rotation Panel and choose 10%–100%. Changes apply immediately and save per character. `/everfrost opacity 60` sets 60%; settings, guide menus and tooltips stay readable.
 - **Native WoW styling:** the compact rotation reference now uses WoW dialog textures, gold title text, standard buttons and quickslot spell borders. Position, size and guide choices are preserved; Reset position & size retains opacity.
@@ -48,7 +52,7 @@ Left-click the minimap logo for settings, right-click to toggle the reference pa
 
 ## Releases and verification
 
-The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling.
+The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling. **0.6.2** tidies the specialization picker into a compact single-line menu.
 
 Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse and settings layout; the latest talent-detection fix, new panel styling/opacity and complete Forever compatibility still need in-game verification. English guidance; some Forever-specific spells depend on English spellbook names.
 

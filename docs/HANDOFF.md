@@ -76,3 +76,13 @@ installable ZIP. Automatic CurseForge package #9264703 targets Forever
 1.60.1; all 14 downloaded files match source after newline normalization.
 Initial status Under Review. Public description now includes the 10–100%
 opacity setting and native panel appearance. No game-folder install.
+
+Local spec-picker cleanup after 0.6.1: user requested removing redundant grey
+second lines and renaming Choose a guide. Menu is now Choose a Spec with
+single-line 26px rows at 28px spacing, 244px width and a normal 188px height.
+Automatic includes the detected tree inline. Removed row descriptions,
+divider and generic saved-choice footer; only relevant level-10/combat
+notices add a 24px footer. Selected check/highlight, saved choices, dismissal
+and deferred combat changes remain. npm test and addon-only build pass.
+Still local 0.6.1 metadata; no publication requested for this follow-up.
+Actual new menu rendering needs an in-game check.

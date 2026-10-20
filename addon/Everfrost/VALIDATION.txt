@@ -68,3 +68,9 @@ Existing class/rotation, native talent, gear and settings regressions pass.
 Native dialog backdrop, standard buttons/fonts and quickslot borders are
 used. Actual new panel rendering and opacity need Forever client checks.
 Addon-only archive verified against all 14 release source files.
+
+0.6.2: Lua 5.1 syntax and simulated rotation/settings/talent/gear checks
+pass after the specialization menu cleanup. Checks retain automatic
+detection, saved selections, dismissal, level-10 notices and combat-deferred
+changes. All 14 packaged addon files match source. Actual compact-menu
+rendering still needs a Forever client check.

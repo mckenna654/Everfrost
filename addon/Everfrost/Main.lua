@@ -138,10 +138,10 @@ local function createGuideMenu()
  catcher:Hide()
  local menu=CreateFrame("Frame","EverfrostGuideMenu",catcher,"BackdropTemplate")
  menu:SetFrameStrata("DIALOG"); menu:SetFrameLevel(catcher:GetFrameLevel()+1)
- menu:SetSize(276,264); menu:SetClampedToScreen(true); menu:EnableMouse(true)
+ menu:SetSize(244,188); menu:SetClampedToScreen(true); menu:EnableMouse(true)
  menu:SetBackdrop({bgFile="Interface\\Tooltips\\UI-Tooltip-Background",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",tile=true,tileSize=16,edgeSize=16,insets={left=4,right=4,top=4,bottom=4}})
  menu:SetBackdropColor(0.055,0.05,0.04,0.98); menu:SetBackdropBorderColor(0.65,0.6,0.46,1)
- menu.heading=text(menu,12); menu.heading:SetPoint("TOPLEFT",16,-14); menu.heading:SetText("Choose a guide")
+ menu.heading=text(menu,12); menu.heading:SetPoint("TOPLEFT",16,-14); menu.heading:SetText("Choose a Spec")
  menu.heading:SetTextColor(1,0.82,0)
  local close=CreateFrame("Button",nil,menu,"UIPanelCloseButton")
  close:SetSize(24,24); close:SetPoint("TOPRIGHT",-5,-5); close:SetScript("OnClick",function() menu:Hide() end)
@@ -150,42 +150,33 @@ local function createGuideMenu()
  menu.rows={}
  for index,choice in ipairs(choices) do
   local value=choice.value
-  local row=CreateFrame("Button",nil,menu); row:SetSize(252,36)
-  row:SetPoint("TOPLEFT",12,-37-(index-1)*38)
+  local row=CreateFrame("Button",nil,menu); row:SetSize(220,26)
+  row:SetPoint("TOPLEFT",12,-37-(index-1)*28)
   row.selected=row:CreateTexture(nil,"BACKGROUND"); row.selected:SetAllPoints(); row.selected:SetColorTexture(0.65,0.5,0.18,0.15)
   row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight","ADD")
   row.check=row:CreateTexture(nil,"OVERLAY"); row.check:SetSize(16,16); row.check:SetPoint("LEFT",4,0)
   row.check:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
-  row.label=text(row,12); row.label:SetPoint("TOPLEFT",26,-3); row.label:SetText(choice.label)
-  row.detail=text(row,10); row.detail:SetPoint("TOPLEFT",26,-20); row.detail:SetTextColor(0.6,0.6,0.55)
-  row.detail:SetWidth(218); row.detail:SetWordWrap(false)
+  row.label=text(row,12); row.label:SetPoint("LEFT",26,0); row.label:SetWidth(186)
+  row.label:SetWordWrap(false); row.label:SetText(choice.label)
   row.value=value
   row:SetScript("OnClick",function() selectGuide(value) end)
   menu.rows[index]=row
  end
- menu.divider=menu:CreateTexture(nil,"ARTWORK"); menu.divider:SetColorTexture(0.55,0.5,0.38,0.3)
- menu.divider:SetHeight(1); menu.divider:SetPoint("BOTTOMLEFT",14,33); menu.divider:SetPoint("BOTTOMRIGHT",-14,33)
- menu.footer=text(menu,10); menu.footer:SetPoint("BOTTOMLEFT",16,12); menu.footer:SetWidth(244); menu.footer:SetHeight(16)
+ menu.footer=text(menu,10); menu.footer:SetPoint("BOTTOMLEFT",16,12); menu.footer:SetWidth(212); menu.footer:SetHeight(14)
  menu.footer:SetTextColor(0.7,0.68,0.6)
  updateGuideMenu=function()
   for index,row in ipairs(menu.rows) do
    local selected=db.spec==row.value
    row.check:SetShown(selected); row.selected:SetShown(selected)
    row.label:SetTextColor(selected and 1 or 0.9,selected and 0.82 or 0.88,selected and 0 or 0.8)
-   local detail
    if index==1 then
     local name=NS.trees[class] and NS.trees[class][detectedSpec]
-    detail=name and ("Detected: "..name) or detectedStatus=="Hybrid" and "Tied talents; uses Leveling" or detectedStatus=="Unspent" and "No talents spent; uses Leveling" or "No spec detected; uses Leveling"
-   elseif index==2 then detail="Gear uses talents from level 10"
-   else detail=level<NS.gearMinLevel and "Gear priorities start at level 10" or "Ability guide and gear priorities" end
-   row.detail:SetText(detail)
+    row.label:SetText("Automatic"..(name and (" ("..name..")") or ""))
+   end
   end
-  local footer="Your choice is saved for this character."
-  if level<NS.gearMinLevel then footer="Stat priorities start at level 10."
-  elseif spec==0 then
-   footer=gearSpec>0 and ("Gear: "..NS.trees[class][gearSpec].." (from talents)") or level<10 and "Gear follows talents from level 10." or "Choose a spec or spend talent points."
-  end
-  menu.footer:SetText(InCombatLockdown() and "Guide changes apply after combat." or footer)
+  local footer=InCombatLockdown() and "Changes apply after combat." or level<NS.gearMinLevel and "Stat priorities start at level 10." or nil
+  menu.footer:SetText(footer or ""); menu.footer:SetShown(footer~=nil)
+  menu:SetHeight(48+#menu.rows*28+(footer and 24 or 0))
  end
  menu:SetScript("OnHide",function() catcher:Hide() end)
  catcher:SetScript("OnClick",function() menu:Hide() end)
@@ -219,7 +210,7 @@ local function createUI()
  frame.guide:RegisterForDrag("LeftButton")
  frame.guide:SetScript("OnDragStart",function() if not db.locked then frame:StartMoving() end end)
  frame.guide:SetScript("OnDragStop",drag:GetScript("OnDragStop"))
- frame.guide:SetScript("OnEnter",function(self) tip(self,"Choose a guide","Automatic, Leveling, or a class specialization.\n"..NS.gearLevelNote.."\nDrag to move the panel.") end)
+ frame.guide:SetScript("OnEnter",function(self) tip(self,"Choose a Spec","Automatic, Leveling, or a class specialization.\n"..NS.gearLevelNote.."\nDrag to move the panel.") end)
  frame.guide:SetScript("OnLeave",function() GameTooltip:Hide() end)
  frame.guide:SetScript("OnClick",function()
   GameTooltip:Hide()

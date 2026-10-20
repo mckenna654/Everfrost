@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.2 — Compact specialization picker
+
+- Simplify the spec picker to compact single-line rows under Choose a Spec. Remove repeated descriptions and the generic saved-choice footer; keep the detected spec inline with Automatic and show only relevant level-10/combat notices.
+
 ## 0.6.1 — Panel opacity and native WoW styling
 
 - Add a Rotation Panel opacity slider from 10% to 100%, applied immediately and saved per character. /everfrost opacity 60 sets 60%; settings, guide menus and tooltips remain fully readable.
