@@ -58,3 +58,7 @@ All nine classes and 27 trees were checked. Changes include corrections to exist
 - Some pages retain earlier level-cap wording. Learned spells remain authoritative for availability; a guide mention never makes an unlearned ability appear.
 - This is a compact reference, not an exhaustive spellbook or automatic next-cast queue. Totem preparation, resource management and some utility remain in notes/hints.
 - Lua regression tests and mocked APIs do not establish Forever client compatibility. Actual client testing remains outstanding, including localization aliases and new spell icons.
+
+## October 20 gear-priority audit
+
+Stat/gearing sections of all 27 linked guides were rechecked for the new gear feature. Their orders are stored separately in GearProfiles.lua; rotation rules retain their October 15 review. Gear scores use Everfrost ordinal estimates, not numeric weights published by Icy Veins. Missing item data remains unscored; loot choices are manual. Full stat table, scoring formula and limitations: https://github.com/mckenna654/Everfrost/blob/main/docs/GEAR.md

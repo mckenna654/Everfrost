@@ -1,12 +1,15 @@
 ## Interface: 16001
 ## Title: Everfrost
 ## IconTexture: Interface\AddOns\Everfrost\Media\Icon.tga
-## Notes: Class and talent-aware level 1-30 rotation reference with learned spells.
+## Notes: Level 1-30 rotation guides, gear upgrades and Need/Greed highlights.
 ## Author: Custom addon for Jake
-## Version: 0.4.2
+## Version: 0.5.0
 ## SavedVariablesPerCharacter: EverfrostDB
 Profiles.lua
 Core.lua
+GearProfiles.lua
+Gear.lua
+GearUI.lua
 Main.lua
 
 

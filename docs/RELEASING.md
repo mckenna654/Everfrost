@@ -20,7 +20,9 @@ repository, screenshots, release notes, or logs.
 1. Update `addon/Everfrost/Everfrost.toc`, the metadata-only root
    `Everfrost-Source.toc`, `package.json`, and lockfile versions together.
 2. Update `addon/Everfrost/CHANGELOG.md` for the release.
-3. Run `npm ci` and `npm test`. Report actual client testing separately.
+3. Run `npm ci`, `npm test`, and `npm run build`. Node packages only
+   `addon/Everfrost` on Windows, macOS and Linux. Verify the archive against
+   source files. Report actual client testing separately.
 4. Commit the release files and push the commit.
 5. Push an annotated version tag. For example, `v0.4.1-beta.1` is a beta;
    `v0.4.1` is a release. CurseForge recognizes `alpha` and `beta` in tag names.

@@ -5,7 +5,7 @@ const parser = require('luaparse');
 const {lua, lauxlib, lualib, to_luastring, to_jsstring} = require('fengari');
 const root = path.resolve(__dirname, '../addon/Everfrost');
 const sources = {};
-for (const name of ['Profiles.lua','Core.lua','Main.lua']) {
+for (const name of ['Profiles.lua','Core.lua','GearProfiles.lua','Gear.lua','GearUI.lua','Main.lua']) {
  sources[name]=fs.readFileSync(path.join(root,name),'utf8');
  parser.parse(sources[name],{luaVersion:'5.1'});
  console.log(name+': Lua 5.1 syntax passed');
@@ -126,13 +126,21 @@ duration={}; C_Spell.GetSpellCooldownDuration=function() return duration end
 EverfrostDB={scale=1.2,locked=true,point='CENTER',relativePoint='CENTER',x=100,y=40}
 GetTalentTabInfo=function(i) return 'Tree',nil,({0,0,2})[i] end
 `);
+load('GearProfiles.lua');
+run(`
+NS.Gear={SetContext=function(...) lastGearContext={...} end,Schedule=function() gearScheduled=true end,Paint=function() end}
+`);
 load('Main.lua');
 run(`
 fire('PLAYER_LOGIN'); local f=EverfrostFrame
 assert(f.title.text=='Retribution  PALADIN' and f.meta.text:find('5'))
 assert(EverfrostDB.scale==1.2 and EverfrostDB.x==100)
 assert(visibleSpells()==1 and f.width==310)
+assert(lastGearContext[1]=='PALADIN' and lastGearContext[2]==3)
 local cmd=SlashCmdList.EVERFROST
+cmd('gear off'); assert(EverfrostDB.gear==false and gearScheduled)
+cmd('gear on'); assert(EverfrostDB.gear==true)
+cmd('gear')
 cmd('hide'); assert(not f:IsShown()); cmd('show'); assert(f:IsShown())
 cmd('scale 1.4'); cmd('scale 99'); assert(EverfrostDB.scale==1.4)
 combat=true; book[3].future=false; fire('PLAYER_LEVEL_UP',6); fire('SPELLS_CHANGED'); fire('SPELL_UPDATE_COOLDOWN')

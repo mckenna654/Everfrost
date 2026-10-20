@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0
+
+- Add guide-based gear priorities for all nine classes and 27 talent trees, checked October 20, 2026.
+- Highlight estimated bag upgrades with a pulsing gold border.
+- Highlight Need for estimated loot upgrades or Greed for known non-upgrades and class-irrelevant items.
+- Add score/stat-order tooltips and `/everfrost gear on` / `off` controls.
+- Handle paired slots, two-hand comparisons, shield builds, item requirements, asynchronous data and combat deferral.
+- Add gear regression tests and cross-platform addon-only ZIP packaging.
+
+Gear scores are estimates; special effects, weapon speed and hit caps are not modeled. Actual Forever client API and visual testing remains outstanding.
+
 ## 0.4.2
 
 - Review all 27 Icy Veins Forever guides on October 15, 2026.

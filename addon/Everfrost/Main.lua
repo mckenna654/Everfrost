@@ -65,6 +65,7 @@ render=function()
  if not frame then return end
  frame:SetShown(not db.hidden)
  local role=effectiveRole()
+ if NS.Gear then NS.Gear.SetContext(class,spec,level,role,known) end
  local list,note,profile=NS.BuildRows(class,spec,level,known,db.aoe and "aoe" or "single",role)
  local specName=NS.trees[class] and NS.trees[class][spec] or "Leveling"
  frame.title:SetText(specName.."  "..className)
@@ -152,12 +153,21 @@ SlashCmdList.EVERFROST=function(message)
   elseif n and NS.trees[class] and NS.trees[class][n] then db.spec=n; refresh()
   else say("/everfrost spec auto, or 1/2/3 in talent-tree order.") end
  elseif command=="refresh" then refresh()
+  if NS.Gear then NS.Gear.pending=true; NS.Gear.Schedule() end
+ elseif command=="gear" then
+  if arg=="on" or arg=="off" then
+   db.gear=arg=="on"
+   if NS.Gear then NS.Gear.enabled=db.gear; NS.Gear.pending=true; NS.Gear.Paint(); NS.Gear.Schedule() end
+  elseif NS.Gear then
+   local p=NS.GearProfile(class,spec,effectiveRole())
+   say((db.gear==false and "Gear highlights OFF. " or "Gear highlights ON. ")..(p and ("Stat order: "..NS.GearPriorityText(p)..". Estimated weights; inspect special effects.") or "Select a talent tree to score gear."))
+  end
  elseif command=="reset" then resetPosition(); db.scale=1; frame:SetScale(1); db.hidden=false
  elseif command=="scale" then
   local n=tonumber(arg); if n and n>=0.6 and n<=2 then db.scale=n; frame:SetScale(n) else say("Scale must be 0.6-2.") end
  elseif command=="source" then say(frame.profile and frame.profile.source or "No profile for this class.")
  elseif command=="status" then say(class.." / "..spec.." / "..level.." / "..status..(scanError and " / "..scanError or ""))
- else say("/everfrost show | hide | lock | unlock | single | aoe | heal | damage | bear | cat | ranged | melee | spec auto/1/2/3 | scale 1 | reset | refresh | source | status") end
+ else say("/everfrost show | hide | lock | unlock | single | aoe | heal | damage | bear | cat | ranged | melee | spec auto/1/2/3 | gear on/off | scale 1 | reset | refresh | source | status") end
  render()
 end
 local events=CreateFrame("Frame")

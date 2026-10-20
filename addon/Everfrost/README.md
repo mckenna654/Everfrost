@@ -1,4 +1,4 @@
-# Everfrost — v0.4.2
+# Everfrost — v0.5.0
 
 A compact class-aware rotation reference for WoW Forever, covering levels 1–30. Detects your class, level, dominant talent tree, and learned spell ranks. Includes all nine classes and 27 talent trees, with a general leveling profile before you spend talents.
 
@@ -64,3 +64,13 @@ Some source pages still contain older level-20 sections alongside newer guidance
 
 
 
+
+## Gear upgrades and Need/Greed highlights
+
+Enabled by default for levels 1–30. Standard bag items get a pulsing gold border when their estimated score beats an equipped replacement. Standard loot-roll windows highlight Need for estimated upgrades and Greed for known non-upgrades or irrelevant items. Disabled choices are respected, and you click the roll yourself. Hover for the score difference and stat order.
+
+Use `/everfrost gear` to show the selected priorities, or `/everfrost gear on` / `off` to toggle the feature. The selected talent tree drives gear scoring; a healer's DAMAGE view still uses healing gear priorities. Hybrid/unspent trees need a manual spec selection. Survival's RANGED view uses ranged priorities.
+
+Stat orders were checked against all 27 linked Icy Veins Forever guides on October 20, 2026. Everfrost converts those orders into approximate weights; it is not a simulator. Procs, set bonuses, weapon speed, sockets, enchants, hit caps and other special effects are not modeled. Check the tooltip and your group's loot rules. A one-hand item replacing a two-hand setup is left unscored because it needs a complete weapon pair. Missing/restricted item data is also unscored. During combat, comparisons wait for combat to end. Custom bag and loot-window replacements are not integrated.
+
+Written with OpenAI Codex. Full scoring method: https://github.com/mckenna654/Everfrost/blob/main/docs/GEAR.md

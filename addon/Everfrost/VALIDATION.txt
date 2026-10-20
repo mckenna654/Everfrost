@@ -1,4 +1,4 @@
-Validation completed October 15, 2026
+Validation completed October 20, 2026
 
 PASS: Lua 5.1 syntax for Profiles.lua, Core.lua and Main.lua.
 PASS: All 27 talent profiles plus nine baseline profiles across levels
@@ -36,3 +36,10 @@ Version 0.4.0: Re-ran the harness using Everfrost folder, frame, saved-variable 
 
 v0.4.2: All checks rerun. Guide-audit regressions cover Mage AoE, talent
 fallbacks, Priest healing/damage, tank ordering, Shaman totems and Hunter hints.
+
+v0.5.0: All six Lua files parse as Lua 5.1. Existing rotation checks pass.
+Gear checks cover all 27 specs, priority reversals, aliases, eligibility, unique
+limits, paired slots, weapon layouts, async metadata, secret-value rejection,
+combat deferral, bag-button reuse, cancellation and Need/Greed eligibility.
+Cross-platform Node build verified against addon source file bytes.
+Actual Forever rendering, item stat tokens and UI hook behavior are unverified.

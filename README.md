@@ -1,4 +1,4 @@
-# Everfrost
+# Everfrost — Rotation Guides & Gear Upgrades
 
 <p align="center">
   <img src="docs/assets/everfrost-logo.png" alt="Everfrost logo: an icy E emblem above the Everfrost wordmark" width="640">
@@ -6,11 +6,11 @@
 
 **Find your class rhythm. Forever.**
 
-Everfrost is a lightweight, standalone Lua addon for **WoW Forever**. It displays a compact, class-aware ability reference for **levels 1–30**, with profiles for all **nine classes and 27 talent trees**. Recommendations are informed by Icy Veins Forever guides and filtered against the spells your character has actually learned.
+Everfrost is a lightweight, standalone Lua addon for **WoW Forever**. It displays a compact, class-aware ability reference for **levels 1–30**, with profiles for all **nine classes and 27 talent trees**. Recommendations are informed by Icy Veins Forever guides and filtered against the spells your character has actually learned. Guide-based gear comparisons add a shiny border to estimated bag upgrades and highlight Need or Greed on the standard loot-roll window.
 
 **Written with OpenAI Codex.** The project uses Codex for AI-assisted development, review, and documentation. Automated validation uses a simulated client; actual Forever client testing is still outstanding.
 
-[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.4.2](https://github.com/mckenna654/Everfrost/releases/tag/v0.4.2) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
+[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.5.0](https://github.com/mckenna654/Everfrost/releases/tag/v0.5.0) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
 
 CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distribution is enabled. New version tags trigger automatic packaging; file processing and moderation can delay availability.
 
@@ -18,7 +18,7 @@ CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distributio
 
 | Item | Current status |
 | --- | --- |
-| Addon version | **0.4.2** |
+| Addon version | **0.5.0** |
 | Supported levels | **1–30** |
 | Class coverage | Nine classes, 27 talent trees, and nine general leveling profiles |
 | Target interface | `16001` — compatibility with the actual Forever client remains unverified |
@@ -35,6 +35,9 @@ Everfrost is an independent project. It is not an official Icy Veins, Blizzard, 
 - Provides concise hover guidance for openers, maintenance effects, fillers, and situational abilities.
 - Offers single-target and AoE views, healing and damage views, and dedicated Feral and Survival role controls.
 - Shows native cooldown sweeps when the client supports cooldown duration objects.
+- Highlights estimated bag upgrades with a pulsing gold border using the detected class/spec stat priorities.
+- Highlights Need for estimated loot upgrades and Greed for known non-upgrades or class-irrelevant loot; you make the roll.
+- Adds score comparisons and stat priorities to item-button hover tooltips.
 - Saves panel position, scale, visibility, mode, and specialization preferences per character.
 - Refreshes spellbook and talent metadata outside combat, deferring changes until combat ends when necessary.
 
@@ -44,9 +47,21 @@ Read the icons from left to right, continuing on the next row, and use the hover
 
 Everfrost does not evaluate combat resources, proc buffs, target health, enemy counts, positioning, or your current shapeshift form to choose a next cast. It does not cast abilities for you. Conditions such as choosing a seal, spending combo points, or reacting to a proc remain the player's responsibility.
 
+## Gear upgrades and loot rolls
+
+Gear hints are enabled by default. Open the standard bags: a pulsing gold border marks equipment with a higher estimated stat score than its equipped replacement. Hover the item to see the score change and the detected specialization's priorities. Rings and trinkets compare against both equipped slots; two-handed weapons include the displaced off-hand in their comparison.
+
+On standard dungeon or raid group-loot windows, the same border highlights **Need** for an estimated upgrade or **Greed** for a known non-upgrade, unusable item, or item irrelevant to the selected class/spec. Disabled roll options are respected. You still choose and click the roll, following your group's loot rules. Missing or restricted data produces no highlight.
+
+Stat orders were checked against all 27 Icy Veins Forever guides on **October 20, 2026**. Numeric scores are Everfrost's transparent estimates, not Icy Veins simulation weights or guaranteed best-in-slot results. Weapon speed, procs, set bonuses, on-use effects, sockets, enchants, professions and hit caps can change the real result. A one-hand item replacing a two-hand setup needs a complete loadout comparison and remains unscored. See [gear scoring and all 27 priorities](docs/GEAR.md) for the formula and limits.
+
+Metadata refreshes outside combat; changes and new loot during combat wait until combat ends. The feature supports the standard bag and group-loot frames, including modern combined bags and classic bags where those hooks exist. Custom inventory/loot replacements are not integrated. No selected tree, a hybrid/unspent tree, or levels outside 1–30 remain unscored; select a tree with `/everfrost spec 1`, `2`, or `3` when needed. Gear follows the selected spec; a healer's DAMAGE view keeps the healer gear profile. Survival's RANGED view uses ranged stat priorities.
+
+Use `/everfrost gear` to print your current stat order, `/everfrost gear off` to disable highlights, and `/everfrost gear on` to enable them again. `/everfrost refresh` requests a new comparison outside combat. Hiding the rotation panel leaves gear hints enabled unless you switch them off separately.
+
 ## Installation
 
-1. Download **`Everfrost-0.4.2.zip`** from the [v0.4.2 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.4.2).
+1. Download **`Everfrost-0.5.0.zip`** from the [v0.5.0 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.5.0).
 2. Exit WoW Forever.
 3. Extract the archive's `Everfrost` folder into your Forever client's `Interface/AddOns` directory.
 4. Confirm the resulting path is `Interface/AddOns/Everfrost/Everfrost.toc`.
@@ -108,6 +123,8 @@ Several specializations share early-level priorities until their distinct abilit
 | `/everfrost lock` / `/everfrost unlock` | Lock or unlock panel dragging |
 | `/everfrost scale 1.2` | Set scale; accepted range is `0.6`–`2` |
 | `/everfrost reset` | Reset position and scale, and show the panel |
+| `/everfrost gear` | Show active gear stat priorities |
+| `/everfrost gear on` / `/everfrost gear off` | Enable or disable gear and loot highlights |
 | `/everfrost refresh` | Refresh cached metadata outside combat |
 | `/everfrost source` | Print the current profile's guide URL |
 | `/everfrost status` | Print class, tree, level, detection status, and any scan error |
@@ -130,19 +147,19 @@ npm ci
 npm test
 ```
 
-The harness parses all three Lua files as Lua 5.1 using `luaparse`, then executes regression checks with `fengari`. Coverage includes class/spec profiles, selected level boundaries, learned-rank filtering, talent API variants, combat deferral, role and encounter controls, and Survival's level-30 transition.
+The harness parses all six Lua files as Lua 5.1 using `luaparse`, then executes regression checks with `fengari`. Coverage includes class/spec profiles, selected level boundaries, learned-rank filtering, talent API variants, combat deferral, role and encounter controls, Survival's level-30 transition, all 27 gear profiles, item eligibility, paired slots, async item data, and loot-roll highlights.
 
 These tests simulate client APIs. A passing result does not prove compatibility with the Forever client, correct visual layout, or real secret-value handling.
 
 ### Package the addon
 
-The current packaging command requires **Windows PowerShell**, available as `powershell`:
+The packaging command uses Node.js and works on Windows, macOS and Linux:
 
-```powershell
+```sh
 npm run build
 ```
 
-It creates `dist/Everfrost-0.4.2.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release. On macOS and Linux, tests can run with Node.js, but the existing build command requires an appropriate PowerShell environment; packaging is not currently cross-platform.
+It creates `dist/Everfrost-0.5.0.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
 
 When releasing a new version, update `addon/Everfrost/Everfrost.toc` and `package.json` together, keep lockfile metadata synchronized, run the tests, and verify the archive contents before uploading.
 
@@ -151,8 +168,8 @@ When releasing a new version, update `addon/Everfrost/Everfrost.toc` and `packag
 CurseForge is configured to package tagged commits only. The repository's
 `.pkgmeta` selects the installable addon and excludes development files.
 An active GitHub push webhook connects this repository to CurseForge. Ordinary
-branch commits are excluded by the tag-only setting. The first new tagged build
-still needs end-to-end verification, including ZIP layout and game version.
+branch commits are excluded by the tag-only setting. The v0.4.2 tagged build
+was verified end to end, including ZIP layout and game version.
 See [release instructions](docs/RELEASING.md) for version tags and validation.
 
 ### Repository layout
@@ -162,12 +179,17 @@ addon/Everfrost/
   Everfrost.toc       Addon metadata and Lua load order
   Profiles.lua       Class/spec reference data and row filtering
   Core.lua           Talent detection and learned-spell scanning
+  GearProfiles.lua   Guide-based stat orders for all 27 talent trees
+  Gear.lua           Item cache, eligibility and equipped-slot comparisons
+  GearUI.lua         Bag/loot borders and tooltip hooks
   Main.lua           Panel, event handling, settings, and commands
   README.md          Packaged user instructions
   SOURCES.md         Guide links and source-review notes
   VALIDATION.txt     Recorded validation and limitations
-scripts/build.ps1    Windows PowerShell packaging script
+scripts/build.cjs    Cross-platform addon-only ZIP packaging
 tests/check.cjs      Syntax and simulated-client regression checks
+tests/gear.cjs       Gear scoring, cache and UI regression checks
+docs/GEAR.md         Stat audit, scoring formula and limitations
 docs/HANDOFF.md      Project history and outstanding in-game checks
 AGENTS.md            Codex project instructions
 ```
