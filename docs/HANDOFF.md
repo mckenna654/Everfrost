@@ -130,3 +130,7 @@ added by the earlier Claude/Codex setup commit and missing from .pkgmeta
 ignore. Fixed .pkgmeta and added a packaging regression check in check.cjs.
 Released as 0.6.4 rather than moving the v0.6.3 tag. Addon code identical to
 0.6.3. The GitHub v0.6.3 release remains (its ZIP is correct).
+Published 0.6.4: GitHub latest v0.6.4 (fe1f0de) and CurseForge file
+#9305197, Under Review, all 14 files verified against source. Next steps:
+copy docs/CURSEFORGE.md into the public CurseForge description if wanted,
+and in-game checks of the 0.6.3 gear changes (Subtlety upgrades, gear-off).

@@ -145,3 +145,22 @@ SHA-256 matches the verified local archive:
 The CurseForge package webhook received the refs/tags/v0.6.3 push and
 returned HTTP 200. Still to confirm in the CurseForge author console: the
 generated file ID, that it targets Forever 1.60.1, and its contents.
+
+0.6.3 outcome: CurseForge file #9305163 was rejected automatically
+("Folder Everfrost-Source must contain a file named Everfrost-Source.toc")
+because root CLAUDE.md was not in the .pkgmeta ignore list. The GitHub
+v0.6.3 release and ZIP are correct and remain published.
+
+## 0.6.4 — October 24, 2026
+
+Packaging fix: .pkgmeta now ignores CLAUDE.md, and tests/check.cjs fails if
+any top-level non-dot file or folder other than addon/Everfrost would be
+packaged. Addon code is identical to 0.6.3. GitHub Actions passed on main
+(fe1f0de) before tagging. GitHub latest v0.6.4 (lightweight tag at fe1f0de,
+created in the web UI); ZIP SHA-256
+2ea12779a0f52303936b0dcf7bbc08a8e93b3aa4e115a91d2a0c7270551410bc matches the
+verified local archive. CurseForge generated Release file #9305197
+(Everfrost-Source-v0.6.4.zip) for Forever 1.60.1; it passed automatic
+validation and is Under Review. All 14 downloaded addon files match source
+byte for byte; only the usual empty Everfrost-Source/addon/ directory is
+extra. The public project description has not been updated for 0.6.3/0.6.4.
