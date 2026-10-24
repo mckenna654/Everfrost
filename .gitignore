@@ -3,3 +3,7 @@ dist/
 *.log
 .DS_Store
 Thumbs.db
+
+# Claude Code (personal/local files)
+.claude/settings.local.json
+.claude/.deps-installed.sha256
