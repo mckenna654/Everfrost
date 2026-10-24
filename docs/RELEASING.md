@@ -130,3 +130,18 @@ normalization. GitHub ZIP SHA-256 matches the verified local archive:
 Initial CurseForge status: Under Review. Updated the public description
 for Choose a Spec and compact rows. Lua 5.1/simulated tests pass; actual
 compact-menu rendering still needs an in-game check.
+
+## 0.6.3 — October 24, 2026
+
+Released the code-review fixes (Subtlety Rogue Attack Power scoring, no
+rescans for permanently unscored results, no item reads while gear is off,
+spell-name cache) as GitHub latest v0.6.3, tag at 2a5c0cf (addon files
+identical to release commit 8b5047c). GitHub Actions (luacheck globals,
+npm ci/test/build) passed on main before tagging. The Claude cloud session
+could not push tags, so the release and tag were created in the GitHub web
+UI; that makes a lightweight tag rather than an annotated one. Release ZIP
+SHA-256 matches the verified local archive:
+53433e769b893b92c146056c036c44c01e13cfbe5d2324490996b3120373c2f4.
+The CurseForge package webhook received the refs/tags/v0.6.3 push and
+returned HTTP 200. Still to confirm in the CurseForge author console: the
+generated file ID, that it targets Forever 1.60.1, and its contents.

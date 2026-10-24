@@ -94,11 +94,16 @@ downloaded addon files match source after newline normalization. Initial
 status Under Review. Public description updated. No game-folder install.
 
 October 24, 2026, v0.6.3 (Claude cloud session): code review fixes, prepared
-for release at the user's request. RELEASE PENDING: the cloud session could
-not push tags or create releases (GitHub proxy denied tag push and the
-tag/release API with 403). main at 8b5047c is release-ready: tag it v0.6.3,
-publish the GitHub release with dist/Everfrost-0.6.3.zip, then verify the
-CurseForge file as in docs/RELEASING.md.
+for release at the user's request. Published on October 24, 2026: the
+session's GitHub proxy denied tag pushes and tag/release API writes, so the
+release was created through the user's signed-in GitHub web UI (built-in
+browser). GitHub latest v0.6.3 (release 422504060), lightweight tag at
+2a5c0cf (docs-only commit after 8b5047c; addon files identical). Asset
+Everfrost-0.6.3.zip SHA-256 53433e769b893b92c146056c036c44c01e13cfbe5d2324490996b3120373c2f4
+matches the locally built and verified archive. The CurseForge webhook
+delivered the refs/tags/v0.6.3 push with HTTP 200. The CurseForge file ID,
+processing/moderation status and downloaded-file check are still to do: the
+built-in browser is not signed in to authors.curseforge.com.
 - Gear.Score counted Attack Power twice for profiles that rank it (only
   Subtlety Rogue), so AP outscored Agility. Fixed; other melee specs keep the
   existing half-Strength AP credit (unchanged, worth a design review: rogues
