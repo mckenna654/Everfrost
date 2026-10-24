@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.3 — Gear scoring fix and lighter background work
+
+- Fix Subtlety Rogue gear scoring: Attack Power was counted twice, so it outscored Agility and could mark worse items as upgrades. It now follows the guide's order (Agility above Attack Power).
+- Stop full bag rescans every time the game loads item details for characters whose gear is never scored (below level 10, or no talent tree chosen). Rescans now happen only when a comparison is genuinely waiting for item data.
+- Skip all item reading while gear highlights are turned off.
+- Remember localized spell names once they have loaded instead of rebuilding them on every spellbook update.
+
+No rotation priorities changed. Validation: simulated-client regression tests, including new checks for each fix, pass on GitHub Actions alongside a Lua globals check. Actual Forever client behaviour still needs in-game verification.
+
 ## 0.6.2 — Compact specialization picker
 
 - Simplify the spec picker to compact single-line rows under Choose a Spec. Remove repeated descriptions and the generic saved-choice footer; keep the detected spec inline with Automatic and show only relevant level-10/combat notices.

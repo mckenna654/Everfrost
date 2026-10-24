@@ -92,3 +92,24 @@ f23ed43 with synchronized TOCs/package/lockfile and GitHub latest ZIP.
 CurseForge automatically generated #9264796 for Forever 1.60.1; all 14
 downloaded addon files match source after newline normalization. Initial
 status Under Review. Public description updated. No game-folder install.
+
+October 24, 2026, v0.6.3 (Claude cloud session): code review fixes, released
+at the user's request.
+- Gear.Score counted Attack Power twice for profiles that rank it (only
+  Subtlety Rogue), so AP outscored Agility. Fixed; other melee specs keep the
+  existing half-Strength AP credit (unchanged, worth a design review: rogues
+  and Survival hunters arguably should follow Agility).
+- Compare results now mark data-dependent unknowns with waiting=true.
+  GearUI rescans on GET_ITEM_INFO_RECEIVED / ITEM_DATA_LOAD_RESULT only for
+  those, ending constant full rescans for level 1-9 and untalented characters.
+- Gear.Refresh skips all item reads when highlights are off.
+- NS.SpellNames caches a class's localized map once every baseID resolves.
+- Added .github/workflows/test.yml (luacheck globals-only via .luacheckrc,
+  npm ci/test/build on Node 24) and regression tests for each change.
+- Reviewed and kept: Subtlety "at 30 prefer Rupture" hint on Slice and Dice
+  matches the current Icy Veins guide (Rupture beats SnD at 30).
+- Not changed (needs tests that tick OnUpdate): Main.lua still refreshes
+  synchronously on every spellbook/talent event; coalescing would require
+  updating check.cjs to advance frames.
+- The cloud session could not run npm locally (registry blocked); GitHub
+  Actions ran the suite. No in-game testing of these changes.

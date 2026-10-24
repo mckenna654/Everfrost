@@ -74,3 +74,14 @@ pass after the specialization menu cleanup. Checks retain automatic
 detection, saved selections, dismissal, level-10 notices and combat-deferred
 changes. All 14 packaged addon files match source. Actual compact-menu
 rendering still needs a Forever client check.
+
+0.6.3: Lua 5.1 syntax and all simulated rotation/settings/talent/gear checks
+pass on GitHub Actions (npm ci, npm test, npm run build), plus a luacheck
+global-variable check of all seven addon files. New regressions cover
+Subtlety Rogue Attack Power scored once at its own weight (Agility now
+ranks above it), unchanged half-Strength AP credit for other melee specs,
+no rescans on item-data events for permanently unscored results (below
+level 10, no tree), no item reads while gear highlights are off, recovery
+when re-enabled, and the localized spell-name cache (retried until
+complete, then reused). Actual Forever client behaviour still needs
+in-game checks.
