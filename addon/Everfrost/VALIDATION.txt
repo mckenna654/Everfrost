@@ -85,3 +85,9 @@ level 10, no tree), no item reads while gear highlights are off, recovery
 when re-enabled, and the localized spell-name cache (retried until
 complete, then reused). Actual Forever client behaviour still needs
 in-game checks.
+
+0.6.4: Packaging-only fix after CurseForge rejected 0.6.3 (its package
+contained Everfrost-Source/CLAUDE.md, a folder without a .toc). .pkgmeta now
+ignores CLAUDE.md, and check.cjs fails if any top-level non-dot file or
+folder other than addon/Everfrost would be packaged. Lua files unchanged
+from 0.6.3; all simulated checks and luacheck run again on GitHub Actions.

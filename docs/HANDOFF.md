@@ -122,3 +122,11 @@ built-in browser is not signed in to authors.curseforge.com.
   updating check.cjs to advance frames.
 - The cloud session could not run npm locally (registry blocked); GitHub
   Actions ran the suite. No in-game testing of these changes.
+
+October 24, 2026, v0.6.4: CurseForge rejected file #9305163 (v0.6.3):
+"Addon does not contain a .toc file. Folder Everfrost-Source must contain a
+file named Everfrost-Source.toc." Its ZIP held Everfrost-Source/CLAUDE.md,
+added by the earlier Claude/Codex setup commit and missing from .pkgmeta
+ignore. Fixed .pkgmeta and added a packaging regression check in check.cjs.
+Released as 0.6.4 rather than moving the v0.6.3 tag. Addon code identical to
+0.6.3. The GitHub v0.6.3 release remains (its ZIP is correct).

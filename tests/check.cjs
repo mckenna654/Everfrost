@@ -549,6 +549,21 @@ local row=NS.Settings.window.pages.Guide.rows[5]; row.scripts.OnClick(row); asse
 print('Legacy native settings registration and missing minimap fallback: passed')
 `);
 
+// CurseForge packages the whole repository as Everfrost-Source, then moves the
+// addon out. Any top-level file it keeps (CLAUDE.md in 0.6.3) leaves a folder
+// without a .toc, and CurseForge rejects the upload.
+{
+  const repo = path.resolve(__dirname, '..');
+  const pkgmeta = fs.readFileSync(path.join(repo, '.pkgmeta'), 'utf8');
+  const ignoreBlock = pkgmeta.split(/^ignore:\s*$/m)[1].split(/^\S/m)[0];
+  const ignored = new Set([...ignoreBlock.matchAll(/^\s*-\s*(.+?)\s*$/gm)].map(m => m[1]));
+  // Dotfiles are excluded by CurseForge; addon/Everfrost is moved to Everfrost.
+  const packaged = fs.readdirSync(repo).filter(name => !name.startsWith('.') && name !== 'addon' && !ignored.has(name));
+  assert.deepEqual(packaged, [], 'Add these to .pkgmeta ignore: ' + packaged.join(', '));
+  assert.deepEqual(fs.readdirSync(path.join(repo, 'addon')), ['Everfrost']);
+  console.log('CurseForge packaging: only addon/Everfrost is packaged: passed');
+}
+
 const packageVersion = require('../package.json').version;
 for (const toc of ['addon/Everfrost/Everfrost.toc', 'Everfrost-Source.toc']) {
   const metadata = require('fs').readFileSync(toc, 'utf8');

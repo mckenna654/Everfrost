@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.4 — CurseForge packaging fix
+
+- Republish the 0.6.3 fixes for CurseForge. The 0.6.3 package was rejected because a repository notes file was included next to the addon; packaging now excludes it, and an automated check stops this from happening again. Addon behaviour is identical to 0.6.3.
+
 ## 0.6.3 — Gear scoring fix and lighter background work
 
 - Fix Subtlety Rogue gear scoring: Attack Power was counted twice, so it outscored Agility and could mark worse items as upgrades. It now follows the guide's order (Agility above Attack Power).

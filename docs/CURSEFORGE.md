@@ -4,7 +4,11 @@
 
 A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1–30, nine classes and 27 talent trees**. Written with **OpenAI Codex**. No third-party addon libraries are required.
 
-## What's new in 0.6.3
+## What's new in 0.6.4
+
+- Brings the 0.6.3 improvements below to CurseForge. The 0.6.3 upload was rejected for a packaging mistake (an extra repository file); addon behaviour is the same.
+
+## Included from 0.6.3
 
 - **Subtlety Rogue gear fix:** Attack Power was counted twice and could beat Agility. Upgrades now follow the guide's order, with Agility above Attack Power.
 - **Lighter background work:** bags are no longer rescanned whenever item details load for characters whose gear isn't scored yet (below level 10 or no talent tree). Turning gear highlights off now skips item reading entirely.
@@ -57,7 +61,7 @@ Left-click the minimap logo for settings, right-click to toggle the reference pa
 
 ## Releases and verification
 
-The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling. **0.6.2** tidies the specialization picker into a compact single-line menu. **0.6.3** fixes Subtlety Rogue Attack Power scoring and reduces background bag scans.
+The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling. **0.6.2** tidies the specialization picker into a compact single-line menu. **0.6.3** fixes Subtlety Rogue Attack Power scoring and reduces background bag scans; it reached CurseForge as **0.6.4** after a packaging fix.
 
 Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse and settings layout; the latest talent-detection fix, new panel styling/opacity and complete Forever compatibility still need in-game verification. English guidance; some Forever-specific spells depend on English spellbook names.
 

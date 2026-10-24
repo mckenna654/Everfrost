@@ -5,6 +5,7 @@ enable-nolib-creation: no
 ignore:
   - Everfrost-Source.toc
   - AGENTS.md
+  - CLAUDE.md
   - README.md
   - LICENSE
   - package.json
