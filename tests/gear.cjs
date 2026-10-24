@@ -168,6 +168,22 @@ assert(G.Compare(item(41,'INVTYPE_RANGED',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=10},
 local mutilate=ctx('ROGUE',1); mutilate.daggers=true
 assert(G.Compare(stick,empty(),mutilate).kind=='greed')
 assert(G.Compare(item(42,'INVTYPE_WEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=10},2,15),empty(),mutilate).kind=='need')
+-- Subtlety ranks Attack Power below Agility: score it once at its own weight.
+local subtlety=ctx('ROGUE',3); local subProfile=NS.gearProfiles.ROGUE[3]
+local apItem=item(43,nil,{ITEM_MOD_ATTACK_POWER_SHORT=10},4,2)
+local agilityItem=item(44,nil,{ITEM_MOD_AGILITY_SHORT=10},4,2)
+assert(G.Score(apItem,subtlety,subProfile)==10*subProfile.weights.attack)
+assert(G.Score(agilityItem,subtlety,subProfile)>G.Score(apItem,subtlety,subProfile))
+local subEquip=empty(); subEquip[5]=apItem
+assert(G.Compare(agilityItem,subEquip,subtlety).kind=='need')
+-- Melee specs without an Attack Power rank keep the existing half-Strength credit.
+local combatProfile=NS.gearProfiles.ROGUE[2]
+assert(G.Score(apItem,ctx('ROGUE',2),combatProfile)==10*combatProfile.weights.strength/2)
+-- Only results that depend on missing item data wait for item-data events.
+assert(G.Compare(nil,equipment,c).waiting==true)
+local unscoredYoung=ctx('WARRIOR',1); unscoredYoung.level=9
+assert(not G.Compare(nil,equipment,unscoredYoung).waiting)
+assert(not G.Compare(item(2,nil,{ITEM_MOD_STRENGTH_SHORT=8}),equipment,ctx('WARRIOR',0)).waiting)
 print('Gear profiles: 27 specs; stat reversals, aliases, eligibility, paired slots, unique limits and weapon layouts passed')
 `);
 run(`
@@ -373,7 +389,16 @@ for _,line in ipairs(GameTooltip.lines) do
  assert(not line:find('Priority:',1,true))
 end
 assert(notes==1)
+-- Permanent "not scored" results must not trigger a full rescan on item-data events.
+local quiet=metadataCalls
+fire('GET_ITEM_INFO_RECEIVED',1); fire('ITEM_DATA_LOAD_RESULT',1); tick()
+assert(metadataCalls==quiet and not G.pending)
 EverfrostDB.gear=false; G.Refresh(); assert(not bag.EverfrostGearGlow:IsShown())
+-- Disabled highlights skip item reads entirely, then resume when re-enabled.
+local off=metadataCalls; G.Refresh(); assert(metadataCalls==off and next(G.bags)==nil)
+assert(G.Evaluate('item:201').reason=='Gear highlights are disabled')
+EverfrostDB.gear=true; G.SetContext('MAGE',2,30,'damage',{}); tick()
+assert(metadataCalls>off and bag.EverfrostGearGlow:IsShown())
 print('Gear UI: bag reuse, loot eligibility, async item data, secret rejection, combat deferral, cancellation and legacy APIs passed')
 `);
 console.log('Gear checks passed. Forever client visuals and API behavior still require in-game testing.');

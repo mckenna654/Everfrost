@@ -155,6 +155,18 @@ local n=0; for _ in pairs(known) do n=n+1 end; assert(n==1)
 book[1].level=4; known=NS.ScanSpells('PALADIN'); assert(known.Judgement.id==2)
 combat=true; assert(NS.ScanSpells('PALADIN')==nil); combat=false
 print('Learned-only scan, future/off-spec/passive/secret exclusion, rank selection and combat deferral: passed')
+-- Localized names are cached only after every known spell ID has resolved.
+local lookups,resolve=0,false
+local originalInfo=C_Spell.GetSpellInfo
+C_Spell.GetSpellInfo=function(id) lookups=lookups+1; if resolve then return {name='Loc'..id} end end
+local partial=NS.SpellNames('PRIEST'); local firstPass=lookups
+assert(partial.Smite=='Smite' and firstPass>0)
+NS.SpellNames('PRIEST'); assert(lookups==2*firstPass)
+resolve=true; local names=NS.SpellNames('PRIEST'); local resolved=lookups
+assert(names.Loc585=='Smite' and names.Smite=='Smite')
+assert(NS.SpellNames('PRIEST')==names and lookups==resolved)
+C_Spell.GetSpellInfo=originalInfo
+print('Spell name cache: incomplete localization retried, complete map reused: passed')
 frames={}; currentLevel=5; currentClass='PALADIN'
 local methods={}
 function methods:SetScript(e,cb) self.scripts[e]=cb end

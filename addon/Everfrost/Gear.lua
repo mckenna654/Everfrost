@@ -121,6 +121,8 @@ function G.ReadItem(link)
  G.items[link]=item; return item
 end
 local function unknown(reason) return {kind="unknown",reason=reason} end
+-- Only these results can change when item data finishes loading.
+local function waiting(reason) return {kind="unknown",reason=reason,waiting=true} end
 local function greed(reason) return {kind="greed",reason=reason} end
 function G.Eligible(item, context, p)
  if item.unsupported then return false,"Not equipment for this guide" end
@@ -165,9 +167,10 @@ function G.Score(item, context, p)
   score=score+(values[key] or 0)*weight*scale
  end
  -- AP equivalents follow the relevant primary stat rather than being omitted.
- if not caster then
+ -- A profile that ranks Attack Power itself already scored it in the loop above.
+ if not caster and not w.attack then
   local ap=math.max(s.attack,p.kind=="ranged" and s.rangedAttack or 0)
-  score=score+ap*(w.attack or (p.kind=="ranged" and w.agility or w.strength or w.agility or 1)/2)
+  score=score+ap*((p.kind=="ranged" and w.agility or w.strength or w.agility or 1)/2)
  end
  local relevant
  if caster then relevant=values.spell+(p.kind=="healer" and values.healing or 0)+s.intellect+s.spirit+s.mp5+values.hit+values.crit+values.haste
@@ -202,13 +205,13 @@ local function validPair(main, off, equipped)
 end
 local function comparePair(item, equipped, context, p, carried, candidate)
  local previous=G.Score(equipped[16],context,p)
- if previous==nil or equipped[17]==nil then return unknown("Waiting for equipped weapon data") end
+ if previous==nil or equipped[17]==nil then return waiting("Waiting for equipped weapon data") end
  if equipped[17] then
   local score=G.Score(equipped[17],context,p)
-  if score==nil then return unknown("Waiting for equipped off-hand data") end
+  if score==nil then return waiting("Waiting for equipped off-hand data") end
   previous=previous+score
  end
- local best,waiting
+ local best,partnerPending
  for _,hand in ipairs({16,17}) do
   if fitsHand(item,hand,context,p) then
    local otherHand=hand==16 and 17 or 16
@@ -217,14 +220,14 @@ local function comparePair(item, equipped, context, p, carried, candidate)
     -- A loot candidate is a separate copy and has no carried entry to exclude.
     if entry~=candidate then
      local partner=entry.item
-     if not partner then waiting=true
+     if not partner then partnerPending=true
      elseif fitsHand(partner,otherHand,context,p) then
       local main=hand==16 and item or partner
       local off=hand==17 and item or partner
       if validPair(main,off,equipped) then
        local score,relevant=G.Score(item,context,p)
        local partnerScore,partnerRelevant=G.Score(partner,context,p)
-       if score==nil or partnerScore==nil then waiting=true
+       if score==nil or partnerScore==nil then partnerPending=true
        elseif relevant or partnerRelevant then
         local delta=score+partnerScore-previous
         if not best or delta>best.delta then
@@ -242,7 +245,7 @@ local function comparePair(item, equipped, context, p, carried, candidate)
  if best and best.delta>0.01 then
   best.kind="need"; best.reason="Estimated upgrade only when equipped together"; return best
  end
- if waiting then return unknown("Waiting for carried weapon/off-hand data") end
+ if partnerPending then return waiting("Waiting for carried weapon/off-hand data") end
  if best then
   best.kind="greed"; best.reason="No estimated upgrade from the available weapon/off-hand pairs"; return best
  end
@@ -253,13 +256,13 @@ function G.Compare(item, equipped, context, carried, candidate)
  if context.level<NS.gearMinLevel then return unknown(NS.gearLevelNote) end
  local p=NS.GearProfile(context.class,context.spec,context.role)
  if not p then return unknown("Select a talent tree to compare gear") end
- if not item then return unknown("Waiting for item data") end
+ if not item then return waiting("Waiting for item data") end
  local eligible,reason=G.Eligible(item,context,p)
  if not eligible then return greed(reason) end
  local score,relevant=G.Score(item,context,p)
  if not score then return unknown("Weapon or item stats are unavailable") end
  if (slots[item.loc][1]==16 or slots[item.loc][1]==17) and equipped[16]==nil then
-  return unknown("Waiting for equipped main-hand data")
+  return waiting("Waiting for equipped main-hand data")
  end
  if equipped[16] and equipped[16].loc=="INVTYPE_2HWEAPON" and
   (fitsHand(item,16,context,p) or fitsHand(item,17,context,p)) then
@@ -273,7 +276,7 @@ function G.Compare(item, equipped, context, carried, candidate)
  for _,slot in ipairs(choices) do
   local old=equipped[slot]
   -- false denotes a confirmed empty slot; nil is missing metadata.
-  if old==nil then return unknown("Waiting for equipped item data") end
+  if old==nil then return waiting("Waiting for equipped item data") end
   if (slot==16 or slot==17) and equipped[16] and equipped[16].loc=="INVTYPE_2HWEAPON" and item.loc~="INVTYPE_2HWEAPON" then
    return unknown("Compare a complete one-hand/off-hand setup before replacing a two-handed weapon")
   end
@@ -285,7 +288,7 @@ function G.Compare(item, equipped, context, carried, candidate)
   local allowed=true
   if item.loc=="INVTYPE_2HWEAPON" then
    local off=equipped[17]
-   if off==nil then return unknown("Waiting for off-hand item data") end
+   if off==nil then return waiting("Waiting for off-hand item data") end
    local extra=0
    if off then
     extra=G.Score(off,context,p)
@@ -325,6 +328,12 @@ function G.Refresh()
  if InCombatLockdown() then G.pending=true; return false end
  G.enabled=not EverfrostDB or EverfrostDB.gear~=false
  G.items={}; G.bags={}; G.carried={}; G.equipment={}
+ -- Turned off: skip every item read; painting with no results clears old glows.
+ if not G.enabled then
+  G.pending=false
+  if G.Paint then G.Paint() end
+  return true
+ end
  for slot=1,19 do
   local result=NS.Call(GetInventoryItemLink,"player",slot)
   if result and NS.Public(result[1]) then
@@ -355,6 +364,7 @@ function G.Refresh()
  return true
 end
 function G.Evaluate(link)
- if G.pending or not G.enabled then return unknown(G.enabled and "Updates after combat or item data refresh" or "Gear highlights are disabled") end
+ if not G.enabled then return unknown("Gear highlights are disabled") end
+ if G.pending then return waiting("Updates after combat or item data refresh") end
  return G.Compare(G.ReadItem(link),G.equipment,G.context,G.carried)
 end

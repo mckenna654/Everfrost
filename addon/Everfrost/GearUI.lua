@@ -270,9 +270,10 @@ eventFrame:SetScript("OnEvent",function(_,event,value)
  elseif event=="PLAYER_REGEN_DISABLED" then G.pending=true; G.Paint(); return end
  if event=="GET_ITEM_INFO_RECEIVED" or event=="ITEM_DATA_LOAD_RESULT" then
   -- Cache hits may also emit this event; only missing data should trigger a rescan.
+  -- Permanent "not scored" results (below level 10, no tree) never wait on data.
   local waiting=false
-  for _,bag in pairs(G.bags) do for _,item in pairs(bag) do if item.result.kind=="unknown" then waiting=true end end end
-  for _,item in pairs(G.rolls) do if item.result.kind=="unknown" then waiting=true end end
+  for _,bag in pairs(G.bags) do for _,item in pairs(bag) do if item.result and item.result.waiting then waiting=true end end end
+  for _,item in pairs(G.rolls) do if item.result and item.result.waiting then waiting=true end end
   if not waiting then return end
  end
  G.pending=true; G.Paint(); G.Schedule()

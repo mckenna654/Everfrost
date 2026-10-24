@@ -153,18 +153,26 @@ NS.baseIDs={
  ["Searing Totem"]=3599,["Lightning Bolt"]=403,["Flame Shock"]=8050,["Earth Shock"]=8042,
  ["Lightning Shield"]=324,["Healing Wave"]=331,["Lesser Healing Wave"]=8004,["Healing Stream Totem"]=5394,
 }
+-- Localized names never change during a session. Cache a class's map only once
+-- every known ID has resolved, so late-loading spell data is still picked up.
+local spellNameCache={}
 function NS.SpellNames(class)
- local names={}
+ if spellNameCache[class] then return spellNameCache[class] end
+ local names,complete={},true
  for _,p in pairs(NS.profiles[class] or {}) do
   for _,list in ipairs({p.steps,p.healing or {},p.bear or {},p.caster or {},p.melee or {}}) do
    for _,entry in ipairs(list) do
     names[entry.name]=entry.name
     local id=NS.baseIDs[entry.name]
-    local info=id and call(C_Spell and C_Spell.GetSpellInfo,id); info=info and info[1]
-    if info and NS.Public(info.name) and type(info.name)=="string" then names[info.name]=entry.name end
+    if id then
+     local info=call(C_Spell and C_Spell.GetSpellInfo,id); info=info and info[1]
+     if info and NS.Public(info.name) and type(info.name)=="string" then names[info.name]=entry.name
+     else complete=false end
+    end
    end
   end
  end
+ if complete then spellNameCache[class]=names end
  return names
 end
 function NS.ScanSpells(class)
