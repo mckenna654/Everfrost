@@ -93,8 +93,12 @@ CurseForge automatically generated #9264796 for Forever 1.60.1; all 14
 downloaded addon files match source after newline normalization. Initial
 status Under Review. Public description updated. No game-folder install.
 
-October 24, 2026, v0.6.3 (Claude cloud session): code review fixes, released
-at the user's request.
+October 24, 2026, v0.6.3 (Claude cloud session): code review fixes, prepared
+for release at the user's request. RELEASE PENDING: the cloud session could
+not push tags or create releases (GitHub proxy denied tag push and the
+tag/release API with 403). main at 8b5047c is release-ready: tag it v0.6.3,
+publish the GitHub release with dist/Everfrost-0.6.3.zip, then verify the
+CurseForge file as in docs/RELEASING.md.
 - Gear.Score counted Attack Power twice for profiles that rank it (only
   Subtlety Rogue), so AP outscored Agility. Fixed; other melee specs keep the
   existing half-Strength AP credit (unchanged, worth a design review: rogues
