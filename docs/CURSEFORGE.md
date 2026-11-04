@@ -4,7 +4,11 @@
 
 A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1–30, nine classes and 27 talent trees**. Written with **OpenAI Codex**. No third-party addon libraries are required.
 
-## What's new in 0.6.4
+## What's new in 0.6.5
+
+- **Tidier text:** the panel header and settings footer share one format ("Elemental Shaman", "Level 18 / Auto", "Shaman / Level 18"), help text uses two consistent greys, and the "start at level 10" note no longer repeats in item tooltips once your gear is being scored.
+
+## Included from 0.6.4
 
 - Brings the 0.6.3 improvements below to CurseForge. The 0.6.3 upload was rejected for a packaging mistake (an extra repository file); addon behaviour is the same.
 

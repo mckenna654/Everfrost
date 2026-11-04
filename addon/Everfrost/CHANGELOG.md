@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.5 — Text and colour polish
+
+- Use one status-line format across the addon: the panel header now reads "Elemental Shaman" and "Level 18 / Auto" (or "Level 18 / Pending"), and the settings footer "Shaman / Level 18", with single spaces and no uppercase.
+- Reduce help and footer text to two greys (secondary and muted) instead of six near-identical shades.
+- Stop repeating the "start at level 10" note in item tooltips once gear is being scored. It still appears in Settings and in tooltips below level 10.
+
+No rotation or gear rules changed. Simulated-client tests and the Lua globals check pass; the new text and colours still need an in-game look.
+
 ## 0.6.4 — CurseForge packaging fix
 
 - Republish the 0.6.3 fixes for CurseForge. The 0.6.3 package was rejected because a repository notes file was included next to the addon; packaging now excludes it, and an automated check stops this from happening again. Addon behaviour is identical to 0.6.3.
