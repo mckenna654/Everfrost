@@ -144,3 +144,10 @@ the level-10 note no longer repeats in item tooltips once gear is scored
 rules changed. npm test and luacheck pass. The new text and colours still
 need an in-game look. Next step: review the PR, then merge and bump the
 version when releasing.
+
+Published 0.6.5 on November 4, 2026: GitHub latest v0.6.5 (701fc5c) with the
+PR #3 text and colour polish; version bumped in both TOCs, package.json,
+package-lock.json, README and CHANGELOG. CurseForge webhook returned 200;
+file ID and Forever 1.60.1 target still need a look in the author console.
+Next steps: paste docs/CURSEFORGE.md into the public CurseForge description,
+and check the new header text and greys in game.

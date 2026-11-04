@@ -164,3 +164,17 @@ verified local archive. CurseForge generated Release file #9305197
 validation and is Under Review. All 14 downloaded addon files match source
 byte for byte; only the usual empty Everfrost-Source/addon/ directory is
 extra. The public project description has not been updated for 0.6.3/0.6.4.
+
+## 0.6.5 — November 4, 2026
+
+Released the text and colour polish from PR #3 (one status-line format,
+two grey text roles, no repeated level-10 note in scored item tooltips) as
+GitHub latest v0.6.5, annotated tag at 701fc5c on main. GitHub Actions
+passed on main before tagging; npm test, luacheck and npm run build passed
+locally. Release ZIP SHA-256 matches the locally built archive:
+36de8669a0473129c3aa950527ee2a0dded4266e5e91d25a54f992cf15de8e81.
+The CurseForge package webhook received the refs/tags/v0.6.5 push and
+returned HTTP 200. Still to confirm in the CurseForge author console: the
+generated file ID, that it targets Forever 1.60.1, and its contents. The
+public CurseForge description has not been updated since 0.6.2; the current
+text is in docs/CURSEFORGE.md.
