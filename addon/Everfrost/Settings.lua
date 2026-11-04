@@ -77,7 +77,7 @@ end
 function S:Refresh()
  if not window or not api then return end
  local db=api.DB(); local state=api.State()
- window.status:SetText(state.className.."  /  Level "..state.level..(state.pending and "  /  Changes after combat" or ""))
+ window.status:SetText(state.className.." / Level "..state.level..(state.pending and " / Changes after combat" or ""))
  for name,page in pairs(window.pages) do
   page:SetShown(name==self.page)
   window.tabs[name]:SetTabSelected(name==self.page)
@@ -171,7 +171,7 @@ function NS.CreateSettings(controller)
   if index==1 then value=nil end
   guide.rows[index]=check(guide,"",-42-(index-1)*24,function() api.SelectGuide(value) end)
  end
- guide.note=label(guide,"",11,0,-172,400); guide.note:SetTextColor(0.7,0.7,0.7)
+ guide.note=label(guide,"",11,0,-172,400); guide.note:SetTextColor(0.8,0.8,0.8)
  guide.single=button(guide,"Single target",0,-212,140,function() command("single") end)
  guide.aoe=button(guide,"Multiple targets",148,-212,140,function() command("aoe") end)
  guide.role=button(guide,"View",0,-244,288,function() api.ToggleRole() end)
@@ -205,11 +205,11 @@ function NS.CreateSettings(controller)
   GameTooltip:Show()
  end)
  panel.opacitySlider:SetScript("OnLeave",function() GameTooltip:Hide() end)
- label(panel,"Opacity fades the whole panel. Drag its header to move it. /everfrost always opens settings.",11,0,-204,400):SetTextColor(0.7,0.7,0.7)
+ label(panel,"Opacity fades the whole panel. Drag its header to move it. /everfrost always opens settings.",11,0,-204,400):SetTextColor(0.8,0.8,0.8)
  panel.reset=button(panel,"Reset position & size",0,-244,180,function() command("reset") end)
  local gear=window.pages.Gear
  gear.enabled=check(gear,"Highlight gear upgrades",-30,function(on) command(on and "gear on" or "gear off") end)
- label(gear,"Upgrades pulse in the item's rarity colour. Hover an item for its comparison and any required weapon partner.",11,0,-62,400):SetTextColor(0.85,0.85,0.85)
+ label(gear,"Upgrades pulse in the item's rarity colour. Hover an item for its comparison and any required weapon partner.",11,0,-62,400):SetTextColor(0.8,0.8,0.8)
  gear.levelNote=label(gear,NS.gearLevelNote,11,0,-98,400); gear.levelNote:SetTextColor(1,0.82,0)
  gear.priorityTitle=label(gear,"Current stat priority",12,0,-132,400); gear.priorityTitle:SetTextColor(1,0.82,0)
  gear.priority=label(gear,"",12,0,-154,400); gear.priority:SetHeight(66)
@@ -220,7 +220,7 @@ function NS.CreateSettings(controller)
   GameTooltip:Show()
  end)
  gear.rescan:SetScript("OnLeave",function() GameTooltip:Hide() end)
- window.status=label(window,"",11,16,-367,416); window.status:SetTextColor(0.7,0.7,0.7)
+ window.status=label(window,"",11,16,-367,416); window.status:SetTextColor(0.6,0.6,0.6)
  UISpecialFrames=UISpecialFrames or {}; UISpecialFrames[#UISpecialFrames+1]="EverfrostSettingsWindow"
  createMinimap(); registerSettings(); S:Refresh()
 end

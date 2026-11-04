@@ -75,7 +75,6 @@ function G.Tooltip(tooltip,result,roll)
  if roll and result.kind~="unknown" then label=label..(result.kind=="need" and " / Need" or " / Greed") end
  tooltip:AddLine("Everfrost: "..label,1,0.82,0.22)
  tooltip:AddLine(result.reason,0.85,0.9,1,true)
- if result.reason~=NS.gearLevelNote then tooltip:AddLine(NS.gearLevelNote,0.75,0.82,0.92,true) end
  if result.combined then
   tooltip:AddLine("Pair with: "..result.companionName,1,0.82,0.22,true)
   tooltip:AddLine("Combined pair compared with your equipped two-hander; equip both items.",0.85,0.9,1,true)
