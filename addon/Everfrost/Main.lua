@@ -99,9 +99,8 @@ render=function()
  if NS.Gear then NS.Gear.SetContext(class,gearSpec,level,effectiveRole(gearSpec),known) end
  local list,note,profile=NS.BuildRows(class,spec,level,known,db.aoe and "aoe" or "single",role)
  local specName=NS.trees[class] and NS.trees[class][spec] or "Leveling"
- frame.title:SetText(specName.."  "..className)
- frame.meta:SetText("LEVEL "..level.."   /   "..status:upper())
- if pending then frame.meta:SetText("LEVEL "..level.."   /   PENDING") end
+ frame.title:SetText(specName.." "..className)
+ frame.meta:SetText("Level "..level.." / "..(pending and "Pending" or status))
  frame.mode:SetText(db.aoe and "AoE" or "Single")
  frame.role:SetShown(profile and (profile.healing or profile.bear or profile.melee) and true or false)
  frame.role:SetText(role=="melee" and "Melee" or role=="ranged" and "Ranged" or role=="heal" and "Heal" or role=="bear" and "Bear" or role=="caster" and "Caster" or (profile and profile.bear and "Cat" or "Damage"))
@@ -163,7 +162,7 @@ local function createGuideMenu()
   menu.rows[index]=row
  end
  menu.footer=text(menu,10); menu.footer:SetPoint("BOTTOMLEFT",16,12); menu.footer:SetWidth(212); menu.footer:SetHeight(14)
- menu.footer:SetTextColor(0.7,0.68,0.6)
+ menu.footer:SetTextColor(0.6,0.6,0.6)
  updateGuideMenu=function()
   for index,row in ipairs(menu.rows) do
    local selected=db.spec==row.value
@@ -220,7 +219,7 @@ local function createUI()
   frame.guideMenu:ClearAllPoints(); frame.guideMenu:SetPoint("TOPLEFT",frame.guide,"BOTTOMLEFT",-4,-3)
   frame.guideCatcher:Show(); frame.guideMenu:Show()
  end)
- frame.meta=text(drag,11); frame.meta:SetPoint("TOPLEFT",8,-35); frame.meta:SetWidth(130); frame.meta:SetWordWrap(false); frame.meta:SetTextColor(0.75,0.75,0.75)
+ frame.meta=text(drag,11); frame.meta:SetPoint("TOPLEFT",8,-35); frame.meta:SetWidth(130); frame.meta:SetWordWrap(false); frame.meta:SetTextColor(0.8,0.8,0.8)
  frame.mode=chip(drag,64); frame.mode:SetPoint("TOPRIGHT",-6,-29)
  frame.mode:SetScript("OnClick",function() db.aoe=not db.aoe; render() end)
  frame.role=chip(drag,66); frame.role:SetPoint("RIGHT",frame.mode,"LEFT",-4,0)

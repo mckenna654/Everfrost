@@ -307,7 +307,7 @@ C_Item.GetItemQualityColor=qualityColor; G.Refresh(); assertColor(bag,0.12,1,0)
 -- Native tooltip rebuilds keep the label, without duplicate OnEnter additions.
 GameTooltip.owner=bag; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
 assert(table.concat(GameTooltip.lines,'|'):find('Everfrost: UPGRADE',1,true))
-assert(table.concat(GameTooltip.lines,'|'):find(NS.gearLevelNote,1,true))
+assert(not table.concat(GameTooltip.lines,'|'):find(NS.gearLevelNote,1,true))
 local lineCount=#GameTooltip.lines; bag.hooks.OnEnter(bag); assert(#GameTooltip.lines==lineCount)
 GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
 assert(#GameTooltip.lines==lineCount and tooltipRegistrations==1)

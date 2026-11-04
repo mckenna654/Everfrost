@@ -134,3 +134,13 @@ Published 0.6.4: GitHub latest v0.6.4 (fe1f0de) and CurseForge file
 #9305197, Under Review, all 14 files verified against source. Next steps:
 copy docs/CURSEFORGE.md into the public CurseForge description if wanted,
 and in-game checks of the 0.6.3 gear changes (Subtlety upgrades, gear-off).
+
+November 4, 2026, unreleased UI polish (branch claude/ui-polish): status
+lines now share one format ("Elemental Shaman", "Level 18 / Auto",
+"Shaman / Level 18") with single spaces and no uppercase; secondary text is
+0.8 grey and footers/status 0.6 grey instead of six near-identical greys;
+the level-10 note no longer repeats in item tooltips once gear is scored
+(it stays in settings and in tooltips below level 10). No rotation or gear
+rules changed. npm test and luacheck pass. The new text and colours still
+need an in-game look. Next step: review the PR, then merge and bump the
+version when releasing.
