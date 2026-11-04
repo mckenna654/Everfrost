@@ -147,7 +147,8 @@ version when releasing.
 
 Published 0.6.5 on November 4, 2026: GitHub latest v0.6.5 (701fc5c) with the
 PR #3 text and colour polish; version bumped in both TOCs, package.json,
-package-lock.json, README and CHANGELOG. CurseForge webhook returned 200;
-file ID and Forever 1.60.1 target still need a look in the author console.
-Next steps: paste docs/CURSEFORGE.md into the public CurseForge description,
-and check the new header text and greys in game.
+package-lock.json, README and CHANGELOG. CurseForge generated Release file
+#9430703 for 1.60.1 (Processing when last checked); its 14 addon files match
+the tag. The public CurseForge description is updated from docs/CURSEFORGE.md.
+Next steps: confirm the file gets approved, and check the new header text and
+greys in game.

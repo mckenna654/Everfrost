@@ -65,7 +65,7 @@ Left-click the minimap logo for settings, right-click to toggle the reference pa
 
 ## Releases and verification
 
-The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling. **0.6.2** tidies the specialization picker into a compact single-line menu. **0.6.3** fixes Subtlety Rogue Attack Power scoring and reduces background bag scans; it reached CurseForge as **0.6.4** after a packaging fix.
+The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling. **0.6.2** tidies the specialization picker into a compact single-line menu. **0.6.3** fixes Subtlety Rogue Attack Power scoring and reduces background bag scans; it reached CurseForge as **0.6.4** after a packaging fix. **0.6.5** tidies status text, grey text and repeated tooltip notes.
 
 Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse and settings layout; the latest talent-detection fix, new panel styling/opacity and complete Forever compatibility still need in-game verification. English guidance; some Forever-specific spells depend on English spellbook names.
 
