@@ -210,3 +210,18 @@ The CurseForge webhook returned HTTP 200. CurseForge generated Release file
 download URL. Status when checked: Processing, not yet public. All 14 downloaded
 addon files match the tag; only the usual empty Everfrost-Source/addon/ directory
 is extra. Updated the public project description from docs/CURSEFORGE.md.
+
+## 0.6.8 — November 5, 2026
+
+Released the early-game gear help from PR #6 (starter priorities below level
+10, quest reward and merchant marks, plain-word tooltips, empty slot reminders)
+as GitHub latest v0.6.8, annotated tag at 10cdca0 on main. GitHub Actions passed
+on main before tagging; npm test, luacheck and npm run build passed locally.
+Release ZIP SHA-256 matches the locally built archive:
+b0308c05c54089a8906635a064db923e41a6d7c821571181600f16aff95b21a9.
+The CurseForge webhook returned HTTP 200. CurseForge generated Release file
+#9452825 (Everfrost-Source-v0.6.8.zip) for 1.60.1; the ID comes from its download
+URL. Status when checked: Processing, not yet public. All 14 downloaded addon
+files match the tag; only the usual empty Everfrost-Source/addon/ directory is
+extra. v0.6.7 (#9451760) had moved to Approved by then. Updated the public
+project description from docs/CURSEFORGE.md.

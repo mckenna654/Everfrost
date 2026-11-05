@@ -229,3 +229,11 @@ in game, including glow placement on quest and merchant buttons, and the Gear
 Upgrades page layout. Next steps: test at low level (quest reward screen, a
 vendor, empty slots), then review and merge. At release, add the CHANGELOG entry
 and What's new in docs/CURSEFORGE.md; its body already describes these features.
+
+Published 0.6.8 on November 5, 2026: PR #6 merged, GitHub latest v0.6.8
+(10cdca0), CurseForge Release file #9452825 for 1.60.1 (Processing when last
+checked; contents match the tag), public description updated. Released at the
+user's go-ahead without an in-game test on record. Next steps: confirm the file
+gets approved; on a low-level character check a quest reward screen, a vendor,
+the Gear Upgrades page layout and a real group-loot roll; compare the starter
+lists with the Icy Veins levelling sections; retake the README screenshots.
