@@ -102,3 +102,7 @@ luacheck pass. The user reports these changes work in game.
 buttons, bag Initialize arguments, roll cancellation, scoring and spelling).
 All simulated checks and luacheck pass. Not yet checked in game, including
 Need/Greed highlights on a real group-loot roll.
+
+0.6.8: Starter priorities below level 10, quest reward and merchant marks,
+plain-word tooltips and empty slot reminders, written against the Forever UI
+source. All simulated checks and luacheck pass. Not yet checked in game.

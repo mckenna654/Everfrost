@@ -4,7 +4,15 @@
 
 A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1–30, nine classes and 27 talent trees**. Written with **OpenAI Codex**. No third-party addon libraries are required.
 
-## What's new in 0.6.7
+## What's new in 0.6.8
+
+- **Gear hints from level 1:** below level 10, each class uses a short starter stat list. These are Everfrost's own estimates, not guide rankings. Talent-based priorities still start at level 10.
+- **Best quest reward:** quest screens mark the best choice, or the one that sells for the most if none is an upgrade. You still pick the reward.
+- **Merchant upgrades:** vendors highlight upgrades you can afford, and tooltips say when you can't yet.
+- **Plain-word tooltips:** for example, "Better because it has more Strength".
+- **Empty slot reminders:** settings counts empty armour slots, and the panel mentions it if no weapon is equipped.
+
+## Included from 0.6.7
 
 - **Need/Greed highlights:** fixed so they reach Forever's loot-roll buttons, and hiding the UI no longer removes the highlight from an open roll.
 - **Fairer gear scores:** Attack Power now counts properly for Agility specs such as Rogues, plain wands count for Priests, Mages and Warlocks, and a second copy of a Unique-Equipped item is no longer flagged as an upgrade.
@@ -79,9 +87,9 @@ Left-click the minimap logo for settings, right-click to toggle the reference pa
 
 ## Releases and verification
 
-The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling. **0.6.2** tidies the specialisation picker into a compact single-line menu. **0.6.3** fixes Subtlety Rogue Attack Power scoring and reduces background bag scans; it reached CurseForge as **0.6.4** after a packaging fix. **0.6.5** tidies status text, grey text and repeated tooltip notes. **0.6.6** counts more armour as a tie-break and adds a green up arrow to bag upgrades. **0.6.7** fixes Need/Greed highlights on Forever's loot-roll buttons, bag tracking and several gear-score cases.
+The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling. **0.6.2** tidies the specialisation picker into a compact single-line menu. **0.6.3** fixes Subtlety Rogue Attack Power scoring and reduces background bag scans; it reached CurseForge as **0.6.4** after a packaging fix. **0.6.5** tidies status text, grey text and repeated tooltip notes. **0.6.6** counts more armour as a tie-break and adds a green up arrow to bag upgrades. **0.6.7** fixes Need/Greed highlights on Forever's loot-roll buttons, bag tracking and several gear-score cases. **0.6.8** adds starter priorities below level 10, quest reward and merchant marks, plain-word tooltips and empty slot reminders.
 
-Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse, settings layout, armour tie-break and green arrow; the latest talent-detection fix, new panel styling/opacity, the 0.6.7 Need/Greed fix and complete Forever compatibility still need in-game verification. English guidance; some Forever-specific spells depend on English spellbook names.
+Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse, settings layout, armour tie-break and green arrow; the latest talent-detection fix, new panel styling/opacity, the 0.6.7 Need/Greed fix, the 0.6.8 quest and merchant marks and complete Forever compatibility still need in-game verification. English guidance; some Forever-specific spells depend on English spellbook names.
 
 **MIT licensed. Third-party addon-manager distribution is enabled.** Everfrost is independent and is not affiliated with or endorsed by Blizzard, Icy Veins or OpenAI.
 

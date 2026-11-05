@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.8 — Help for early gear
+
+- Gear hints now work from level 1. Below level 10, each class uses a short starter stat list, because there is usually no talent tree to read yet. These lists are Everfrost estimates, not guide rankings. Talent-based priorities still start at level 10.
+- Quest screens mark the best reward choice. If none is an upgrade, the one that sells for the most gets a gold mark. You still pick the reward.
+- Merchants highlight upgrades on the current page once you can afford them, and the tooltip says when you can't yet.
+- Tooltips explain upgrades in plain words, such as "Better because it has more Strength". Below level 10 the score line is hidden.
+- The Gear Upgrades page counts empty armour slots, and the panel mentions it if no weapon is equipped.
+
+Rotation priorities are unchanged. The addon still never picks, buys or equips anything. Simulated-client tests and the Lua globals check pass; these changes still need checking in game, especially the quest reward and merchant screens.
+
 ## 0.6.7 — Loot highlight, scoring and bag fixes
 
 - Fix Need/Greed highlights not reaching Forever's loot-roll buttons, which sit inside a container on the roll frame. Tooltips on those buttons are fixed too.

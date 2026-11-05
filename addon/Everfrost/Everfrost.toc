@@ -3,7 +3,7 @@
 ## IconTexture: Interface\AddOns\Everfrost\Media\Icon.tga
 ## Notes: Level 1-30 spell guides and gear upgrade hints, with simple class priorities below level 10.
 ## Author: Custom addon for Jake
-## Version: 0.6.7
+## Version: 0.6.8
 ## SavedVariablesPerCharacter: EverfrostDB
 Profiles.lua
 Core.lua
