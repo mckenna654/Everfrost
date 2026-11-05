@@ -152,3 +152,22 @@ package-lock.json, README and CHANGELOG. CurseForge generated Release file
 the tag. The public CurseForge description is updated from docs/CURSEFORGE.md.
 Next steps: confirm the file gets approved, and check the new header text and
 greys in game.
+
+November 5, 2026, unreleased (branch claude/armour-tie-breaker): the user's
+screenshot showed Warrior's Girdle (50 armor, mail) marked "No useful stats" for
+Retribution against Ragged Leather Belt (18 armor). Armor is unweighted for
+non-tank profiles and the stat gate returned before any comparison. User chose
+armor as a tie-breaker rather than a scored stat. Gear.Compare now lets armor
+pieces and shields through that gate; more armor with no loss on score is an
+upgrade (result.armorOnly, tooltip states the gain, score line omitted). A
+candidate with no useful stats can only replace another such item, so Stamina
+cannot stand in for lost Strength. This also means Need highlights on group loot
+for these items. Weapons and two-hander pairs are unchanged. The stamina-only
+wording ("No useful stats" although Stamina is listed for Retribution) remains
+for items that do not gain armor. Also added a steady green up arrow on bag
+upgrades using the native bags-greenarrow atlas (Forever ContainerFrame.xml);
+roll buttons keep the glow only. npm test and the build pass; luacheck was not
+run on this PC (CI runs it). None of this is verified in game: check the arrow's
+position and visibility against the glow, the belt tooltip, and that
+RESISTANCE0_NAME really reports armor in Forever, since the tie-break depends on
+it. Public descriptions and CHANGELOG are not updated yet; do that when releasing.
