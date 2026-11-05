@@ -153,7 +153,7 @@ the tag. The public CurseForge description is updated from docs/CURSEFORGE.md.
 Next steps: confirm the file gets approved, and check the new header text and
 greys in game.
 
-November 5, 2026, unreleased (branch claude/armour-tie-breaker): the user's
+November 5, 2026, released as 0.6.6 (PR #4, branch claude/armour-tie-breaker): the user's
 screenshot showed Warrior's Girdle (50 armor, mail) marked "No useful stats" for
 Retribution against Ragged Leather Belt (18 armor). Armor is unweighted for
 non-tank profiles and the stat gate returned before any comparison. User chose
@@ -167,7 +167,8 @@ wording ("No useful stats" although Stamina is listed for Retribution) remains
 for items that do not gain armor. Also added a steady green up arrow on bag
 upgrades using the native bags-greenarrow atlas (Forever ContainerFrame.xml);
 roll buttons keep the glow only. npm test and the build pass; luacheck was not
-run on this PC (CI runs it). None of this is verified in game: check the arrow's
+run on this PC (CI runs it and passed). Before release, the user reported that
+everything works in game. Original test notes, for reference: check the arrow's
 position and visibility against the glow, the belt tooltip, and that
 RESISTANCE0_NAME really reports armor in Forever, since the tie-break depends on
-it. Public descriptions and CHANGELOG are not updated yet; do that when releasing.
+it. Public descriptions and CHANGELOG were updated in the 0.6.6 release commit.

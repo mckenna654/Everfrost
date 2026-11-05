@@ -4,7 +4,12 @@
 
 A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1–30, nine classes and 27 talent trees**. Written with **OpenAI Codex**. No third-party addon libraries are required.
 
-## What's new in 0.6.5
+## What's new in 0.6.6
+
+- **Armor upgrades:** more armor now counts as an upgrade when you lose no useful stats, so a plain mail belt beats a plain leather one instead of showing "No useful stats". Armor only breaks ties and never outweighs a stat loss. These items also highlight **Need** on group loot.
+- **Green up arrow:** bag upgrades now show a green up arrow alongside the glow.
+
+## Included from 0.6.5
 
 - **Tidier text:** the panel header and settings footer share one format ("Elemental Shaman", "Level 18 / Auto", "Shaman / Level 18"), help text uses two consistent greys, and the "start at level 10" note no longer repeats in item tooltips once your gear is being scored.
 
@@ -44,7 +49,7 @@ This is a **basic reference**, not a live next-cast queue or full class guide. I
 
 ## Gear upgrades and Need/Greed
 
-From level 10, standard bag items glow when their estimated guide-based stat score beats an equipped replacement. Hover for the comparison and stat order. Rings and trinkets consider both slots. Complete one-hand/off-hand combinations can compare against two-handers; pair tooltips name the partner, and **both items must be equipped** for that recommendation to apply.
+From level 10, standard bag items glow and show a green up arrow when their estimated guide-based stat score beats an equipped replacement. Armor pieces with more armor and no loss of useful stats also count. Hover for the comparison and stat order. Rings and trinkets consider both slots. Complete one-hand/off-hand combinations can compare against two-handers; pair tooltips name the partner, and **both items must be equipped** for that recommendation to apply.
 
 Standard dungeon and raid loot-roll windows highlight **Need** for estimated upgrades and **Greed** for known non-upgrades or class-irrelevant items. Disabled choices are respected. You choose and click the roll, following your group's loot rules. Missing or restricted data stays unscored; refreshes defer during combat. Custom bag/loot replacements are not integrated.
 
@@ -65,9 +70,9 @@ Left-click the minimap logo for settings, right-click to toggle the reference pa
 
 ## Releases and verification
 
-The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling. **0.6.2** tidies the specialization picker into a compact single-line menu. **0.6.3** fixes Subtlety Rogue Attack Power scoring and reduces background bag scans; it reached CurseForge as **0.6.4** after a packaging fix. **0.6.5** tidies status text, grey text and repeated tooltip notes.
+The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling. **0.6.2** tidies the specialization picker into a compact single-line menu. **0.6.3** fixes Subtlety Rogue Attack Power scoring and reduces background bag scans; it reached CurseForge as **0.6.4** after a packaging fix. **0.6.5** tidies status text, grey text and repeated tooltip notes. **0.6.6** counts more armor as a tie-break and adds a green up arrow to bag upgrades.
 
-Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse and settings layout; the latest talent-detection fix, new panel styling/opacity and complete Forever compatibility still need in-game verification. English guidance; some Forever-specific spells depend on English spellbook names.
+Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse, settings layout, armor tie-break and green arrow; the latest talent-detection fix, new panel styling/opacity and complete Forever compatibility still need in-game verification. English guidance; some Forever-specific spells depend on English spellbook names.
 
 **MIT licensed. Third-party addon-manager distribution is enabled.** Everfrost is independent and is not affiliated with or endorsed by Blizzard, Icy Veins or OpenAI.
 

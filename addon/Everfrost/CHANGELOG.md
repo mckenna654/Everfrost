@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.6 — Armor upgrades and a green arrow
+
+- Count more armor as an upgrade when you lose no useful stats. A plain mail belt now beats a plain leather belt for damage and caster specs, instead of showing "No useful stats". Armor only breaks ties: it never outweighs a stat loss.
+- These items also highlight Need instead of Greed on group loot.
+- Mark bag upgrades with the game's green up arrow alongside the glow. Loot-roll buttons keep the glow only.
+- Tooltips for these upgrades state the armor gained instead of a score.
+
+Simulated-client tests and the Lua globals check pass. The user reports these changes work in game.
+
 ## 0.6.5 — Text and colour polish
 
 - Use one status-line format across the addon: the panel header now reads "Elemental Shaman" and "Level 18 / Auto" (or "Level 18 / Pending"), and the settings footer "Shaman / Level 18", with single spaces and no uppercase.

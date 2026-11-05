@@ -12,7 +12,7 @@ Everfrost is a lightweight, standalone Lua addon for **WoW Forever**. It display
 
 **Written with OpenAI Codex.** The project uses Codex for AI-assisted development, review, and documentation. Automated validation uses a simulated client. Early in-game checks confirmed the gear eligibility fix, rarity pulse and settings layout; the latest talent fix and broader client compatibility still need verification.
 
-[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.6.5](https://github.com/mckenna654/Everfrost/releases/tag/v0.6.5) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
+[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.6.6](https://github.com/mckenna654/Everfrost/releases/tag/v0.6.6) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
 
 CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distribution is enabled. New version tags trigger automatic packaging; file processing and moderation can delay availability.
 
@@ -20,7 +20,7 @@ CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distributio
 
 | Item | Current status |
 | --- | --- |
-| Addon version | **0.6.5** |
+| Addon version | **0.6.6** |
 | Supported levels | **1–30** |
 | Class coverage | Nine classes, 27 talent trees, and nine general leveling profiles |
 | Target interface | `16001` — compatibility with the actual Forever client remains unverified |
@@ -55,7 +55,7 @@ Open any screenshot for its full-size view. Use `/everfrost` to open these setti
 - Provides concise hover guidance for openers, maintenance effects, fillers, and situational abilities.
 - Offers single-target and AoE views, healing and damage views, and dedicated Feral and Survival role controls.
 - Shows native cooldown sweeps when the client supports cooldown duration objects.
-- Highlights estimated bag upgrades with a pulsing border in the item's rarity colour using the detected class/spec stat priorities.
+- Highlights estimated bag upgrades with a pulsing border in the item's rarity colour and a green up arrow, using the detected class/spec stat priorities.
 - Highlights Need for estimated loot upgrades and Greed for known non-upgrades or class-irrelevant loot; you make the roll.
 - Adds a clear UPGRADE label, score comparisons and stat priorities to item-button hover tooltips.
 - Provides native-style Specialization, Rotation Panel and Gear Upgrades settings, plus a draggable minimap button.
@@ -70,7 +70,7 @@ Everfrost does not evaluate combat resources, proc buffs, target health, enemy c
 
 ## Gear upgrades and loot rolls
 
-Gear hints are enabled by default. Open the standard bags: a pulsing border in the item's rarity colour marks equipment with a higher estimated stat score than its equipped replacement. Hover the item for a clear **UPGRADE** label and the score change and the detected specialization's priorities. Rings and trinkets compare against both equipped slots; two-handed weapons include the displaced off-hand in their comparison.
+Gear hints are enabled by default. Open the standard bags: a pulsing border in the item's rarity colour and a green up arrow mark equipment with a higher estimated stat score than its equipped replacement. Armor pieces with more armor and no loss of useful stats also count, even if they have no other stats. Hover the item for a clear **UPGRADE** label and the score change and the detected specialization's priorities. Rings and trinkets compare against both equipped slots; two-handed weapons include the displaced off-hand in their comparison.
 
 **Complete weapon comparisons:** when replacing an equipped two-hander, Everfrost searches your carried bags for a usable one-hand/off-hand pair. Each candidate is compared together with its best valid partner; an estimated pair upgrade can highlight both bag items. The tooltip names the partner and makes clear that you must equip both. Loot candidates use partners you already carry. Shields, held off-hands and learned Dual Wield are supported; an incomplete or unresolved pair stays unscored.
 
@@ -84,7 +84,7 @@ Use `/everfrost gear` to print your current stat order, `/everfrost gear off` to
 
 ## Installation
 
-1. Download **`Everfrost-0.6.5.zip`** from the [v0.6.5 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.6.5).
+1. Download **`Everfrost-0.6.6.zip`** from the [v0.6.6 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.6.6).
 2. Exit WoW Forever.
 3. Extract the archive's `Everfrost` folder into your Forever client's `Interface/AddOns` directory.
 4. Confirm the resulting path is `Interface/AddOns/Everfrost/Everfrost.toc`.
@@ -204,7 +204,7 @@ The packaging command uses Node.js and works on Windows, macOS and Linux:
 npm run build
 ```
 
-It creates `dist/Everfrost-0.6.5.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
+It creates `dist/Everfrost-0.6.6.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
 
 When releasing a new version, update `addon/Everfrost/Everfrost.toc` and `package.json` together, keep lockfile metadata synchronized, run the tests, and verify the archive contents before uploading.
 

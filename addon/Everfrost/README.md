@@ -86,7 +86,7 @@ Some source pages still contain older level-20 sections alongside newer guidance
 
 ## Gear upgrades and Need/Greed highlights
 
-Enabled by default for levels 10–30. Standard bag items get a pulsing border in the item's rarity colour when their estimated score beats an equipped replacement. Standard loot-roll windows highlight Need for estimated upgrades and Greed for known non-upgrades or irrelevant items. Disabled choices are respected, and you click the roll yourself. Hover for the score difference and stat order.
+Enabled by default for levels 10–30. Standard bag items get a pulsing border in the item's rarity colour and a green up arrow when their estimated score beats an equipped replacement. Armor pieces with more armor and no loss of useful stats also count. Standard loot-roll windows highlight Need for estimated upgrades and Greed for known non-upgrades or irrelevant items. Disabled choices are respected, and you click the roll yourself. Hover for the score difference and stat order.
 
 Use `/everfrost gear` to show the selected priorities, or `/everfrost gear on` / `off` to toggle the feature. **Stat priorities and gear upgrade hints start at level 10** including for manual spec choices. This note is also displayed in settings, gear tooltips and panel hover text. Leveling uses the tree with the most talent points in the active talent group from level 10 onward. All three tree counts must be available. The settings Gear Upgrades page identifies the inferred spec; ties, unspent talents or unavailable data stay unscored. From level 10, manual spec choices override detection. A healer's DAMAGE view still uses healing gear priorities. Survival uses ranged priorities before its melee requirements are met or when RANGED is selected.
 
