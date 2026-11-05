@@ -88,6 +88,7 @@ function G.ReadItem(link)
  end
  if not public(info[9],"string") or not public(info[5],"number") then return nil end
  local item={link=link,id=tonumber(link:match("item:(%d+)")),name=info[1],level=info[5],loc=info[9],classID=info[12],subclassID=info[13]}
+ item.sellPrice=public(info[11],"number") and info[11] or 0
  -- Cosmetic rarity metadata is cached outside combat, independently of scoring.
  item.color={1,1,1}
  local quality=info[3]
@@ -147,9 +148,9 @@ function G.Eligible(item, context, p)
  if context.daggers and item.classID==2 and (item.loc=="INVTYPE_WEAPON" or item.loc=="INVTYPE_WEAPONMAINHAND" or item.loc=="INVTYPE_WEAPONOFFHAND") and item.subclassID~=15 then return false,"Mutilate requires daggers" end
  return true
 end
-function G.Score(item, context, p)
- if not item or not item.stats then return nil end
- local s=item.stats; local w=p.weights
+-- The amounts a profile actually credits, including its school and rating aliases.
+local function effective(item, p)
+ local s=item.stats
  local caster=p.kind=="caster" or p.kind=="healer"
  local ratingKind=caster and "SPELL" or p.kind=="ranged" and "RANGED" or "MELEE"
  local values={}
@@ -162,17 +163,24 @@ function G.Score(item, context, p)
  local ranged=item.loc=="INVTYPE_RANGED" or item.loc=="INVTYPE_RANGEDRIGHT" or item.loc=="INVTYPE_THROWN"
  local weapon=item.classID==2
  local damageWeapon=weapon and ((p.kind=="ranged" and ranged) or (not caster and p.kind~="ranged" and not ranged))
- if damageWeapon and s.dps<=0 then return nil end
  values.dps=damageWeapon and s.dps or 0
  -- Stat sticks do not get melee/ranged DPS credit for the wrong role.
+ -- A wand is a caster's Shoot damage. No guide ranks it, so DPS earns a small fixed credit.
+ values.wand=caster and item.classID==2 and item.subclassID==19 and s.dps or 0
+ return values,damageWeapon
+end
+function G.Score(item, context, p)
+ if not item or not item.stats then return nil end
+ local s=item.stats; local w=p.weights
+ local caster=p.kind=="caster" or p.kind=="healer"
+ local values,damageWeapon=effective(item,p)
+ if damageWeapon and s.dps<=0 then return nil end
  local score=0
  for key,weight in pairs(w) do
   local scale=key=="armor" and 0.02 or key=="dps" and 12 or 1
   score=score+(values[key] or 0)*weight*scale
  end
- -- A wand is a caster's Shoot damage. No guide ranks it, so DPS earns a small fixed credit.
- local wand=caster and item.classID==2 and item.subclassID==19 and s.dps or 0
- score=score+wand
+ score=score+values.wand
  -- AP equivalents follow the relevant primary stat rather than being omitted.
  -- A profile that ranks Attack Power itself already scored it in the loop above.
  if not caster and not w.attack then
@@ -181,7 +189,7 @@ function G.Score(item, context, p)
   score=score+ap*(primary>0 and primary or 1)/2
  end
  local relevant
- if caster then relevant=values.spell+(p.kind=="healer" and values.healing or 0)+s.intellect+s.spirit+s.mp5+values.hit+values.crit+values.haste+wand
+ if caster then relevant=values.spell+(p.kind=="healer" and values.healing or 0)+s.intellect+s.spirit+s.mp5+values.hit+values.crit+values.haste+values.wand
  else relevant=s.strength+s.agility+s.attack+s.rangedAttack+values.dps+values.hit+values.crit+(s.expertise or 0)
   if p.kind=="tank" then relevant=relevant+s.stamina+s.armor+s.block+s.defense end
   if context.class=="PALADIN" then relevant=relevant+values.spell end
@@ -264,10 +272,29 @@ local function armorGain(item, old)
  if item.classID~=4 or (old and old.classID~=4) then return 0 end
  return item.stats.armor-(old and old.stats.armor or 0)
 end
+-- The most important stat that favours one item, in the words a new player would use.
+local function explain(result, item, old, p)
+ if result.armorOnly or result.combined then return nil end
+ if old==false then return result.kind=="need" and "Better because that slot is empty." or nil end
+ if not old or not old.stats then return nil end
+ local mine,theirs=effective(item,p),effective(old,p)
+ local winner=result.kind=="need" and mine or theirs
+ local loser=result.kind=="need" and theirs or mine
+ for rank,group in ipairs(p.order) do
+  for key in group:gmatch("%S+") do
+   if (winner[key] or 0)>(loser[key] or 0)+0.001 then
+    local label=NS.gearStatLabels[key] or key
+    if result.kind=="need" then return "Better because it has more "..label..(rank==1 and ", your top priority." or ".") end
+    return "Your current item has more "..label.."."
+   end
+  end
+ end
+ if winner.wand>loser.wand then return result.kind=="need" and "Better because it has a stronger wand attack." or "Your current wand attacks harder." end
+ return nil
+end
 function G.Compare(item, equipped, context, carried, candidate)
- if not context or context.level<1 or context.level>NS.maxLevel then return unknown("Gear guide supports levels 10-30") end
- if context.level<NS.gearMinLevel then return unknown(NS.gearLevelNote) end
- local p=NS.GearProfile(context.class,context.spec,context.role)
+ if not context or context.level<1 or context.level>NS.maxLevel then return unknown("Gear guide supports levels 1-30") end
+ local p=NS.GearProfile(context.class,context.spec,context.role,context.level)
  if not p then return unknown("Select a talent tree to compare gear") end
  if not item then return waiting("Waiting for item data") end
  local eligible,reason=G.Eligible(item,context,p)
@@ -322,12 +349,16 @@ function G.Compare(item, equipped, context, carried, candidate)
   if old and old.link==item.link then allowed=false end
   if allowed and (not best or score-oldScore>best.delta) then
    best={kind="greed",score=score,previous=oldScore,delta=score-oldScore,slot=slot,source=p.source,
-    oldRelevant=oldRelevant,armorGain=armorGain(item,old)}
+    oldRelevant=oldRelevant,armorGain=armorGain(item,old),old=old,
+    -- A two-hander also displaces the off-hand, so one stat cannot explain the result.
+    plain=not (item.loc=="INVTYPE_2HWEAPON" and equipped[17])}
   end
  end
  if not best then return greed("Not a valid replacement for your current equipment") end
  if relevant and best.delta>0.01 then
-  best.kind="need"; best.reason="Estimated stat upgrade"; return best
+  best.kind="need"; best.reason="Estimated stat upgrade"
+  if best.plain then best.why=explain(best,item,best.old,p) end
+  return best
  end
  -- Armor only breaks ties: it never outweighs a stat loss. An item with no useful
  -- stats can only replace another one, so Stamina cannot stand in for lost Strength.
@@ -338,6 +369,7 @@ function G.Compare(item, equipped, context, carried, candidate)
  end
  if not relevant then return greed(noUsefulStats) end
  best.reason="No estimated stat upgrade"
+ if best.plain then best.why=explain(best,item,best.old,p) end
  return best
 end
 function G.SetContext(class, spec, level, role, known)
@@ -361,6 +393,7 @@ function G.Refresh()
  if not G.enabled then
   G.pending=false
   if G.Paint then G.Paint() end
+  if G.OnRefreshed then G.OnRefreshed() end
   return true
  end
  for slot=1,19 do
@@ -390,7 +423,16 @@ function G.Refresh()
  for _,entry in ipairs(G.carried) do entry.result=G.Compare(entry.item,G.equipment,G.context,G.carried,entry) end
  G.pending=false
  if G.Paint then G.Paint() end
+ if G.OnRefreshed then G.OnRefreshed() end
  return true
+end
+local armorSlots={1,3,5,6,7,8,9,10,15}
+-- Only a slot the game confirms empty counts, so unread equipment never raises a false alarm.
+function G.EmptySlots()
+ if not G.enabled or G.pending or not next(G.equipment) then return false,0 end
+ local count=0
+ for _,slot in ipairs(armorSlots) do if G.equipment[slot]==false then count=count+1 end end
+ return G.equipment[16]==false,count
 end
 function G.Evaluate(link)
  if not G.enabled then return unknown("Gear highlights are disabled") end

@@ -1,6 +1,6 @@
 # Gear priorities and upgrade highlights
 
-Everfrost 0.5.0 adds estimated gear comparisons for levels 1–30. Stat and gearing sections of all 27 [Icy Veins Forever guides](../addon/Everfrost/SOURCES.md) were checked on October 20, 2026. Rotation rules retain their separate October 15 review. Source URLs are stored on every gear profile.
+Everfrost 0.5.0 adds estimated gear comparisons for levels 1–30, with talent-based priorities from level 10. Stat and gearing sections of all 27 [Icy Veins Forever guides](../addon/Everfrost/SOURCES.md) were checked on October 20, 2026. Rotation rules retain their separate October 15 review. Source URLs are stored on every gear profile.
 
 ## Stat audit
 
@@ -38,9 +38,27 @@ The following orders adapt the current guides. Equal-ranked stats share a group.
 
 The Druid caster guides describe beta stats and emphasize Intellect and spell/healing power. Feral shares a base order for Cat and Bear; the guide notes that survival needs can change tank choices. Hunter Survival uses Marksmanship's ranged order until its melee requirements are met or when the RANGED override is selected. A healer's DAMAGE view changes rotation guidance, while gear retains that selected healer specialisation's priorities.
 
-**Levelling gear guidance (0.6.0):** stat priorities and gear upgrade hints start at level 10 for every selection, including manual specs. This rule is displayed in the Gear Upgrades and Specialisation settings, gear tooltips, guide menu, panel hover text, addon metadata and `/everfrost gear` output before level 10. Spell guides still cover levels 1–30. From level 10, the Levelling spell guide uses the active talent group's tree with the most spent points for gear scoring. The general spell priorities remain unchanged. All three tree counts must be available, with one positive winner; a tie, zero spent points or unavailable/partial point data remains unscored. An active specialisation index alone does not establish the dominant talent tree for this rule. An explicit manual spec choice overrides detection from level 10 onward. Talent metadata refreshes outside combat, including after talent changes or switching active groups; combat keeps the previous cached gear context until it ends. Settings, the guide menu, `/everfrost gear` and bag/loot comparisons use the same effective gear spec. The Gear Upgrades heading names the spec and marks a talent-inferred choice with `(talents)`.
+**Starter priorities:** below level 10 every class uses one short stat list, whatever guide is selected, because there is usually no talent tree to read. See the table below.
+
+**Levelling gear guidance (0.6.0):** talent-based stat priorities start at level 10 for every selection, including manual specs. This rule is displayed in the Gear Upgrades and Specialisation settings, gear tooltips, guide menu, panel hover text, addon metadata and `/everfrost gear` output before level 10. Spell guides still cover levels 1–30. From level 10, the Levelling spell guide uses the active talent group's tree with the most spent points for gear scoring. The general spell priorities remain unchanged. All three tree counts must be available, with one positive winner; a tie, zero spent points or unavailable/partial point data remains unscored. An active specialisation index alone does not establish the dominant talent tree for this rule. An explicit manual spec choice overrides detection from level 10 onward. Talent metadata refreshes outside combat, including after talent changes or switching active groups; combat keeps the previous cached gear context until it ends. Settings, the guide menu, `/everfrost gear` and bag/loot comparisons use the same effective gear spec. The Gear Upgrades heading names the spec and marks a talent-inferred choice with `(talents)`.
 
 Forever detection uses the active group's combat config, its three display groups and `C_Traits.GetGroupCurrencyInfo`. Counts are matched by group ID and ordered like the native talent headers, using the first currency's `spent` field. A group omitted from an otherwise valid currency list counts as zero, matching the native window. Missing/invalid metadata and staged respecs remain unavailable. Specialisation settings displays the cached split; `/everfrost status` adds its source. This replaces the misleading zero totals returned by the specialisation tuple in the reported level-18 Shaman case.
+
+## Starter priorities (levels 1–9)
+
+These are Everfrost estimates based on each class's usual stats, not rankings from a guide.
+
+| Class | Starter order |
+| --- | --- |
+| Warrior | Weapon DPS > Strength > Agility > Stamina > Armour |
+| Paladin | Weapon DPS > Strength > Stamina > Intellect > Armour |
+| Hunter | Weapon DPS > Agility > Stamina > Intellect > Armour |
+| Rogue | Weapon DPS > Agility > Strength > Stamina > Armour |
+| Shaman | Weapon DPS > Intellect > Strength > Stamina > Spirit > Armour |
+| Mage | Intellect > Spirit > Spell power > Stamina > Armour |
+| Priest | Intellect > Spirit > Spell power > Stamina > Armour |
+| Warlock | Intellect > Stamina > Spirit > Spell power > Armour |
+| Druid | Intellect > Spirit > Stamina > Spell power > Armour |
 
 ## How scores work
 
@@ -87,6 +105,15 @@ Weapon guides also value damage per hit and often slower weapons. This first gea
 - Native bag frames, classic bag hooks and modern combined bags are supported where available. Third-party bag/loot replacements require their own integration.
 
 `/everfrost gear` prints the active order. `/everfrost gear on` and `off` persist per character; `/everfrost refresh` requests a new scan. Hiding the rotation panel does not disable gear highlights.
+
+## Quest rewards, merchants and empty slots
+
+- **Quest choices:** when a quest offers two or more item choices, the upgrade with the largest score gain gets the usual glow and green arrow. If none is an upgrade, the choice that sells for the most gets a gold glow and no arrow. Nothing is marked until every choice's data has loaded. The addon never picks a reward.
+- **Merchants:** upgrades on the current buy page glow if `CanAffordMerchantItem` doesn't say no. Upgrades you can't afford have no glow, and the tooltip says so. The buyback tab is ignored. The addon never buys anything.
+- **Plain-word reasons:** tooltips name the most important stat that decides a comparison, or say the slot is empty. Below level 10 the score line is hidden. Pair comparisons and two-handers replacing an off-hand show no single reason.
+- **Empty slots:** the Gear Upgrades page counts confirmed empty armour slots (head, shoulders, chest, waist, legs, feet, wrists, hands, back). The panel caption mentions a missing main-hand weapon. Unread equipment never counts as empty.
+
+Combat hides these marks and they return afterwards, and `/everfrost gear off` turns them off.
 
 ## Limits and verification
 

@@ -23,7 +23,7 @@ local function refresh()
  if db.spec==0 or (NS.trees[class] and NS.trees[class][db.spec]) then spec,status=db.spec,"Manual" end
  gearSpec,gearReason=spec,nil
  if level<NS.gearMinLevel then
-  gearSpec=0; gearReason=NS.gearLevelNote
+  gearSpec=0
  elseif spec==0 then
   if not talentPointsAvailable then
    gearReason="Talent points are unavailable. Choose a specialisation on the Specialisation page to score gear."
@@ -82,6 +82,18 @@ local function hasRoleChoice(p)
  if p.melee then return level>=30 and known["Strider Kick"]~=nil end
  return (p.healing or p.bear) and true or false
 end
+local function emptySlotText()
+ if not (NS.Gear and NS.Gear.EmptySlots) then return nil end
+ local noWeapon,armor=NS.Gear.EmptySlots()
+ local parts={}
+ if noWeapon then parts[#parts+1]="No weapon equipped." end
+ if armor>0 then parts[#parts+1]=armor..(armor==1 and " empty armour slot." or " empty armour slots.") end
+ return #parts>0 and table.concat(parts," ") or nil,noWeapon
+end
+local function defaultCaption()
+ local _,noWeapon=emptySlotText()
+ return scanError or (pending and "Updates after combat") or (noWeapon and "No weapon equipped: check your bags or a vendor") or "Hover a spell for its place in the rotation"
+end
 local function makeTile(index)
  local tile=CreateFrame("Frame",nil,frame); tile:SetSize(44,44); tile:EnableMouse(true)
  tile.icon=tile:CreateTexture(nil,"ARTWORK"); tile.icon:SetAllPoints(); tile.icon:SetTexCoord(0.07,0.93,0.07,0.93)
@@ -92,10 +104,10 @@ local function makeTile(index)
   if self.spellID then
    GameTooltip:SetOwner(self,"ANCHOR_BOTTOM"); GameTooltip:SetSpellByID(self.spellID)
    GameTooltip:AddLine(" "); GameTooltip:AddLine(self.hint,0.85,0.9,1,true); GameTooltip:Show()
-   frame.caption:SetText(self.hint)
+   frame.caption:SetText(self.hint); frame.hoveringTile=true
   end
  end)
- tile:SetScript("OnLeave",function() GameTooltip:Hide(); frame.caption:SetText(frame.defaultCaption) end)
+ tile:SetScript("OnLeave",function() GameTooltip:Hide(); frame.hoveringTile=false; frame.caption:SetText(frame.defaultCaption) end)
  tiles[index]=tile; return tile
 end
 render=function()
@@ -122,7 +134,7 @@ render=function()
  if #list==0 then height=40; frame.empty:SetText(not profile and note or level>NS.maxLevel and ("Level 1-"..NS.maxLevel.." guide") or scanError or "Train a spell to get started") end
  frame.caption:ClearAllPoints(); frame.caption:SetPoint("TOPLEFT",20,-73-height)
  frame.caption:SetWidth(width-40); frame.caption:SetHeight(30)
- frame.defaultCaption=scanError or (pending and "Updates after combat") or "Hover a spell for its place in the rotation"
+ frame.defaultCaption=defaultCaption()
  frame.caption:SetText(frame.defaultCaption); frame:SetHeight(116+height)
  frame.info=note or ""; frame.profile=profile; cooldowns()
  if frame.guideMenu and frame.guideMenu:IsShown() then updateGuideMenu() end
@@ -179,7 +191,7 @@ local function createGuideMenu()
     row.label:SetText("Automatic"..(name and (" ("..name..")") or ""))
    end
   end
-  local footer=InCombatLockdown() and "Changes apply after combat." or level<NS.gearMinLevel and "Stat priorities start at level 10." or nil
+  local footer=InCombatLockdown() and "Changes apply after combat." or level<NS.gearMinLevel and "Starter gear hints until level 10." or nil
   menu.footer:SetText(footer or ""); menu.footer:SetShown(footer~=nil)
   menu:SetHeight(48+#menu.rows*28+(footer and 24 or 0))
  end
@@ -192,6 +204,7 @@ local function createGuideMenu()
 end
 local function createUI()
  frame=CreateFrame("Frame","EverfrostFrame",UIParent,"BackdropTemplate")
+ frame.hoveringTile=false
  frame:SetFrameStrata("MEDIUM"); frame:SetClampedToScreen(true); frame:SetMovable(true)
  frame:SetBackdrop(BACKDROP_DIALOG_32_32 or {bgFile="Interface\\DialogFrame\\UI-DialogBox-Background",edgeFile="Interface\\DialogFrame\\UI-DialogBox-Border",tile=true,tileEdge=true,tileSize=32,edgeSize=32,insets={left=11,right=12,top=12,bottom=11}})
  frame:SetBackdropColor(1,1,1,0.95); frame:SetBackdropBorderColor(1,1,1,1)
@@ -267,9 +280,9 @@ SlashCmdList.EVERFROST=function(message)
    db.gear=arg=="on"
    if NS.Gear then NS.Gear.enabled=db.gear; NS.Gear.pending=true; NS.Gear.Paint(); NS.Gear.Schedule() end
   elseif NS.Gear then
-   local p=NS.GearProfile(class,gearSpec,effectiveRole(gearSpec))
+   local p=NS.GearProfile(class,gearSpec,effectiveRole(gearSpec),level)
    local name=gearSpec>0 and NS.trees[class][gearSpec] or nil
-   say((db.gear==false and "Gear highlights OFF. " or "Gear highlights ON. ")..(p and ((spec==0 and (name.." talents. ") or "").."Stat order: "..NS.GearPriorityText(p)..". Estimated weights; inspect special effects.") or gearReason or "Select a talent tree to score gear."))
+   say((db.gear==false and "Gear highlights OFF. " or "Gear highlights ON. ")..(p and ((p.starter and "Starter priorities until level 10. " or spec==0 and (name.." talents. ") or "").."Stat order: "..NS.GearPriorityText(p)..". Estimated weights; inspect special effects.") or gearReason or "Select a talent tree to score gear."))
   end
  elseif command=="reset" then resetPosition(); db.scale=1; frame:SetScale(1); db.hidden=false
  elseif command=="scale" then
@@ -302,7 +315,7 @@ events:SetScript("OnEvent",function(_,event,value)
     SelectGuide=selectGuide,ToggleRole=toggleRole,CloseGuide=function() frame.guideMenu:Hide() end,
     State=function()
      local p=NS.profiles[class] and NS.profiles[class][spec]
-     local gear=NS.GearProfile(class,gearSpec,effectiveRole(gearSpec))
+     local gear=NS.GearProfile(class,gearSpec,effectiveRole(gearSpec),level)
      local gearName=gearSpec>0 and (NS.trees[class] or {})[gearSpec] or nil
      local role=effectiveRole()
      local roleLabel=role=="damage" and (p and p.bear and "Cat" or "Damage") or role:sub(1,1):upper()..role:sub(2)
@@ -310,11 +323,20 @@ events:SetScript("OnEvent",function(_,event,value)
       detected=((NS.trees[class] or {})[detectedSpec] or detectedStatus)..(detectedPoints and (" ("..table.concat(detectedPoints," / ")..")") or ""),
       hasRole=hasRoleChoice(p),roleLabel=roleLabel,
       priority=gear and NS.GearPriorityText(gear) or nil,gearReason=gearReason,
-      gearTitle=gearName and ("Stat priority: "..gearName..(spec==0 and " (talents)" or "")) or nil,
+      gearTitle=gear and gear.starter and ("Starter priority: "..className) or gearName and ("Stat priority: "..gearName..(spec==0 and " (talents)" or "")) or nil,
+      emptySlots=emptySlotText(),
       levelingHint=NS.gearLevelNote.." Levelling uses your dominant talent tree for gear."}
     end})
   end
   render()
+  if NS.Gear then
+   -- Equipment changes arrive through gear rescans, not through the panel's own events.
+   NS.Gear.OnRefreshed=function()
+    frame.defaultCaption=defaultCaption()
+    if not frame.hoveringTile then frame.caption:SetText(frame.defaultCaption) end
+    if NS.Settings then NS.Settings:Refresh() end
+   end
+  end
  elseif not frame then return
  elseif event=="PLAYER_REGEN_DISABLED" then if NS.Settings then NS.Settings:Refresh() end
  elseif event=="SPELL_UPDATE_COOLDOWN" then cooldowns()

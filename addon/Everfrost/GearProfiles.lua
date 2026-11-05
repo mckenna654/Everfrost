@@ -1,6 +1,6 @@
 local _, NS = ...
 NS.gearMinLevel=10
-NS.gearLevelNote="Stat priorities and upgrade hints start at level 10."
+NS.gearLevelNote="Below level 10, gear hints use a simple starter priority for your class. Talent-based priorities start at level 10."
 -- Stat orders reviewed against all 27 Icy Veins Forever guides, 2026-10-20.
 -- These ordinal weights are Everfrost estimates, not published simulation weights.
 NS.gearProfiles = {}
@@ -46,17 +46,37 @@ profile("SHAMAN",1,{"spell","crit","hit","intellect","mp5","spirit","stamina"},{
 profile("SHAMAN",2,{"dps","hit expertise","crit","strength","intellect","agility","spirit","spell","stamina"},{kind="melee"})
 profile("SHAMAN",3,{"healing","crit","intellect","spirit","mp5","stamina"},{kind="healer"})
 
-function NS.GearProfile(class, spec, role)
+-- Below level 10 there is usually no talent tree to read, so each class gets one short list.
+-- These are Everfrost estimates based on the class's usual stats, not guide rankings.
+NS.gearStarter = {}
+local function starter(class, kind, order)
+ local p = {kind=kind,order=order,weights={},starter=true,source=NS.profiles[class][0].source}
+ for rank, key in ipairs(order) do p.weights[key] = #order - rank + 1 end
+ NS.gearStarter[class] = p
+end
+starter("WARRIOR","melee",{"dps","strength","agility","stamina","armor"})
+starter("PALADIN","melee",{"dps","strength","stamina","intellect","armor"})
+starter("HUNTER","ranged",{"dps","agility","stamina","intellect","armor"})
+starter("ROGUE","melee",{"dps","agility","strength","stamina","armor"})
+starter("SHAMAN","melee",{"dps","intellect","strength","stamina","spirit","armor"})
+starter("MAGE","caster",{"intellect","spirit","spell","stamina","armor"})
+starter("PRIEST","caster",{"intellect","spirit","spell","stamina","armor"})
+starter("WARLOCK","caster",{"intellect","stamina","spirit","spell","armor"})
+starter("DRUID","caster",{"intellect","spirit","stamina","spell","armor"})
+
+function NS.GearProfile(class, spec, role, level)
+ if level and level<NS.gearMinLevel then return NS.gearStarter[class] end
  -- A tied/unspent/unknown tree is intentionally unscored until a tree is selected.
  local p = NS.gearProfiles[class] and NS.gearProfiles[class][spec]
  if class=="HUNTER" and spec==3 and role=="ranged" then return NS.gearProfiles.HUNTER[2] end
  return p
 end
 
+NS.gearStatLabels={dps="Weapon DPS",hit="Hit",expertise="Expertise",crit="Crit",spell="Spell power",healing="Healing power",
+ strength="Strength",agility="Agility",intellect="Intellect",stamina="Stamina",spirit="Spirit",mp5="MP5",
+ haste="Haste",attack="Attack power",armor="Armour",block="Block",defense="Defence"}
 function NS.GearPriorityText(p)
- local labels={dps="Weapon DPS",hit="Hit",expertise="Expertise",crit="Crit",spell="Spell power",healing="Healing power",
-  strength="Strength",agility="Agility",intellect="Intellect",stamina="Stamina",spirit="Spirit",mp5="MP5",
-  haste="Haste",attack="Attack power",armor="Armour",block="Block",defense="Defence"}
+ local labels=NS.gearStatLabels
  local groups={}
  for _,group in ipairs(p.order) do
   local parts={}; for key in group:gmatch("%S+") do parts[#parts+1]=labels[key] or key end

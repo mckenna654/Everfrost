@@ -38,12 +38,38 @@ local equipment=empty(); local c=ctx('WARRIOR',1)
 equipment[5]=item(1,nil,{ITEM_MOD_STRENGTH_SHORT=4,ITEM_MOD_STAMINA_SHORT=2})
 assert(G.Compare(item(2,nil,{ITEM_MOD_STRENGTH_SHORT=8}),equipment,c).kind=='need')
 local young=ctx('WARRIOR',1)
+-- Below level 10 every class scores from its starter list, whatever spec is selected.
 for level=1,9 do
  young.level=level
- local unscored=G.Compare(item(2,nil,{ITEM_MOD_STRENGTH_SHORT=8}),equipment,young)
- assert(unscored.kind=='unknown' and unscored.reason==NS.gearLevelNote)
+ local early=G.Compare(item(2,nil,{ITEM_MOD_STRENGTH_SHORT=8}),equipment,young)
+ assert(early.kind=='need' and early.why=='Better because it has more Strength.')
+ assert(NS.GearProfile('WARRIOR',1,'damage',level)==NS.gearStarter.WARRIOR)
 end
 young.level=10
+assert(NS.GearProfile('WARRIOR',1,'damage',10)==NS.gearProfiles.WARRIOR[1])
+assert(NS.GearProfile('WARRIOR',0,'damage',10)==nil)
+for class in pairs(NS.trees) do
+ local starter=NS.gearStarter[class]
+ assert(starter and starter.starter and starter.source and #NS.GearPriorityText(starter)>0)
+ for _,key in ipairs(starter.order) do assert(NS.gearStatLabels[key]) end
+end
+-- Starter lists suit the class: a Mage wants Intellect, a Rogue a better weapon, and any
+-- wearable piece beats an empty slot. A caster's weapon DPS still earns no credit.
+local earlyCtx=function(class) local e=ctx(class,0); e.level=5; return e end
+local earlyMage=earlyCtx('MAGE')
+assert(G.Compare(item(4,nil,{ITEM_MOD_INTELLECT_SHORT=2}),empty(),earlyMage).why=='Better because that slot is empty.')
+local robeWorn=empty(); robeWorn[5]=item(5,nil,{ITEM_MOD_SPIRIT_SHORT=1})
+assert(G.Compare(item(6,nil,{ITEM_MOD_INTELLECT_SHORT=2}),robeWorn,earlyMage).why=='Better because it has more Intellect, your top priority.')
+assert(G.Compare(item(7,nil,{ITEM_MOD_SPIRIT_SHORT=2}),robeWorn,earlyMage).why=='Better because it has more Spirit.')
+assert(G.Compare(item(8,'INVTYPE_WEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=50},2,7),empty(),earlyMage).kind=='greed')
+local dagger=item(9,'INVTYPE_WEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=5},2,15)
+local earlyRogue=earlyCtx('ROGUE')
+local rogueEquip=empty(); rogueEquip[16]=item(10,'INVTYPE_WEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=3},2,15)
+assert(G.Compare(dagger,rogueEquip,earlyRogue).why=='Better because it has more Weapon DPS, your top priority.')
+assert(G.Compare(item(11,'INVTYPE_WEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=2},2,15),rogueEquip,earlyRogue).why=='Your current item has more Weapon DPS.')
+local earlyWand=empty(); earlyWand[18]=item(12,'INVTYPE_RANGEDRIGHT',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=3},2,19)
+assert(G.Compare(item(13,'INVTYPE_RANGEDRIGHT',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=6},2,19),earlyWand,earlyMage).why=='Better because it has a stronger wand attack.')
+assert(G.Compare(item(14,'INVTYPE_WAIST',{RESISTANCE0_NAME=20},4,1),empty(),earlyCtx('WARRIOR')).kind=='need')
 assert(G.Compare(item(2,nil,{ITEM_MOD_STRENGTH_SHORT=8}),equipment,young).kind=='need')
 assert(G.Compare(item(3,nil,{ITEM_MOD_STRENGTH_SHORT=2}),equipment,c).kind=='greed')
 assert(G.Compare(item(4,nil,{ITEM_MOD_INTELLECT_SHORT=20,ITEM_MOD_STAMINA_SHORT=10}),equipment,c).kind=='greed')
@@ -195,8 +221,6 @@ wandEquip[18]=wandOf(49,{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=6,ITEM_MOD_SPELL_POWER
 assert(G.Compare(plainWand,wandEquip,ctx('MAGE',2)).kind=='greed')
 -- Only results that depend on missing item data wait for item-data events.
 assert(G.Compare(nil,equipment,c).waiting==true)
-local unscoredYoung=ctx('WARRIOR',1); unscoredYoung.level=9
-assert(not G.Compare(nil,equipment,unscoredYoung).waiting)
 assert(not G.Compare(item(2,nil,{ITEM_MOD_STRENGTH_SHORT=8}),equipment,ctx('WARRIOR',0)).waiting)
 -- The reported belts: plain mail replaces plain leather for Retribution on armor alone.
 local ret=ctx('PALADIN',3)
@@ -269,6 +293,7 @@ function methods:IsPlaying() return self.playing==true end
 function methods:Play() self.playing=true; self.plays=(self.plays or 0)+1 end
 function methods:Stop() self.playing=false end
 function methods:IsShown() return self.shown~=false end
+function methods:IsVisible() return self.shown~=false end
 function methods:IsEnabled() return self.enabled~=false end
 function methods:Show() self.shown=true end
 function methods:Hide() self.shown=false end
@@ -501,15 +526,15 @@ assert(bag.EverfrostGearGlow:IsShown() and offBag.EverfrostGearGlow:IsShown() an
 local pairCalls=metadataCalls; combat=true; fire('PLAYER_REGEN_DISABLED'); tick()
 assert(metadataCalls==pairCalls and not bag.EverfrostGearGlow:IsShown() and not offBag.EverfrostGearGlow:IsShown())
 combat=false; fire('PLAYER_REGEN_ENABLED'); tick(); assert(bag.EverfrostGearGlow:IsShown())
+-- Starter tooltips explain themselves in plain words, without a score.
 G.SetContext('MAGE',2,9,'damage',{}); tick()
-assert(G.bags[0][1].result.reason==NS.gearLevelNote and not bag.EverfrostGearGlow:IsShown())
+assert(G.bags[0][1].result.delta and bag.EverfrostGearGlow:IsShown())
 GameTooltip:ClearLines(); bag.hooks.OnEnter(bag)
-local notes=0
-for _,line in ipairs(GameTooltip.lines) do
- if line==NS.gearLevelNote then notes=notes+1 end
- assert(not line:find('Priority:',1,true))
-end
-assert(notes==1)
+local starterLines=table.concat(GameTooltip.lines,'|')
+assert(starterLines:find('Starter priority: Intellect',1,true) and not starterLines:find('Estimated score',1,true))
+assert(starterLines:find('Simple estimate',1,true) and not starterLines:find('|Priority:',1,true))
+G.SetContext('MAGE',0,30,'damage',{}); tick()
+assert(G.bags[0][1].result.kind=='unknown' and not bag.EverfrostGearGlow:IsShown())
 -- Permanent "not scored" results must not trigger a full rescan on item-data events.
 local quiet=metadataCalls
 fire('GET_ITEM_INFO_RECEIVED',1); fire('ITEM_DATA_LOAD_RESULT',1); tick()
@@ -520,6 +545,80 @@ local off=metadataCalls; G.Refresh(); assert(metadataCalls==off and next(G.bags)
 assert(G.Evaluate('item:201').reason=='Gear highlights are disabled')
 EverfrostDB.gear=true; G.SetContext('MAGE',2,30,'damage',{}); tick()
 assert(next(G.bags)~=nil and bag.EverfrostGearGlow:IsShown())
+-- Quest rewards: mark the best upgrade among the choices.
+bagLinks={}; extraBagLink=nil; inventory={[5]='item:100'}; G.SetContext('WARRIOR',1,5,'damage',{})
+local function questFixture(link,stat,price) fixture(link,stat); itemInfo[link][11]=price end
+questFixture('item:400',{ITEM_MOD_STRENGTH_SHORT=5},10)
+questFixture('item:401',{ITEM_MOD_STRENGTH_SHORT=9},1)
+questFixture('item:402',{ITEM_MOD_STRENGTH_SHORT=1},7)
+questFixture('item:403',{ITEM_MOD_STRENGTH_SHORT=1},90)
+local rewardFrame=widget(); QuestInfoRewardsFrame=rewardFrame
+local function reward(id,kind,objectType) local b=widget(); b.id=id; b.type=kind or 'choice'; b.objectType=objectType or 'item'; return b end
+local r1,r2,r3=reward(1),reward(2),reward(1,'reward')
+rewardFrame.RewardButtons={r1,r2,r3}
+questLinks={'item:400','item:401'}
+function GetQuestItemLink(kind,id) return kind=='choice' and questLinks[id] or nil end
+function QuestInfo_Display() end
+function MerchantFrame_Update() end
+fire('BAG_UPDATE',0); tick(); assert(hooks.QuestInfo_Display and hooks.MerchantFrame_Update)
+hooks.QuestInfo_Display(); tick()
+assert(r2.EverfrostGearGlow:IsShown() and r2.EverfrostGearArrow:IsShown() and not r1.EverfrostGearGlow and not r3.EverfrostGearGlow)
+GameTooltip.owner=r2; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
+local questLines=table.concat(GameTooltip.lines,'|')
+assert(questLines:find('UPGRADE',1,true) and questLines:find('Best reward choice for you.',1,true) and questLines:find('Better because it has more Strength',1,true))
+GameTooltip.owner=r1; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
+assert(table.concat(GameTooltip.lines,'|'):find('UPGRADE',1,true) and not table.concat(GameTooltip.lines,'|'):find('Best reward',1,true))
+-- With no upgrade on offer, the best sell value gets a gold mark and no arrow.
+inventory[5]='item:401'; questLinks={'item:402','item:403'}; fire('BAG_UPDATE',0); tick()
+assert(r2.EverfrostGearGlow:IsShown() and not r2.EverfrostGearArrow:IsShown())
+assert(r2.EverfrostGearGlow.vertex[1]==1 and r2.EverfrostGearGlow.vertex[2]==0.82)
+assert(G.Paint and not (r1.EverfrostGearGlow and r1.EverfrostGearGlow:IsShown()))
+GameTooltip.owner=r2; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
+assert(table.concat(GameTooltip.lines,'|'):find('sells for the most',1,true))
+-- Nothing is marked until every choice has loaded, or for a single forced reward.
+questLinks={'item:402','item:404'}; fire('BAG_UPDATE',0); tick()
+assert(not r2.EverfrostGearGlow:IsShown())
+questFixture('item:404',{ITEM_MOD_STRENGTH_SHORT=1},300); fire('GET_ITEM_INFO_RECEIVED',404); tick()
+assert(r2.EverfrostGearGlow:IsShown())
+r2.shown=false; fire('BAG_UPDATE',0); tick(); assert(not r2.EverfrostGearGlow:IsShown() and not (r1.EverfrostGearGlow and r1.EverfrostGearGlow:IsShown())); r2.shown=true
+-- The quest log reads its own links, and currency choices are skipped.
+QuestInfoFrame={questLog=true,rewardsFrame=rewardFrame}
+inventory[5]='item:100'
+function GetQuestLogItemLink(kind,id) return kind=='choice' and ({'item:400','item:401'})[id] or nil end
+questLinks={}; fire('BAG_UPDATE',0); tick(); assert(r2.EverfrostGearArrow:IsShown())
+r2.objectType='currency'; fire('BAG_UPDATE',0); tick(); assert(not r2.EverfrostGearGlow:IsShown()); r2.objectType='item'
+-- Combat and turning gear hints off both clear the marks.
+fire('BAG_UPDATE',0); tick(); assert(r2.EverfrostGearGlow:IsShown())
+combat=true; fire('PLAYER_REGEN_DISABLED'); assert(not r2.EverfrostGearGlow:IsShown()); tick(); combat=false; fire('PLAYER_REGEN_ENABLED'); tick()
+assert(r2.EverfrostGearGlow:IsShown())
+EverfrostDB.gear=false; fire('BAG_UPDATE',0); tick(); assert(not r2.EverfrostGearGlow:IsShown()); EverfrostDB.gear=true; fire('BAG_UPDATE',0); tick()
+rewardFrame.shown=false; fire('BAG_UPDATE',0); tick(); assert(not r2.EverfrostGearGlow:IsShown()); rewardFrame.shown=true
+QuestInfoFrame=nil; QuestInfoRewardsFrame=nil
+-- Merchants: upgrades you can afford glow; the rest explain themselves in the tooltip.
+MerchantFrame=widget(); MerchantFrame.selectedTab=1; MERCHANT_ITEMS_PER_PAGE=3
+MerchantItem1ItemButton=widget(); MerchantItem1ItemButton.hasItem=true; MerchantItem1ItemButton.id=11
+MerchantItem2ItemButton=widget(); MerchantItem2ItemButton.hasItem=true; MerchantItem2ItemButton.id=12
+MerchantItem3ItemButton=widget(); MerchantItem3ItemButton.hasItem=nil; MerchantItem3ItemButton.id=13
+local shopLinks={[11]='item:400',[12]='item:401',[13]='item:402'}; local affordable={[11]=true,[12]=false}
+function GetMerchantItemLink(index) return shopLinks[index] end
+function CanAffordMerchantItem(index) return affordable[index] end
+hooks.MerchantFrame_Update(); tick()
+assert(MerchantItem1ItemButton.EverfrostGearGlow:IsShown() and MerchantItem1ItemButton.EverfrostGearArrow:IsShown())
+assert(not MerchantItem2ItemButton.EverfrostGearGlow and not MerchantItem3ItemButton.EverfrostGearGlow)
+GameTooltip.owner=MerchantItem2ItemButton; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
+assert(table.concat(GameTooltip.lines,'|'):find("You can't afford this yet.",1,true))
+affordable[12]=true; hooks.MerchantFrame_Update(); tick(); assert(MerchantItem2ItemButton.EverfrostGearGlow:IsShown())
+MerchantFrame.selectedTab=2; hooks.MerchantFrame_Update(); tick(); assert(not MerchantItem1ItemButton.EverfrostGearGlow:IsShown())
+MerchantFrame.selectedTab=1; MerchantFrame.shown=false; hooks.MerchantFrame_Update(); tick(); assert(not MerchantItem1ItemButton.EverfrostGearGlow:IsShown())
+MerchantFrame=nil
+-- Empty slots count only what the game confirms, and clear while results are pending.
+inventory={[5]='item:100',[7]='item:100'}; fire('BAG_UPDATE',0); tick()
+local noWeapon,emptyArmor=G.EmptySlots(); assert(noWeapon==true and emptyArmor==7)
+inventory[16]='item:401'; fire('BAG_UPDATE',0); tick()
+noWeapon,emptyArmor=G.EmptySlots(); assert(noWeapon==false and emptyArmor==7)
+G.pending=true; noWeapon,emptyArmor=G.EmptySlots(); assert(noWeapon==false and emptyArmor==0); G.pending=false
+local refreshed=0; G.OnRefreshed=function() refreshed=refreshed+1 end; fire('BAG_UPDATE',0); tick(); assert(refreshed==1); G.OnRefreshed=nil
+print('Quest reward marks, sell-value fallback, merchant upgrades, affordability and empty slots: passed')
 print('Gear UI: bag reuse, loot eligibility, async item data, secret rejection, combat deferral, cancellation and legacy APIs passed')
 `);
 console.log('Gear checks passed. Forever client visuals and API behavior still require in-game testing.');

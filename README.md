@@ -58,6 +58,10 @@ Open any screenshot for its full-size view. Use `/everfrost` to open these setti
 - Highlights estimated bag upgrades with a pulsing border in the item's rarity colour and a green up arrow, using the detected class/spec stat priorities.
 - Highlights Need for estimated loot upgrades and Greed for known non-upgrades or class-irrelevant loot; you make the roll.
 - Adds a clear UPGRADE label, score comparisons and stat priorities to item-button hover tooltips.
+- Marks the best quest reward choice; if none is an upgrade, marks the one that sells for the most in gold. You still pick the reward yourself.
+- Highlights upgrades on the merchant's current page once you can afford them. Tooltips say when you can't yet.
+- Explains upgrades in plain words, for example "Better because it has more Strength".
+- Shows empty armour slot counts in settings, and a reminder on the panel when no weapon is equipped.
 - Provides native-style Specialisation, Rotation Panel and Gear Upgrades settings, plus a draggable minimap button.
 - Saves panel position, scale, visibility, mode, and specialisation preferences per character.
 - Refreshes spellbook and talent metadata outside combat, deferring changes until combat ends when necessary.
@@ -78,7 +82,7 @@ On standard dungeon or raid group-loot windows, the same border highlights **Nee
 
 Stat orders were checked against all 27 Icy Veins Forever guides on **October 20, 2026**. Numeric scores are Everfrost's transparent estimates, not Icy Veins simulation weights or guaranteed best-in-slot results. Weapon speed, dual-wield damage penalties, procs, set bonuses, on-use effects, sockets, enchants, professions and hit caps can change the real result. See [gear scoring and all 27 priorities](docs/GEAR.md) for the formula and limits.
 
-Metadata refreshes outside combat; changes and new loot during combat wait until combat ends. The feature supports the standard bag and group-loot frames, including modern combined bags and classic bags where those hooks exist. Custom inventory/loot replacements are not integrated. **Stat priorities and gear upgrade hints start at level 10**, including when a spec is selected manually. Levelling uses the active talent group's dominant tree for gear, while retaining the general spell guide. All three point counts must be available; ties, unspent talents and unavailable data remain unscored. From level 10, explicit spec selections override detection. Gear comparisons cover levels 10–30; a healer's DAMAGE view keeps the healer gear profile, and Survival uses ranged priorities until its melee requirements are met or RANGED is selected.
+Metadata refreshes outside combat; changes and new loot during combat wait until combat ends. The feature supports the standard bag and group-loot frames, including modern combined bags and classic bags where those hooks exist. Custom inventory/loot replacements are not integrated. **Below level 10, gear hints use a simple starter priority for your class**, because there is usually no talent tree to read yet. These lists are Everfrost estimates, not guide rankings. Talent-based priorities start at level 10. This applies even when a spec is selected manually. Levelling uses the active talent group's dominant tree for gear, while retaining the general spell guide. All three point counts must be available; ties, unspent talents and unavailable data remain unscored. From level 10, explicit spec selections override detection. Gear comparisons cover levels 10–30; a healer's DAMAGE view keeps the healer gear profile, and Survival uses ranged priorities until its melee requirements are met or RANGED is selected.
 
 Use `/everfrost gear` to print your current stat order, `/everfrost gear off` to disable highlights, and `/everfrost gear on` to enable them again. `/everfrost refresh` requests a new comparison outside combat. Hiding the rotation panel leaves gear hints enabled unless you switch them off separately.
 

@@ -212,3 +212,20 @@ checked; contents match the tag), public description updated. Not checked in
 game. Next steps: confirm the file gets approved, try a real group-loot roll in
 game (the first real test of the Need/Greed highlights on Forever), and retake
 the README screenshots that still show US spellings.
+
+November 5, 2026, unreleased early-game gear help (branch claude/early-gear-help):
+- Below level 10, NS.GearProfile returns a per-class starter list
+  (NS.gearStarter in GearProfiles.lua), so bag, loot, quest and merchant hints
+  work from level 1. The lists are Everfrost estimates, not guide rankings;
+  worth comparing with the Icy Veins levelling sections.
+- Quest choices (QuestInfo_Display hook) mark the best upgrade, or the highest
+  sell value in gold with no arrow. Merchants (MerchantFrame_Update hook) mark
+  affordable upgrades on the buy tab. Both were written from the Mainline
+  QuestInfo.lua and MerchantFrame.lua in Gethe/wow-ui-source's forever branch.
+- Tooltips add a plain-word reason (result.why); starter tooltips hide the score.
+- Empty armour slot counts on the Gear Upgrades page; panel caption for no weapon.
+npm test and luacheck pass with a simulated client. None of this has been seen
+in game, including glow placement on quest and merchant buttons, and the Gear
+Upgrades page layout. Next steps: test at low level (quest reward screen, a
+vendor, empty slots), then review and merge. At release, add the CHANGELOG entry
+and What's new in docs/CURSEFORGE.md; its body already describes these features.

@@ -4,6 +4,10 @@ local eventFrame=CreateFrame("Frame")
 local bags=setmetatable({},{__mode="k"})
 local rolls=setmetatable({},{__mode="k"})
 local hookedBags=setmetatable({},{__mode="k"})
+-- Quest reward and merchant buttons, each with its comparison and how to mark it.
+local overlays=setmetatable({},{__mode="k"})
+local hookedOverlays=setmetatable({},{__mode="k"})
+local sellValueColour={color={1,0.82,0}}
 local discoverDue=true
 local hooked={}
 local queued=false
@@ -88,16 +92,20 @@ function G.Tooltip(tooltip,result,roll)
  if roll and result.kind~="unknown" then label=label..(result.kind=="need" and " / Need" or " / Greed") end
  tooltip:AddLine("Everfrost: "..label,1,0.82,0.22)
  tooltip:AddLine(result.reason,0.85,0.9,1,true)
+ if result.why then tooltip:AddLine(result.why,0.85,0.9,1,true) end
+ if result.note then tooltip:AddLine(result.note,1,0.82,0.22,true) end
  if result.combined then
   tooltip:AddLine("Pair with: "..result.companionName,1,0.82,0.22,true)
   tooltip:AddLine("Combined pair compared with your equipped two-hander; equip both items.",0.85,0.9,1,true)
  end
- -- Armor is not scored for most specs, so "0.0 vs 0.0" would only confuse here.
- if result.delta and not result.armorOnly then tooltip:AddLine(string.format("Estimated score: %.1f vs %.1f (%+.1f)",result.score,result.previous,result.delta),0.85,0.9,1,true) end
  local c=G.context
- local p=c and c.level>=NS.gearMinLevel and NS.GearProfile(c.class,c.spec,c.role)
- if p then tooltip:AddLine("Priority: "..NS.GearPriorityText(p),0.75,0.82,0.92,true) end
- tooltip:AddLine("Guide-based stat estimate. Check effects, weapon setup and group loot rules.",0.65,0.72,0.82,true)
+ local p=c and NS.GearProfile(c.class,c.spec,c.role,c.level)
+ local starter=p and p.starter
+ -- Armor is not scored for most specs, so "0.0 vs 0.0" would only confuse here.
+ -- Scores mean little on starter gear, where the reason above says enough.
+ if result.delta and not result.armorOnly and not starter then tooltip:AddLine(string.format("Estimated score: %.1f vs %.1f (%+.1f)",result.score,result.previous,result.delta),0.85,0.9,1,true) end
+ if p then tooltip:AddLine((starter and "Starter priority: " or "Priority: ")..NS.GearPriorityText(p),0.75,0.82,0.92,true) end
+ tooltip:AddLine(starter and "Simple estimate from your class's usual stats. Check effects and group loot rules." or "Guide-based stat estimate. Check effects, weapon setup and group loot rules.",0.65,0.72,0.82,true)
  tooltip:Show()
 end
 function G.PaintBag(button)
@@ -208,9 +216,82 @@ local function readRoll(id)
  if not public(info[6],"boolean") or not public(info[7],"boolean") then return end
  G.rolls[id]={link=link,item=G.ReadItem(link),result=G.Evaluate(link),canNeed=info[6],canGreed=info[7]}
 end
+local function paintOverlay(button)
+ local entry=overlays[button]
+ if not entry then return end
+ local shown=G.enabled and not G.pending and entry.mark~=nil
+ glow(button,shown,entry.mark=="sell" and sellValueColour or entry.item,entry.mark=="upgrade")
+end
 function G.Paint()
  for button in pairs(bags) do G.PaintBag(button) end
  for frame in pairs(rolls) do G.PaintRoll(frame) end
+ for button in pairs(overlays) do paintOverlay(button) end
+end
+local function clearOverlays(kind)
+ for button,entry in pairs(overlays) do
+  if entry.kind==kind then overlays[button]=nil; hide(button) end
+ end
+end
+local function addOverlay(button,kind,link)
+ local item=G.ReadItem(link)
+ local entry={kind=kind,item=item,result=G.Compare(item,G.equipment,G.context,G.carried)}
+ overlays[button]=entry
+ if not hookedOverlays[button] and button.HookScript then
+  hookedOverlays[button]=true
+  button:HookScript("OnEnter",function(self)
+   local current=overlays[self]
+   if current and G.enabled and not G.pending then G.Tooltip(GameTooltip,current.result) end
+  end)
+ end
+ return entry
+end
+-- Mark the best quest choice. With no upgrade on offer, mark what sells for the most instead.
+local function readQuestChoices()
+ clearOverlays("quest")
+ local info=QuestInfoFrame
+ local rewards=(info and info.rewardsFrame) or QuestInfoRewardsFrame
+ if not G.enabled or not rewards or not rewards.RewardButtons or not first(rewards.IsVisible or rewards.IsShown,rewards) then return end
+ local getLink=info and info.questLog and GetQuestLogItemLink or GetQuestItemLink
+ local entries={}
+ for _,button in ipairs(rewards.RewardButtons) do
+  if button.type=="choice" and (button.objectType==nil or button.objectType=="item") and first(button.IsShown,button) then
+   local link=first(getLink,"choice",first(button.GetID,button))
+   if public(link,"string") then entries[#entries+1]=addOverlay(button,"quest",link) end
+  end
+ end
+ if #entries<2 then return end
+ local best,seller
+ for _,entry in ipairs(entries) do
+  -- Wait for every choice's data, so the mark never settles on a partial list.
+  if not entry.item or entry.result.waiting then return end
+  if entry.result.kind=="need" and (not best or entry.result.delta>best.result.delta) then best=entry end
+  if entry.item.sellPrice>0 and (not seller or entry.item.sellPrice>seller.item.sellPrice) then seller=entry end
+ end
+ if best then
+  best.mark="upgrade"; best.result.note="Best reward choice for you."
+ elseif seller then
+  seller.mark="sell"; seller.result.note="None of these is an upgrade, so this one is marked because it sells for the most."
+ end
+end
+-- Upgrades on the current merchant page. The glow waits until you can afford the item.
+local function readMerchant()
+ clearOverlays("merchant")
+ local merchant=MerchantFrame
+ if not G.enabled or not merchant or merchant.selectedTab~=1 or not first(merchant.IsShown,merchant) then return end
+ for i=1,(MERCHANT_ITEMS_PER_PAGE or 12) do
+  local button=_G["MerchantItem"..i.."ItemButton"]
+  if button and button.hasItem then
+   local index=first(button.GetID,button)
+   local link=first(GetMerchantItemLink,index)
+   if public(link,"string") then
+    local entry=addOverlay(button,"merchant",link)
+    if entry.result.kind=="need" then
+     if first(CanAffordMerchantItem,index)==false then entry.result.note="You can't afford this yet."
+     else entry.mark="upgrade" end
+    end
+   end
+  end
+ end
 end
 local function installHooks()
  if InCombatLockdown() or not hooksecurefunc then return end
@@ -228,7 +309,8 @@ local function installHooks()
    local owner=first(tooltip.GetOwner,tooltip)
    local key=owner and bags[owner]
    local entry=key and G.bags[key.bag] and G.bags[key.bag][key.slot]
-   if entry then G.Tooltip(tooltip,entry.result) end
+   if entry then G.Tooltip(tooltip,entry.result)
+   elseif owner and overlays[owner] then G.Tooltip(tooltip,overlays[owner].result) end
   end
   if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum and Enum.TooltipDataType and Enum.TooltipDataType.Item then
    TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item,append)
@@ -246,6 +328,8 @@ local function installHooks()
  hook("ContainerFrame_UpdateAll",function() discoverBags(); G.Schedule() end)
  hook("ContainerFrame_GenerateFrame",function() discoverBags(); G.Schedule() end)
  hook("GroupLootFrame_OnShow",function(frame) G.TrackRoll(frame); G.Schedule() end)
+ hook("QuestInfo_Display",function() G.Schedule() end)
+ hook("MerchantFrame_Update",function() G.Schedule() end)
  local mixin=ContainerFrameItemButtonMixin
  if mixin and type(mixin.Initialize)=="function" and not hooked.bagMixin then
   -- Forever passes the container first: Initialize(containerFrame, bag, slot).
@@ -279,6 +363,7 @@ function G.Schedule()
     activeRolls[id]=true; readRoll(id)
    end
   end
+  readQuestChoices(); readMerchant()
   G.Paint()
  end)
 end
@@ -301,6 +386,7 @@ eventFrame:SetScript("OnEvent",function(_,event,value)
   local waiting=false
   for _,bag in pairs(G.bags) do for _,item in pairs(bag) do if item.result and item.result.waiting then waiting=true end end end
   for _,item in pairs(G.rolls) do if item.result and item.result.waiting then waiting=true end end
+  for _,entry in pairs(overlays) do if entry.result.waiting then waiting=true end end
   if not waiting then return end
  end
  -- Outside combat the rescan lands next frame: keep the glows so their pulse carries on.
