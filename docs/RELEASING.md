@@ -189,7 +189,10 @@ tagging; npm test and npm run build passed locally. All 14 packaged files match
 source byte for byte. Release ZIP SHA-256 matches the locally built archive:
 8bf5b72a01fb129624b0bd45df14774668439bd02324b4213b774540c79b110b.
 The CurseForge package webhook received the refs/tags/v0.6.6 push and returned
-HTTP 200. The file was not yet listed publicly when checked minutes later (v0.6.5
-was still the main file). Still to do in the CurseForge author console, which
-needs the user's sign-in: the generated file ID and status, that it targets
-1.60.1, its contents, and updating the public description from docs/CURSEFORGE.md.
+HTTP 200. CurseForge generated Release file #9450295
+(Everfrost-Source-v0.6.6.zip) for 1.60.1. It showed Under Review, then the same
+status code as the approved v0.6.5 file within minutes; the public listing was
+not rechecked after that. All 14 downloaded addon files match the tag (12 byte
+for byte, 2 allowing newline normalization) and the TOC reports 0.6.6; only the
+usual empty Everfrost-Source/addon/ directory is extra. Updated the public
+project description from docs/CURSEFORGE.md.

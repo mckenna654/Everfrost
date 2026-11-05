@@ -174,7 +174,8 @@ RESISTANCE0_NAME really reports armor in Forever, since the tie-break depends on
 it. Public descriptions and CHANGELOG were updated in the 0.6.6 release commit.
 
 Published 0.6.6 on November 5, 2026: GitHub latest v0.6.6 (a053c22) with PR #4.
-See docs/RELEASING.md for the checksum and webhook delivery. Next steps: confirm
-the CurseForge file was generated and approved, check its contents, and update
-the public description from docs/CURSEFORGE.md. The author console needs the
-user's sign-in in the browser.
+See docs/RELEASING.md for the checksum and webhook delivery. CurseForge generated
+Release file #9450295 for 1.60.1; its 14 addon files match the tag. The author
+console shows it with the same status as approved files. The public description
+is updated from docs/CURSEFORGE.md. Next step: confirm v0.6.6 is the main file on
+the public CurseForge page.
