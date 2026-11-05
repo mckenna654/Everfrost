@@ -106,3 +106,6 @@ Need/Greed highlights on a real group-loot roll.
 0.6.8: Starter priorities below level 10, quest reward and merchant marks,
 plain-word tooltips and empty slot reminders, written against the Forever UI
 source. All simulated checks and luacheck pass. Not yet checked in game.
+
+0.6.9: Wording change to the spec menu note below level 10. All simulated
+checks and luacheck pass. Not yet checked in game.

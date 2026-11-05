@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.9 — Clearer spec menu note
+
+- Below level 10, the Choose a Spec menu now says "Full stat priorities need talents." The old note read as if gear help stopped at level 10.
+
+No other behaviour changed. Simulated-client tests and the Lua globals check pass; the new wording still needs checking in game.
+
 ## 0.6.8 — Help for early gear
 
 - Gear hints now work from level 1. Below level 10, each class uses a short starter stat list, because there is usually no talent tree to read yet. These lists are Everfrost estimates, not guide rankings. Talent-based priorities still start at level 10.
