@@ -225,3 +225,17 @@ URL. Status when checked: Processing, not yet public. All 14 downloaded addon
 files match the tag; only the usual empty Everfrost-Source/addon/ directory is
 extra. v0.6.7 (#9451760) had moved to Approved by then. Updated the public
 project description from docs/CURSEFORGE.md.
+
+## 0.6.9 — November 5, 2026
+
+Released the spec menu note wording from PR #7 as GitHub latest v0.6.9, annotated
+tag at 660d5ae on main. GitHub Actions passed on main before tagging; npm test,
+luacheck and npm run build passed locally. Release ZIP SHA-256 matches the locally
+built archive: bc26631b728765b8c3540999e649b5757563e07a25e56850ed81d6fe7a5739d3.
+The CurseForge webhook returned HTTP 200. CurseForge generated Release file
+#9453332 (Everfrost-Source-v0.6.9.zip) for 1.60.1; the ID comes from its download
+URL. Status when checked: Processing, not yet on the signed-out files page. All 14
+downloaded addon files match the tag; only the usual empty Everfrost-Source/addon/
+directory is extra. Updated the public project description from docs/CURSEFORGE.md.
+The author console can keep showing Processing after a file appears publicly:
+v0.6.8 was on the signed-out files page while it still said so.

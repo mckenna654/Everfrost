@@ -239,3 +239,11 @@ the Gear Upgrades page layout and a real group-loot roll; compare the starter
 lists with the Icy Veins levelling sections; retake the README screenshots.
 
 November 5, 2026, unreleased: the spec menu footer below level 10 now reads "Full stat priorities need talents." at the user's request, replacing "Starter gear hints until level 10.". It is the same length, so it should fit the footer's single line; not yet seen in game.
+
+Published 0.6.9 on November 5, 2026: PR #7 merged, GitHub latest v0.6.9 (660d5ae),
+CurseForge Release file #9453332 for 1.60.1 (contents match the tag; not yet on the
+public files page when last checked), public description updated. The only addon
+code change is the spec menu note. Dependabot PR #2 (GitHub Actions bumps) was left
+open. Next steps are unchanged from 0.6.8: check the quest, merchant, Gear Upgrades
+and group-loot screens in game, compare the starter lists with the Icy Veins
+levelling sections, and retake the screenshots.
