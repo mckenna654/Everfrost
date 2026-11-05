@@ -172,3 +172,9 @@ everything works in game. Original test notes, for reference: check the arrow's
 position and visibility against the glow, the belt tooltip, and that
 RESISTANCE0_NAME really reports armor in Forever, since the tie-break depends on
 it. Public descriptions and CHANGELOG were updated in the 0.6.6 release commit.
+
+Published 0.6.6 on November 5, 2026: GitHub latest v0.6.6 (a053c22) with PR #4.
+See docs/RELEASING.md for the checksum and webhook delivery. Next steps: confirm
+the CurseForge file was generated and approved, check its contents, and update
+the public description from docs/CURSEFORGE.md. The author console needs the
+user's sign-in in the browser.

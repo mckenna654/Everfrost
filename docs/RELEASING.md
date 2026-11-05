@@ -180,3 +180,16 @@ Status when checked: Processing, not yet public. All 14 downloaded addon
 files match the v0.6.5 tag, allowing newline normalization; only the usual
 empty Everfrost-Source/addon/ directory is extra. Updated the public project
 description from docs/CURSEFORGE.md (it had not changed since 0.6.2).
+
+## 0.6.6 — November 5, 2026
+
+Released the armor tie-break and green bag arrow from PR #4 as GitHub latest
+v0.6.6, annotated tag at a053c22 on main. GitHub Actions passed on main before
+tagging; npm test and npm run build passed locally. All 14 packaged files match
+source byte for byte. Release ZIP SHA-256 matches the locally built archive:
+8bf5b72a01fb129624b0bd45df14774668439bd02324b4213b774540c79b110b.
+The CurseForge package webhook received the refs/tags/v0.6.6 push and returned
+HTTP 200. The file was not yet listed publicly when checked minutes later (v0.6.5
+was still the main file). Still to do in the CurseForge author console, which
+needs the user's sign-in: the generated file ID and status, that it targets
+1.60.1, its contents, and updating the public description from docs/CURSEFORGE.md.
