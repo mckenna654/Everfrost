@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: Everfrost
 ## IconTexture: Interface\AddOns\Everfrost\Media\Icon.tga
-## Notes: Level 1-30 spell guides. Stat priorities and gear upgrade hints start at level 10.
+## Notes: Level 1-30 spell guides and gear upgrade hints, with simple class priorities below level 10.
 ## Author: Custom addon for Jake
 ## Version: 0.6.7
 ## SavedVariablesPerCharacter: EverfrostDB

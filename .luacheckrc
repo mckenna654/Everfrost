@@ -15,7 +15,9 @@ globals = {
 
 -- WoW Forever client API the addon reads.
 read_globals = {
-  "BACKDROP_DIALOG_32_32",
+  "BACKDROP_DIALOG_32_32", "CanAffordMerchantItem", "GetMerchantItemLink",
+  "GetQuestItemLink", "GetQuestLogItemLink", "MERCHANT_ITEMS_PER_PAGE",
+  "MerchantFrame", "QuestInfoFrame", "QuestInfoRewardsFrame",
   "C_ClassTalents", "C_Container", "C_Item", "C_SpecializationInfo",
   "C_Spell", "C_SpellBook", "C_Traits",
   "ContainerFrameCombinedBags", "ContainerFrameItemButtonMixin",

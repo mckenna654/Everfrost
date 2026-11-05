@@ -42,7 +42,7 @@ A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1â
 
 - **Native-style settings:** type `/everfrost` or use the minimap button or the game's AddOns settings launcher. Specialisation, Rotation Panel and Gear Upgrades tabs keep the controls together.
 - **Clearer upgrade hints:** a prominent border fades in and out in the item's rarity colour. Tooltips show **UPGRADE**, the estimated score change and any required weapon partner. Passive equipment is no longer rejected for lacking a usable action.
-- **Levelling gear guidance from level 10:** keep the general Levelling spell guide while the active talent tree with the most points determines your gear priorities. Manual specialisation choices can override detection. Stat priorities and upgrade hints start at level 10; spell guides remain available from level 1.
+- **Levelling gear guidance from level 10:** keep the general Levelling spell guide while the active talent tree with the most points determines your gear priorities. Manual specialisation choices can override detection. Talent-based priorities start at level 10; spell guides remain available from level 1.
 - **Corrected Forever talent detection:** use the native talent window's trait-group totals, refresh after talent changes and show the detected split in settings. Ties, unspent points and unavailable data leave Levelling gear unscored.
 
 ## Spell reference panel
@@ -56,7 +56,9 @@ This is a **basic reference**, not a live next-cast queue or full class guide. I
 
 ## Gear upgrades and Need/Greed
 
-From level 10, standard bag items glow and show a green up arrow when their estimated guide-based stat score beats an equipped replacement. Armour pieces with more armour and no loss of useful stats also count. Hover for the comparison and stat order. Rings and trinkets consider both slots. Complete one-hand/off-hand combinations can compare against two-handers; pair tooltips name the partner, and **both items must be equipped** for that recommendation to apply.
+Standard bag items glow and show a green up arrow when their estimated stat score beats an equipped replacement. Below level 10 this uses a simple starter priority for your class; from level 10 it uses your talent tree and guide-based priorities. Tooltips explain why in plain words. Armour pieces with more armour and no loss of useful stats also count. Hover for the comparison and stat order. Rings and trinkets consider both slots. Complete one-hand/off-hand combinations can compare against two-handers; pair tooltips name the partner, and **both items must be equipped** for that recommendation to apply.
+
+Quest screens mark the best reward choice, or the one that sells for the most if none is an upgrade. Merchants highlight upgrades you can afford. You still choose and buy for yourself. Settings counts empty armour slots, and the panel reminds you if no weapon is equipped.
 
 Standard dungeon and raid loot-roll windows highlight **Need** for estimated upgrades and **Greed** for known non-upgrades or class-irrelevant items. Disabled choices are respected. You choose and click the roll, following your group's loot rules. Missing or restricted data stays unscored; refreshes defer during combat. Custom bag/loot replacements are not integrated.
 
