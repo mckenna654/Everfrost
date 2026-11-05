@@ -97,3 +97,8 @@ the new text and greys were not checked in game by the release session.
 
 0.6.6: Armour tie-break and green upgrade arrow. All simulated checks and
 luacheck pass. The user reports these changes work in game.
+
+0.6.7: Code review fixes checked against the Forever UI source (nested roll
+buttons, bag Initialize arguments, roll cancellation, scoring and spelling).
+All simulated checks and luacheck pass. Not yet checked in game, including
+Need/Greed highlights on a real group-loot roll.

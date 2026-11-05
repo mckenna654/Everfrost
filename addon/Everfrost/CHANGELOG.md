@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.6.7 — Loot highlight, scoring and bag fixes
+
+- Fix Need/Greed highlights not reaching Forever's loot-roll buttons, which sit inside a container on the roll frame. Tooltips on those buttons are fixed too.
+- Hiding the UI (Alt-Z) or a cinematic no longer removes the highlight from a roll that is still open.
+- Fix bag buttons losing their tracking and glow when bags opened, and stop reused buttons collecting duplicate script hooks.
+- Value Attack Power by a spec's higher Strength or Agility weight, so Rogues and melee Survival Hunters no longer undervalue it.
+- Plain wands now count for Priests, Mages and Warlocks. Stats still outrank a small DPS gain.
+- A second copy of a Unique-Equipped item is no longer flagged as an upgrade.
+- Hide the Survival role button until level 30 with Strider Kick, when it can change something.
+- The upgrade glow keeps pulsing through bag changes outside combat, and rescans do far less repeated work. `/everfrost refresh` and Rescan bags still re-read everything.
+- Use Australian spelling in the interface: Specialisation, Levelling, Armour and Defence. Spell names are unchanged, and `/everfrost spec leveling` still works alongside `levelling`.
+
+Rotation priorities are unchanged apart from spelling. Simulated-client tests and the Lua globals check pass; these changes still need checking in game, especially a real group-loot roll.
+
 ## 0.6.6 — Armor upgrades and a green arrow
 
 - Count more armor as an upgrade when you lose no useful stats. A plain mail belt now beats a plain leather belt for damage and caster specs, instead of showing "No useful stats". Armor only breaks ties: it never outweighs a stat loss.
