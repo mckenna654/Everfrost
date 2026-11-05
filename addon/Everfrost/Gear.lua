@@ -116,7 +116,11 @@ function G.ReadItem(link)
  local unique=NS.Call(itemAPI("GetItemUniqueness"),link)
  if unique then
   if not NS.Public(unique[1]) or not NS.Public(unique[2]) then return nil end
-  if public(unique[1],"number") and public(unique[2],"number") then item.unique,item.limit=unique[1],unique[2] end
+  if public(unique[1],"number") and public(unique[2],"number") then
+   item.unique,item.limit=unique[1],unique[2]
+   -- Plain Unique-Equipped items report category -1: they only limit copies of themselves.
+   if item.unique==-1 and item.id then item.unique=-item.id; item.limit=math.max(item.limit,1) end
+  end
  end
  G.items[link]=item; return item
 end
@@ -130,7 +134,7 @@ function G.Eligible(item, context, p)
  if item.usable==false then return false,"Item requirements are not met" end
  if item.classID==4 then
   local sub=item.subclassID
-  if sub>=1 and sub<=4 and sub>(armorMax[context.class] or 0) then return false,"Armor type unavailable to your class at this level" end
+  if sub>=1 and sub<=4 and sub>(armorMax[context.class] or 0) then return false,"Armour type unavailable to your class at this level" end
   if sub==6 and context.class~="WARRIOR" and context.class~="PALADIN" and context.class~="SHAMAN" then return false,"Your class cannot use shields" end
   if sub>=7 and sub<=11 then
    local owner=({[7]="PALADIN",[8]="DRUID",[9]="SHAMAN"})[sub]
@@ -166,14 +170,18 @@ function G.Score(item, context, p)
   local scale=key=="armor" and 0.02 or key=="dps" and 12 or 1
   score=score+(values[key] or 0)*weight*scale
  end
+ -- A wand is a caster's Shoot damage. No guide ranks it, so DPS earns a small fixed credit.
+ local wand=caster and item.classID==2 and item.subclassID==19 and s.dps or 0
+ score=score+wand
  -- AP equivalents follow the relevant primary stat rather than being omitted.
  -- A profile that ranks Attack Power itself already scored it in the loop above.
  if not caster and not w.attack then
   local ap=math.max(s.attack,p.kind=="ranged" and s.rangedAttack or 0)
-  score=score+ap*((p.kind=="ranged" and w.agility or w.strength or w.agility or 1)/2)
+  local primary=math.max(w.strength or 0,w.agility or 0)
+  score=score+ap*(primary>0 and primary or 1)/2
  end
  local relevant
- if caster then relevant=values.spell+(p.kind=="healer" and values.healing or 0)+s.intellect+s.spirit+s.mp5+values.hit+values.crit+values.haste
+ if caster then relevant=values.spell+(p.kind=="healer" and values.healing or 0)+s.intellect+s.spirit+s.mp5+values.hit+values.crit+values.haste+wand
  else relevant=s.strength+s.agility+s.attack+s.rangedAttack+values.dps+values.hit+values.crit+(s.expertise or 0)
   if p.kind=="tank" then relevant=relevant+s.stamina+s.armor+s.block+s.defense end
   if context.class=="PALADIN" then relevant=relevant+values.spell end
@@ -191,7 +199,7 @@ end
 local function validPair(main, off, equipped)
  -- Test each exposed limit against the final loadout, including both new items.
  for _,item in ipairs({main,off}) do
-  if item.unique and item.unique>0 and item.limit and item.limit>0 then
+  if item.unique and item.unique~=0 and item.limit and item.limit>0 then
    local count=0
    for _,other in ipairs({main,off}) do if other.unique==item.unique then count=count+1 end end
    for slot=1,19 do
@@ -273,7 +281,7 @@ function G.Compare(item, equipped, context, carried, candidate)
   (fitsHand(item,16,context,p) or fitsHand(item,17,context,p)) then
   return comparePair(item,equipped,context,p,carried,candidate)
  end
- local noUsefulStats="No useful stats for your current specialization"
+ local noUsefulStats="No useful stats for your current specialisation"
  -- Armor pieces continue without useful stats: more armor can still decide a tie below.
  if not relevant and not (item.classID==4 and item.stats.armor>0) then return greed(noUsefulStats) end
  local choices=slots[item.loc]
@@ -303,7 +311,7 @@ function G.Compare(item, equipped, context, carried, candidate)
    end
    oldScore=oldScore+extra
   elseif slot==17 and p.shield and item.loc~="INVTYPE_SHIELD" then allowed=false end
-  if item.unique and item.unique>0 and item.limit and item.limit>0 then
+  if item.unique and item.unique~=0 and item.limit and item.limit>0 then
    local count=0
    for other=1,19 do
     local worn=equipped[other]
@@ -325,7 +333,7 @@ function G.Compare(item, equipped, context, carried, candidate)
  -- stats can only replace another one, so Stamina cannot stand in for lost Strength.
  if best.armorGain>0 and best.delta>=-0.01 and (relevant or not best.oldRelevant) then
   best.kind="need"; best.armorOnly=true
-  best.reason=string.format("More armor, no useful stats lost (+%.0f Armor)",best.armorGain)
+  best.reason=string.format("More armour, no useful stats lost (+%.0f Armour)",best.armorGain)
   return best
  end
  if not relevant then return greed(noUsefulStats) end
@@ -347,7 +355,8 @@ end
 function G.Refresh()
  if InCombatLockdown() then G.pending=true; return false end
  G.enabled=not EverfrostDB or EverfrostDB.gear~=false
- G.items={}; G.bags={}; G.carried={}; G.equipment={}
+ -- G.items stays: an item link's stats never change, and rescans are frequent.
+ G.bags={}; G.carried={}; G.equipment={}
  -- Turned off: skip every item read; painting with no results clears old glows.
  if not G.enabled then
   G.pending=false

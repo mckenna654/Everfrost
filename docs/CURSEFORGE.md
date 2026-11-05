@@ -6,7 +6,7 @@ A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1â
 
 ## What's new in 0.6.6
 
-- **Armor upgrades:** more armor now counts as an upgrade when you lose no useful stats, so a plain mail belt beats a plain leather one instead of showing "No useful stats". Armor only breaks ties and never outweighs a stat loss. These items also highlight **Need** on group loot.
+- **Armour upgrades:** more armour now counts as an upgrade when you lose no useful stats, so a plain mail belt beats a plain leather one instead of showing "No useful stats". Armour only breaks ties and never outweighs a stat loss. These items also highlight **Need** on group loot.
 - **Green up arrow:** bag upgrades now show a green up arrow alongside the glow.
 
 ## Included from 0.6.5
@@ -24,7 +24,7 @@ A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1â
 
 ## Included from 0.6.2
 
-- **Cleaner specialization menu:** the panel title opens **Choose a Spec**, with compact single-line choices. Automatic shows the detected tree inline. Repeated descriptions and the generic saved-choice footer are removed; level-10 and combat notices appear only when relevant.
+- **Cleaner specialisation menu:** the panel title opens **Choose a Spec**, with compact single-line choices. Automatic shows the detected tree inline. Repeated descriptions and the generic saved-choice footer are removed; level-10 and combat notices appear only when relevant.
 
 ## Included from 0.6.1
 
@@ -33,15 +33,15 @@ A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1â
 
 ## Included from 0.6.0
 
-- **Native-style settings:** type `/everfrost` or use the minimap button or the game's AddOns settings launcher. Specialization, Rotation Panel and Gear Upgrades tabs keep the controls together.
+- **Native-style settings:** type `/everfrost` or use the minimap button or the game's AddOns settings launcher. Specialisation, Rotation Panel and Gear Upgrades tabs keep the controls together.
 - **Clearer upgrade hints:** a prominent border fades in and out in the item's rarity colour. Tooltips show **UPGRADE**, the estimated score change and any required weapon partner. Passive equipment is no longer rejected for lacking a usable action.
-- **Leveling gear guidance from level 10:** keep the general Leveling spell guide while the active talent tree with the most points determines your gear priorities. Manual specialization choices can override detection. Stat priorities and upgrade hints start at level 10; spell guides remain available from level 1.
-- **Corrected Forever talent detection:** use the native talent window's trait-group totals, refresh after talent changes and show the detected split in settings. Ties, unspent points and unavailable data leave Leveling gear unscored.
+- **Levelling gear guidance from level 10:** keep the general Levelling spell guide while the active talent tree with the most points determines your gear priorities. Manual specialisation choices can override detection. Stat priorities and upgrade hints start at level 10; spell guides remain available from level 1.
+- **Corrected Forever talent detection:** use the native talent window's trait-group totals, refresh after talent changes and show the detected split in settings. Ties, unspent points and unavailable data leave Levelling gear unscored.
 
 ## Spell reference panel
 
 - Learned-spell-aware ability references using your trained ranks, with short hover guidance.
-- Automatic class, level and talent-tree detection, plus Automatic, Leveling and manual specialization choices.
+- Automatic class, level and talent-tree detection, plus Automatic, Levelling and manual specialisation choices.
 - Single-target/AoE views and supported healing, Feral and Survival role views.
 - Compact, movable panel with saved position, visibility, locking and size; native cooldown sweeps where supported.
 
@@ -49,7 +49,7 @@ This is a **basic reference**, not a live next-cast queue or full class guide. I
 
 ## Gear upgrades and Need/Greed
 
-From level 10, standard bag items glow and show a green up arrow when their estimated guide-based stat score beats an equipped replacement. Armor pieces with more armor and no loss of useful stats also count. Hover for the comparison and stat order. Rings and trinkets consider both slots. Complete one-hand/off-hand combinations can compare against two-handers; pair tooltips name the partner, and **both items must be equipped** for that recommendation to apply.
+From level 10, standard bag items glow and show a green up arrow when their estimated guide-based stat score beats an equipped replacement. Armour pieces with more armour and no loss of useful stats also count. Hover for the comparison and stat order. Rings and trinkets consider both slots. Complete one-hand/off-hand combinations can compare against two-handers; pair tooltips name the partner, and **both items must be equipped** for that recommendation to apply.
 
 Standard dungeon and raid loot-roll windows highlight **Need** for estimated upgrades and **Greed** for known non-upgrades or class-irrelevant items. Disabled choices are respected. You choose and click the roll, following your group's loot rules. Missing or restricted data stays unscored; refreshes defer during combat. Custom bag/loot replacements are not integrated.
 
@@ -70,9 +70,9 @@ Left-click the minimap logo for settings, right-click to toggle the reference pa
 
 ## Releases and verification
 
-The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling. **0.6.2** tidies the specialization picker into a compact single-line menu. **0.6.3** fixes Subtlety Rogue Attack Power scoring and reduces background bag scans; it reached CurseForge as **0.6.4** after a packaging fix. **0.6.5** tidies status text, grey text and repeated tooltip notes. **0.6.6** counts more armor as a tie-break and adds a green up arrow to bag upgrades.
+The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling. **0.6.2** tidies the specialisation picker into a compact single-line menu. **0.6.3** fixes Subtlety Rogue Attack Power scoring and reduces background bag scans; it reached CurseForge as **0.6.4** after a packaging fix. **0.6.5** tidies status text, grey text and repeated tooltip notes. **0.6.6** counts more armour as a tie-break and adds a green up arrow to bag upgrades.
 
-Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse, settings layout, armor tie-break and green arrow; the latest talent-detection fix, new panel styling/opacity and complete Forever compatibility still need in-game verification. English guidance; some Forever-specific spells depend on English spellbook names.
+Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse, settings layout, armour tie-break and green arrow; the latest talent-detection fix, new panel styling/opacity and complete Forever compatibility still need in-game verification. English guidance; some Forever-specific spells depend on English spellbook names.
 
 **MIT licensed. Third-party addon-manager distribution is enabled.** Everfrost is independent and is not affiliated with or endorsed by Blizzard, Icy Veins or OpenAI.
 

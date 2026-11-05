@@ -26,11 +26,11 @@ local function refresh()
   gearSpec=0; gearReason=NS.gearLevelNote
  elseif spec==0 then
   if not talentPointsAvailable then
-   gearReason="Talent points are unavailable. Choose a specialization on the Specialization page to score gear."
+   gearReason="Talent points are unavailable. Choose a specialisation on the Specialisation page to score gear."
   elseif detectedSpec>0 then gearSpec=detectedSpec
   elseif detectedStatus=="Hybrid" then
-   gearReason="Your talent trees are tied. Spend more points or choose a specialization to score gear."
-  else gearReason="No talent points spent yet. Spend a talent point or choose a specialization to score gear." end
+   gearReason="Your talent trees are tied. Spend more points or choose a specialisation to score gear."
+  else gearReason="No talent points spent yet. Spend a talent point or choose a specialisation to score gear." end
  end
  local spells,err=NS.ScanSpells(class)
  if spells then known=spells end
@@ -76,6 +76,12 @@ local function toggleRole()
  else db.role=effectiveRole()=="bear" and "damage" or "bear" end
  render()
 end
+-- Survival's melee view needs level 30 and Strider Kick, so until then there is nothing to switch.
+local function hasRoleChoice(p)
+ if not p then return false end
+ if p.melee then return level>=30 and known["Strider Kick"]~=nil end
+ return (p.healing or p.bear) and true or false
+end
 local function makeTile(index)
  local tile=CreateFrame("Frame",nil,frame); tile:SetSize(44,44); tile:EnableMouse(true)
  tile.icon=tile:CreateTexture(nil,"ARTWORK"); tile.icon:SetAllPoints(); tile.icon:SetTexCoord(0.07,0.93,0.07,0.93)
@@ -98,11 +104,11 @@ render=function()
  local role=effectiveRole()
  if NS.Gear then NS.Gear.SetContext(class,gearSpec,level,effectiveRole(gearSpec),known) end
  local list,note,profile=NS.BuildRows(class,spec,level,known,db.aoe and "aoe" or "single",role)
- local specName=NS.trees[class] and NS.trees[class][spec] or "Leveling"
+ local specName=NS.trees[class] and NS.trees[class][spec] or "Levelling"
  frame.title:SetText(specName.." "..className)
  frame.meta:SetText("Level "..level.." / "..(pending and "Pending" or status))
  frame.mode:SetText(db.aoe and "AoE" or "Single")
- frame.role:SetShown(profile and (profile.healing or profile.bear or profile.melee) and true or false)
+ frame.role:SetShown(hasRoleChoice(profile))
  frame.role:SetText(role=="melee" and "Melee" or role=="ranged" and "Ranged" or role=="heal" and "Heal" or role=="bear" and "Bear" or role=="caster" and "Caster" or (profile and profile.bear and "Cat" or "Damage"))
  for _,tile in ipairs(tiles) do tile:Hide(); tile.cd:Clear(); tile.spellID=nil end
  local columns=math.min(6,math.max(1,#list))
@@ -144,7 +150,7 @@ local function createGuideMenu()
  menu.heading:SetTextColor(1,0.82,0)
  local close=CreateFrame("Button",nil,menu,"UIPanelCloseButton")
  close:SetSize(24,24); close:SetPoint("TOPRIGHT",-5,-5); close:SetScript("OnClick",function() menu:Hide() end)
- local choices={{label="Automatic",value=nil},{label="Leveling",value=0}}
+ local choices={{label="Automatic",value=nil},{label="Levelling",value=0}}
  for index,name in ipairs(NS.trees[class] or {}) do choices[#choices+1]={label=name,value=index} end
  menu.rows={}
  for index,choice in ipairs(choices) do
@@ -209,7 +215,7 @@ local function createUI()
  frame.guide:RegisterForDrag("LeftButton")
  frame.guide:SetScript("OnDragStart",function() if not db.locked then frame:StartMoving() end end)
  frame.guide:SetScript("OnDragStop",drag:GetScript("OnDragStop"))
- frame.guide:SetScript("OnEnter",function(self) tip(self,"Choose a Spec","Automatic, Leveling, or a class specialization.\n"..NS.gearLevelNote.."\nDrag to move the panel.") end)
+ frame.guide:SetScript("OnEnter",function(self) tip(self,"Choose a Spec","Automatic, Levelling, or a class specialisation.\n"..NS.gearLevelNote.."\nDrag to move the panel.") end)
  frame.guide:SetScript("OnLeave",function() GameTooltip:Hide() end)
  frame.guide:SetScript("OnClick",function()
   GameTooltip:Hide()
@@ -251,11 +257,11 @@ SlashCmdList.EVERFROST=function(message)
  elseif command=="spec" then
   local n=tonumber(arg)
   if arg=="auto" then selectGuide(nil)
-  elseif arg=="leveling" or n==0 then selectGuide(0)
+  elseif arg=="levelling" or arg=="leveling" or n==0 then selectGuide(0)
   elseif n and NS.trees[class] and NS.trees[class][n] then selectGuide(n)
-  else say("/everfrost spec auto | leveling | 1/2/3, or click the guide title.") end
+  else say("/everfrost spec auto | levelling | 1/2/3, or click the guide title.") end
  elseif command=="refresh" then refresh()
-  if NS.Gear then NS.Gear.pending=true; NS.Gear.Schedule() end
+  if NS.Gear then NS.Gear.items={}; NS.Gear.pending=true; NS.Gear.Schedule() end
  elseif command=="gear" then
   if arg=="on" or arg=="off" then
    db.gear=arg=="on"
@@ -302,10 +308,10 @@ events:SetScript("OnEvent",function(_,event,value)
      local roleLabel=role=="damage" and (p and p.bear and "Cat" or "Damage") or role:sub(1,1):upper()..role:sub(2)
      return {class=class,className=className,level=level,pending=pending,
       detected=((NS.trees[class] or {})[detectedSpec] or detectedStatus)..(detectedPoints and (" ("..table.concat(detectedPoints," / ")..")") or ""),
-      hasRole=p and (p.melee or p.healing or p.bear) and true or false,roleLabel=roleLabel,
+      hasRole=hasRoleChoice(p),roleLabel=roleLabel,
       priority=gear and NS.GearPriorityText(gear) or nil,gearReason=gearReason,
       gearTitle=gearName and ("Stat priority: "..gearName..(spec==0 and " (talents)" or "")) or nil,
-      levelingHint=NS.gearLevelNote.." Leveling uses your dominant talent tree for gear."}
+      levelingHint=NS.gearLevelNote.." Levelling uses your dominant talent tree for gear."}
     end})
   end
   render()

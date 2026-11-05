@@ -176,9 +176,23 @@ assert(G.Score(apItem,subtlety,subProfile)==10*subProfile.weights.attack)
 assert(G.Score(agilityItem,subtlety,subProfile)>G.Score(apItem,subtlety,subProfile))
 local subEquip=empty(); subEquip[5]=apItem
 assert(G.Compare(agilityItem,subEquip,subtlety).kind=='need')
--- Melee specs without an Attack Power rank keep the existing half-Strength credit.
+-- Melee specs without an Attack Power rank use half their higher Strength or Agility weight.
 local combatProfile=NS.gearProfiles.ROGUE[2]
-assert(G.Score(apItem,ctx('ROGUE',2),combatProfile)==10*combatProfile.weights.strength/2)
+assert(G.Score(apItem,ctx('ROGUE',2),combatProfile)==10*combatProfile.weights.agility/2)
+assert(G.Score(apItem,ctx('WARRIOR',1),NS.gearProfiles.WARRIOR[1])==10*NS.gearProfiles.WARRIOR[1].weights.strength/2)
+local apRing=item(45,'INVTYPE_FINGER',{ITEM_MOD_ATTACK_POWER_SHORT=20}); local agiRing=item(46,'INVTYPE_FINGER',{ITEM_MOD_AGILITY_SHORT=6})
+local ringEquip=empty(); ringEquip[11]=agiRing; ringEquip[12]=agiRing
+assert(G.Compare(apRing,ringEquip,ctx('ROGUE',2)).kind=='need')
+-- A plain wand is an upgrade for casters: stats still outrank a small DPS gain.
+local wandOf=function(id,stats) return item(id,'INVTYPE_RANGEDRIGHT',stats,2,19) end
+local plainWand=wandOf(47,{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=8})
+assert(G.Compare(plainWand,empty(),ctx('MAGE',2)).kind=='need')
+assert(G.Compare(plainWand,empty(),ctx('PRIEST',1)).kind=='need')
+assert(G.Compare(plainWand,empty(),ctx('WARRIOR',1)).reason:find('cannot use',1,true))
+local wandEquip=empty(); wandEquip[18]=wandOf(48,{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=6})
+assert(G.Compare(plainWand,wandEquip,ctx('MAGE',2)).kind=='need')
+wandEquip[18]=wandOf(49,{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=6,ITEM_MOD_SPELL_POWER_SHORT=4})
+assert(G.Compare(plainWand,wandEquip,ctx('MAGE',2)).kind=='greed')
 -- Only results that depend on missing item data wait for item-data events.
 assert(G.Compare(nil,equipment,c).waiting==true)
 local unscoredYoung=ctx('WARRIOR',1); unscoredYoung.level=9
@@ -194,7 +208,7 @@ local worn=empty(); worn[6]=belt(70,2,18)
 local girdle=belt(71,3,50)
 local gain=G.Compare(girdle,worn,ret)
 assert(gain.kind=='need' and gain.armorOnly and gain.armorGain==32 and gain.slot==6)
-assert(gain.reason:find('+32 Armor',1,true))
+assert(gain.reason:find('+32 Armour',1,true))
 -- An empty slot is a confirmed gain; unknown equipment still waits for data.
 assert(G.Compare(girdle,empty(),ret).armorOnly)
 local unread=empty(); unread[6]=nil
@@ -224,8 +238,8 @@ assert(G.Compare(belt(84,3,50,{ITEM_MOD_STRENGTH_SHORT=4}),worn,ret).armorOnly)
 local robe=empty(); robe[5]=item(85,nil,{RESISTANCE0_NAME=10,ITEM_MOD_INTELLECT_SHORT=3})
 assert(G.Compare(item(86,nil,{RESISTANCE0_NAME=20,ITEM_MOD_INTELLECT_SHORT=3}),robe,ctx('MAGE',2)).armorOnly)
 -- Armor type and level limits still come first.
-assert(G.Compare(belt(87,4,900),empty(),ret).reason:find('Armor type',1,true))
-assert(G.Compare(belt(88,3,50),empty(),ctx('MAGE',2)).reason:find('Armor type',1,true))
+assert(G.Compare(belt(87,4,900),empty(),ret).reason:find('Armour type',1,true))
+assert(G.Compare(belt(88,3,50),empty(),ctx('MAGE',2)).reason:find('Armour type',1,true))
 -- Tanks already score armor, so this stays an ordinary stat upgrade for them.
 worn[6]=belt(89,2,18)
 local tankBelt=G.Compare(girdle,worn,ctx('WARRIOR',3))
@@ -240,7 +254,7 @@ run(`
 frames={}; hooks={}; metadataCalls=0; inventory={}; bagLinks={}; itemInfo={}; rawStats={}; rollLinks={}; rollEligibility={}
 local methods={}
 function methods:SetScript(name,fn) self.scripts[name]=fn end
-function methods:HookScript(name,fn) self.hooks[name]=fn end
+function methods:HookScript(name,fn) self.hooks[name]=fn; self.hookCounts=self.hookCounts or {}; self.hookCounts[name]=(self.hookCounts[name] or 0)+1 end
 function methods:RegisterEvent(name) self.events[name]=true end
 function methods:CreateTexture() local t=widget(); t.owner=self; return t end
 function methods:CreateAnimationGroup() local g=widget(); g.owner=self; return g end
@@ -350,14 +364,14 @@ end
 local plays=bag.EverfrostGearPulses[1].plays; local calls=qualityCalls
 G.PaintBag(bag); assert(bag.EverfrostGearPulses[1].plays==plays and qualityCalls==calls)
 -- Reused buttons pick up new rarity colors, with safe neutral missing-data fallbacks.
-itemInfo['item:101'][3]=3; G.Refresh(); assertColor(bag,0,0.44,0.87)
-itemInfo['item:101'][3]=4; G.Refresh(); assertColor(bag,0.64,0.21,0.93)
-itemInfo['item:101'][3]=secret; G.Refresh(); assertColor(bag,1,1,1)
+itemInfo['item:101'][3]=3; G.items={}; G.Refresh(); assertColor(bag,0,0.44,0.87)
+itemInfo['item:101'][3]=4; G.items={}; G.Refresh(); assertColor(bag,0.64,0.21,0.93)
+itemInfo['item:101'][3]=secret; G.items={}; G.Refresh(); assertColor(bag,1,1,1)
 assert(G.bags[0][1].result.kind=='need')
 itemInfo['item:101'][3]=2; C_Item.GetItemQualityColor=function() return secret,1,1 end
-G.Refresh(); assertColor(bag,1,1,1)
-C_Item.GetItemQualityColor=nil; G.Refresh(); assertColor(bag,1,1,1)
-C_Item.GetItemQualityColor=qualityColor; G.Refresh(); assertColor(bag,0.12,1,0)
+G.items={}; G.Refresh(); assertColor(bag,1,1,1)
+C_Item.GetItemQualityColor=nil; G.items={}; G.Refresh(); assertColor(bag,1,1,1)
+C_Item.GetItemQualityColor=qualityColor; G.items={}; G.Refresh(); assertColor(bag,0.12,1,0)
 -- Native tooltip rebuilds keep the label, without duplicate OnEnter additions.
 GameTooltip.owner=bag; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
 assert(table.concat(GameTooltip.lines,'|'):find('Everfrost: UPGRADE',1,true))
@@ -381,7 +395,7 @@ assert(not frame.NeedButton.EverfrostGearArrow)
 assertColor(frame.NeedButton,0.12,1,0)
 local rollPlays=frame.NeedButton.EverfrostGearPulses[1].plays
 G.PaintRoll(frame); assert(frame.NeedButton.EverfrostGearPulses[1].plays==rollPlays)
-itemInfo['item:101'][3]=3; fire('START_LOOT_ROLL',1); tick()
+itemInfo['item:101'][3]=3; G.items={}; fire('START_LOOT_ROLL',1); tick()
 assertColor(frame.NeedButton,0,0.44,0.87)
 rollLinks[1]='item:102'; fire('START_LOOT_ROLL',1); tick()
 assert(not frame.NeedButton.EverfrostGearGlow:IsShown() and frame.GreedButton.EverfrostGearGlow:IsShown())
@@ -400,13 +414,59 @@ assert(not frame.NeedButton.EverfrostGearGlow:IsShown())
 combat=false; fire('PLAYER_REGEN_ENABLED'); tick(); assert(frame.NeedButton.EverfrostGearGlow:IsShown())
 fire('CANCEL_LOOT_ROLL',1); tick()
 assert(G.rolls[1]==nil and not frame.NeedButton.EverfrostGearGlow:IsShown())
+-- Hiding the whole UI is not the end of a roll: its highlight returns with the frame.
+rollLinks[2]='item:101'; frame.rollID=2; fire('START_LOOT_ROLL',2); tick()
+assert(G.rolls[2] and frame.NeedButton.EverfrostGearGlow:IsShown())
+frame.shown=false; frame.hooks.OnHide(frame); assert(not frame.NeedButton.EverfrostGearGlow:IsShown())
+frame.shown=true; frame.hooks.OnShow(frame); tick()
+assert(G.rolls[2] and frame.NeedButton.EverfrostGearGlow:IsShown())
+GameTooltip:ClearLines(); frame.NeedButton.hooks.OnEnter(frame.NeedButton)
+assert(table.concat(GameTooltip.lines,'|'):find('UPGRADE / Need',1,true))
+fire('CANCEL_LOOT_ROLL',2); tick(); assert(G.rolls[2]==nil and not frame.NeedButton.EverfrostGearGlow:IsShown())
+-- Forever nests its roll buttons inside LootButtonContainer.
+local nested=widget(); local widgetIndex=getmetatable(nested).__index
+setmetatable(nested,{__index=function(t,k) if k=='NeedButton' or k=='GreedButton' then return nil end; return widgetIndex(t,k) end})
+nested.LootButtonContainer=widget(); nested.LootButtonContainer.NeedButton=widget(); nested.LootButtonContainer.GreedButton=widget()
+nested.rollID=3; rollLinks[3]='item:101'; G.TrackRoll(nested); fire('START_LOOT_ROLL',3); tick()
+assert(nested.LootButtonContainer.NeedButton.EverfrostGearGlow:IsShown() and nested.LootButtonContainer.NeedButton.hooks.OnEnter)
+nested.shown=false; nested.hooks.OnHide(nested); assert(not nested.LootButtonContainer.NeedButton.EverfrostGearGlow:IsShown())
+fire('CANCEL_LOOT_ROLL',3); tick()
+-- Forever calls Initialize(containerFrame, bag, slot); the older form has no container.
+local pooled=widget(); hooks.Initialize(pooled,widget(),0,1)
+assert(pooled.EverfrostGearGlow and pooled.EverfrostGearGlow:IsShown())
+local legacyButton=widget(); hooks.Initialize(legacyButton,0,1); assert(legacyButton.EverfrostGearGlow:IsShown())
+-- A reused button keeps one set of hooks, even after showing a bank bag.
+hooks.Initialize(pooled,widget(),6,1); assert(not pooled.EverfrostGearGlow:IsShown())
+hooks.Initialize(pooled,widget(),0,1); assert(pooled.EverfrostGearGlow:IsShown() and pooled.hookCounts.OnEnter==1 and pooled.hookCounts.OnShow==1)
+-- Bag changes outside combat keep the pulse running and reuse cached items.
+fire('BAG_UPDATE',0); tick()
+local pulsePlays=pooled.EverfrostGearPulses[1].plays; local reads=metadataCalls
+fire('BAG_UPDATE',0); assert(pooled.EverfrostGearPulses[1]:IsPlaying()); tick()
+assert(pooled.EverfrostGearGlow:IsShown() and pooled.EverfrostGearPulses[1].plays==pulsePlays and metadataCalls==reads)
+-- A walk of every bag button happens when needed, not on every bag change.
+local walks=0; ContainerFrame1={EnumerateValidItems=function() walks=walks+1; return function() end end}
+fire('ADDON_LOADED','x'); tick(); assert(walks==1)
+fire('BAG_UPDATE',0); tick(); assert(walks==1)
+ContainerFrame1=nil
+-- Plain Unique-Equipped items report category -1 and limit copies of themselves.
+fixture('item:300',{ITEM_MOD_STRENGTH_SHORT=9}); itemInfo['item:300'][9]='INVTYPE_TRINKET'
+fixture('item:301',{ITEM_MOD_STRENGTH_SHORT=2}); itemInfo['item:301'][9]='INVTYPE_TRINKET'
+local plainUnique=C_Item.GetItemUniqueness
+C_Item.GetItemUniqueness=function(link) if link=='item:300' then return -1,1 end; return 0,0 end
+local duplicate=G.ReadItem('item:300'); assert(duplicate.unique==-300 and duplicate.limit==1)
+local twoTrinkets={}; for i=1,19 do twoTrinkets[i]=false end
+twoTrinkets[13]=duplicate; twoTrinkets[14]=G.ReadItem('item:301')
+local dupeResult=G.Compare(duplicate,twoTrinkets,G.context)
+assert(dupeResult.kind=='greed' and dupeResult.reason:find('Not a valid',1,true))
+twoTrinkets[13]=false; assert(G.Compare(duplicate,twoTrinkets,G.context).kind=='need')
+C_Item.GetItemUniqueness=plainUnique
 -- A plain armor upgrade explains itself without a meaningless 0.0 vs 0.0 score.
 GameTooltip:ClearLines()
-G.Tooltip(GameTooltip,{kind='need',reason='More armor, no useful stats lost (+32 Armor)',armorOnly=true,score=0,previous=0,delta=0})
+G.Tooltip(GameTooltip,{kind='need',reason='More armour, no useful stats lost (+32 Armour)',armorOnly=true,score=0,previous=0,delta=0})
 local armorLines=table.concat(GameTooltip.lines,'|')
-assert(armorLines:find('Everfrost: UPGRADE',1,true) and armorLines:find('+32 Armor',1,true) and not armorLines:find('Estimated score',1,true))
+assert(armorLines:find('Everfrost: UPGRADE',1,true) and armorLines:find('+32 Armour',1,true) and not armorLines:find('Estimated score',1,true))
 -- Missing and secret metadata defer rather than treating an occupied slot as empty.
-itemInfo['item:100']=nil; G.Refresh(); assert(G.bags[0][1].result.kind=='unknown')
+itemInfo['item:100']=nil; G.items={}; G.Refresh(); assert(G.bags[0][1].result.kind=='unknown')
 fixture('item:100',{ITEM_MOD_STRENGTH_SHORT=3}); rawStats['item:100'].ITEM_MOD_STRENGTH_SHORT=secret
 G.Refresh(); assert(G.bags[0][1].result.kind=='unknown')
 fixture('item:100',{ITEM_MOD_STRENGTH_SHORT=3})
@@ -434,7 +494,7 @@ assert(table.concat(GameTooltip.lines,'|'):find('UPGRADE (equip both) / Need',1,
 extraBagLink=nil; fire('BAG_UPDATE',1); tick()
 assert(G.bags[0][1].result.kind=='unknown' and not bag.EverfrostGearGlow:IsShown())
 assert(not offBag.EverfrostGearGlow:IsShown() and not frame.NeedButton.EverfrostGearGlow:IsShown())
-extraBagLink='item:202'; rawStats['item:202']=nil; fire('BAG_UPDATE',1); tick()
+extraBagLink='item:202'; rawStats['item:202']=nil; G.items={}; fire('BAG_UPDATE',1); tick()
 assert(G.bags[0][1].result.kind=='unknown')
 rawStats['item:202']={ITEM_MOD_SPELL_POWER_SHORT=10}; fire('ITEM_DATA_LOAD_RESULT',202); tick()
 assert(bag.EverfrostGearGlow:IsShown() and offBag.EverfrostGearGlow:IsShown() and frame.NeedButton.EverfrostGearGlow:IsShown())
@@ -459,7 +519,7 @@ EverfrostDB.gear=false; G.Refresh(); assert(not bag.EverfrostGearGlow:IsShown())
 local off=metadataCalls; G.Refresh(); assert(metadataCalls==off and next(G.bags)==nil)
 assert(G.Evaluate('item:201').reason=='Gear highlights are disabled')
 EverfrostDB.gear=true; G.SetContext('MAGE',2,30,'damage',{}); tick()
-assert(metadataCalls>off and bag.EverfrostGearGlow:IsShown())
+assert(next(G.bags)~=nil and bag.EverfrostGearGlow:IsShown())
 print('Gear UI: bag reuse, loot eligibility, async item data, secret rejection, combat deferral, cancellation and legacy APIs passed')
 `);
 console.log('Gear checks passed. Forever client visuals and API behavior still require in-game testing.');

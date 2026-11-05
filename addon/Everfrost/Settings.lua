@@ -89,7 +89,7 @@ function S:Refresh()
   local value=index-2
   if index==1 then value=nil end
   row:SetChecked(db.spec==value)
-  row.label:SetText(index==1 and "Automatic" or index==2 and "Leveling" or (NS.trees[state.class] or {})[index-2] or "Unavailable")
+  row.label:SetText(index==1 and "Automatic" or index==2 and "Levelling" or (NS.trees[state.class] or {})[index-2] or "Unavailable")
  end
  guide.single:SetEnabled(db.aoe==true); guide.aoe:SetEnabled(db.aoe~=true)
  guide.role:SetShown(state.hasRole); guide.role:SetText("View: "..state.roleLabel)
@@ -103,7 +103,7 @@ function S:Refresh()
  local gear=window.pages.Gear
  gear.enabled:SetChecked(db.gear~=false)
  gear.priorityTitle:SetText(state.gearTitle or "Current stat priority")
- gear.priority:SetText(state.priority or (state.gearReason==NS.gearLevelNote and "Not active yet.") or state.gearReason or "Choose a specialization or spend talent points to score gear.")
+ gear.priority:SetText(state.priority or (state.gearReason==NS.gearLevelNote and "Not active yet.") or state.gearReason or "Choose a specialisation or spend talent points to score gear.")
  gear.rescan:SetEnabled(not InCombatLockdown())
  positionMinimap()
 end
@@ -148,7 +148,7 @@ function NS.CreateSettings(controller)
  window.close=close; window.pages={}; window.tabs={}
  window.inset=CreateFrame("Frame",nil,window,"InsetFrameTemplate")
  window.inset:SetPoint("TOPLEFT",8,-62); window.inset:SetPoint("BOTTOMRIGHT",-8,30)
- local tabs={{key="Guide",label="Specialization",width=130},{key="Panel",label="Rotation Panel",width=130},{key="Gear",label="Gear Upgrades",width=130}}
+ local tabs={{key="Guide",label="Specialisation",width=130},{key="Panel",label="Rotation Panel",width=130},{key="Gear",label="Gear Upgrades",width=130}}
  local tabX=18
  for _,entry in ipairs(tabs) do
   local name=entry.key

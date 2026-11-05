@@ -91,3 +91,9 @@ contained Everfrost-Source/CLAUDE.md, a folder without a .toc). .pkgmeta now
 ignores CLAUDE.md, and check.cjs fails if any top-level non-dot file or
 folder other than addon/Everfrost would be packaged. Lua files unchanged
 from 0.6.3; all simulated checks and luacheck run again on GitHub Actions.
+
+0.6.5: Text and colour polish only. All simulated checks and luacheck pass;
+the new text and greys were not checked in game by the release session.
+
+0.6.6: Armour tie-break and green upgrade arrow. All simulated checks and
+luacheck pass. The user reports these changes work in game.
