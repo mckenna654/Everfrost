@@ -237,3 +237,5 @@ user's go-ahead without an in-game test on record. Next steps: confirm the file
 gets approved; on a low-level character check a quest reward screen, a vendor,
 the Gear Upgrades page layout and a real group-loot roll; compare the starter
 lists with the Icy Veins levelling sections; retake the README screenshots.
+
+November 5, 2026, unreleased: the spec menu footer below level 10 now reads "Full stat priorities need talents." at the user's request, replacing "Starter gear hints until level 10.". It is the same length, so it should fit the footer's single line; not yet seen in game.

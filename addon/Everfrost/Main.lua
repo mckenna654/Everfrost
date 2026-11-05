@@ -191,7 +191,7 @@ local function createGuideMenu()
     row.label:SetText("Automatic"..(name and (" ("..name..")") or ""))
    end
   end
-  local footer=InCombatLockdown() and "Changes apply after combat." or level<NS.gearMinLevel and "Starter gear hints until level 10." or nil
+  local footer=InCombatLockdown() and "Changes apply after combat." or level<NS.gearMinLevel and "Full stat priorities need talents." or nil
   menu.footer:SetText(footer or ""); menu.footer:SetShown(footer~=nil)
   menu:SetHeight(48+#menu.rows*28+(footer and 24 or 0))
  end
