@@ -251,6 +251,11 @@ local function comparePair(item, equipped, context, p, carried, candidate)
  end
  return unknown("Carry a usable one-hand weapon and off-hand to compare with your two-hander")
 end
+-- Armor gained by wearing item instead of old; false means a confirmed empty slot.
+local function armorGain(item, old)
+ if item.classID~=4 or (old and old.classID~=4) then return 0 end
+ return item.stats.armor-(old and old.stats.armor or 0)
+end
 function G.Compare(item, equipped, context, carried, candidate)
  if not context or context.level<1 or context.level>NS.maxLevel then return unknown("Gear guide supports levels 10-30") end
  if context.level<NS.gearMinLevel then return unknown(NS.gearLevelNote) end
@@ -268,7 +273,9 @@ function G.Compare(item, equipped, context, carried, candidate)
   (fitsHand(item,16,context,p) or fitsHand(item,17,context,p)) then
   return comparePair(item,equipped,context,p,carried,candidate)
  end
- if not relevant then return greed("No useful stats for your current specialization") end
+ local noUsefulStats="No useful stats for your current specialization"
+ -- Armor pieces continue without useful stats: more armor can still decide a tie below.
+ if not relevant and not (item.classID==4 and item.stats.armor>0) then return greed(noUsefulStats) end
  local choices=slots[item.loc]
  if item.loc=="INVTYPE_WEAPON" and context.dual then choices={16,17} end
  if item.loc=="INVTYPE_WEAPONOFFHAND" and not context.dual then return greed("Dual wield is not learned") end
@@ -280,9 +287,9 @@ function G.Compare(item, equipped, context, carried, candidate)
   if (slot==16 or slot==17) and equipped[16] and equipped[16].loc=="INVTYPE_2HWEAPON" and item.loc~="INVTYPE_2HWEAPON" then
    return unknown("Compare a complete one-hand/off-hand setup before replacing a two-handed weapon")
   end
-  local oldScore=0
+  local oldScore,oldRelevant=0,false
   if old then
-   oldScore=G.Score(old,context,p)
+   oldScore,oldRelevant=G.Score(old,context,p)
    if oldScore==nil then return unknown("Equipped weapon stats are unavailable") end
   end
   local allowed=true
@@ -305,11 +312,24 @@ function G.Compare(item, equipped, context, carried, candidate)
    if count>=item.limit then allowed=false end
   end
   if old and old.link==item.link then allowed=false end
-  if allowed and (not best or score-oldScore>best.delta) then best={kind="greed",score=score,previous=oldScore,delta=score-oldScore,slot=slot,source=p.source} end
+  if allowed and (not best or score-oldScore>best.delta) then
+   best={kind="greed",score=score,previous=oldScore,delta=score-oldScore,slot=slot,source=p.source,
+    oldRelevant=oldRelevant,armorGain=armorGain(item,old)}
+  end
  end
  if not best then return greed("Not a valid replacement for your current equipment") end
- best.kind=best.delta>0.01 and "need" or "greed"
- best.reason=best.kind=="need" and "Estimated stat upgrade" or "No estimated stat upgrade"
+ if relevant and best.delta>0.01 then
+  best.kind="need"; best.reason="Estimated stat upgrade"; return best
+ end
+ -- Armor only breaks ties: it never outweighs a stat loss. An item with no useful
+ -- stats can only replace another one, so Stamina cannot stand in for lost Strength.
+ if best.armorGain>0 and best.delta>=-0.01 and (relevant or not best.oldRelevant) then
+  best.kind="need"; best.armorOnly=true
+  best.reason=string.format("More armor, no useful stats lost (+%.0f Armor)",best.armorGain)
+  return best
+ end
+ if not relevant then return greed(noUsefulStats) end
+ best.reason="No estimated stat upgrade"
  return best
 end
 function G.SetContext(class, spec, level, role, known)

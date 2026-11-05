@@ -184,6 +184,56 @@ assert(G.Compare(nil,equipment,c).waiting==true)
 local unscoredYoung=ctx('WARRIOR',1); unscoredYoung.level=9
 assert(not G.Compare(nil,equipment,unscoredYoung).waiting)
 assert(not G.Compare(item(2,nil,{ITEM_MOD_STRENGTH_SHORT=8}),equipment,ctx('WARRIOR',0)).waiting)
+-- The reported belts: plain mail replaces plain leather for Retribution on armor alone.
+local ret=ctx('PALADIN',3)
+local function belt(id,sub,armor,extra)
+ local raw=extra or {}; raw.RESISTANCE0_NAME=armor
+ return item(id,'INVTYPE_WAIST',raw,4,sub)
+end
+local worn=empty(); worn[6]=belt(70,2,18)
+local girdle=belt(71,3,50)
+local gain=G.Compare(girdle,worn,ret)
+assert(gain.kind=='need' and gain.armorOnly and gain.armorGain==32 and gain.slot==6)
+assert(gain.reason:find('+32 Armor',1,true))
+-- An empty slot is a confirmed gain; unknown equipment still waits for data.
+assert(G.Compare(girdle,empty(),ret).armorOnly)
+local unread=empty(); unread[6]=nil
+assert(G.Compare(girdle,unread,ret).waiting==true)
+-- Less or equal armor with no useful stats still says so.
+worn[6]=belt(72,3,50)
+assert(G.Compare(belt(73,3,50),worn,ret).reason:find('No useful stats',1,true))
+worn[6]=belt(74,3,60)
+assert(G.Compare(girdle,worn,ret).reason:find('No useful stats',1,true))
+-- Armor never outweighs a stat loss, whatever the difference.
+worn[6]=belt(75,2,18,{ITEM_MOD_STRENGTH_SHORT=1})
+local lost=G.Compare(belt(76,3,500),worn,ret)
+assert(lost.kind=='greed' and not lost.armorOnly)
+-- Stamina on a piece with no useful stats cannot stand in for lost Strength.
+assert(G.Compare(belt(77,3,500,{ITEM_MOD_STAMINA_SHORT=50}),worn,ret).kind=='greed')
+-- A lower-priority stat kept alongside more armor is still no loss.
+worn[6]=belt(78,2,18,{ITEM_MOD_STAMINA_SHORT=2})
+assert(G.Compare(belt(79,3,50),worn,ret).kind=='greed')
+assert(G.Compare(belt(80,3,50,{ITEM_MOD_STAMINA_SHORT=2}),worn,ret).armorOnly)
+-- A stat upgrade stays a stat upgrade, even with less armor.
+worn[6]=belt(81,3,50)
+local statUpgrade=G.Compare(belt(82,2,18,{ITEM_MOD_STRENGTH_SHORT=2}),worn,ret)
+assert(statUpgrade.kind=='need' and not statUpgrade.armorOnly and statUpgrade.reason=='Estimated stat upgrade')
+-- Equal stats: more armor breaks the tie for every damage or caster spec.
+worn[6]=belt(83,2,18,{ITEM_MOD_STRENGTH_SHORT=4})
+assert(G.Compare(belt(84,3,50,{ITEM_MOD_STRENGTH_SHORT=4}),worn,ret).armorOnly)
+local robe=empty(); robe[5]=item(85,nil,{RESISTANCE0_NAME=10,ITEM_MOD_INTELLECT_SHORT=3})
+assert(G.Compare(item(86,nil,{RESISTANCE0_NAME=20,ITEM_MOD_INTELLECT_SHORT=3}),robe,ctx('MAGE',2)).armorOnly)
+-- Armor type and level limits still come first.
+assert(G.Compare(belt(87,4,900),empty(),ret).reason:find('Armor type',1,true))
+assert(G.Compare(belt(88,3,50),empty(),ctx('MAGE',2)).reason:find('Armor type',1,true))
+-- Tanks already score armor, so this stays an ordinary stat upgrade for them.
+worn[6]=belt(89,2,18)
+local tankBelt=G.Compare(girdle,worn,ctx('WARRIOR',3))
+assert(tankBelt.kind=='need' and not tankBelt.armorOnly)
+-- A shield swap never counts a weapon as armor, and weapons get no armor credit.
+local offhand=empty(); offhand[16]=false; offhand[17]=item(90,'INVTYPE_WEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=5},2,7)
+assert(not G.Compare(item(91,'INVTYPE_SHIELD',{RESISTANCE0_NAME=200},4,6),offhand,ret).armorOnly)
+print('Armor tie-break: plain upgrades, stat protection, ties, eligibility and tanks passed')
 print('Gear profiles: 27 specs; stat reversals, aliases, eligibility, paired slots, unique limits and weapon layouts passed')
 `);
 run(`
@@ -200,6 +250,7 @@ function methods:SetToAlpha(value) self.to=value end
 function methods:SetDuration(value) self.duration=value end
 function methods:SetLooping(value) self.looping=value end
 function methods:SetVertexColor(r,g,b,a) self.vertex={r,g,b,a} end
+function methods:SetAtlas(name,useSize) self.atlas=name; self.atlasSize=useSize end
 function methods:IsPlaying() return self.playing==true end
 function methods:Play() self.playing=true; self.plays=(self.plays or 0)+1 end
 function methods:Stop() self.playing=false end
@@ -288,6 +339,9 @@ local function assertColor(button,r,g,b)
  end
 end
 assertColor(bag,0.12,1,0)
+-- Upgrades get the native green arrow, which follows the glow on and off.
+local arrow=bag.EverfrostGearArrow
+assert(arrow and arrow:IsShown() and arrow.atlas=='bags-greenarrow' and arrow.atlasSize==true)
 assert(#bag.EverfrostGearPulses==5)
 for _,pulse in ipairs(bag.EverfrostGearPulses) do
  assert(pulse:IsPlaying() and pulse.looping=='BOUNCE')
@@ -311,17 +365,19 @@ assert(not table.concat(GameTooltip.lines,'|'):find(NS.gearLevelNote,1,true))
 local lineCount=#GameTooltip.lines; bag.hooks.OnEnter(bag); assert(#GameTooltip.lines==lineCount)
 GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
 assert(#GameTooltip.lines==lineCount and tooltipRegistrations==1)
-G.TrackBag(bag,0,2); assert(not bag.EverfrostGearGlow:IsShown())
+G.TrackBag(bag,0,2); assert(not bag.EverfrostGearGlow:IsShown() and not arrow:IsShown())
 for _,edge in ipairs(bag.EverfrostGearEdges) do assert(not edge:IsShown()) end
 for _,pulse in ipairs(bag.EverfrostGearPulses) do assert(not pulse:IsPlaying()) end
 GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
 assert(table.concat(GameTooltip.lines,'|'):find('Everfrost: No upgrade',1,true))
-G.TrackBag(bag,0,1); assert(bag.EverfrostGearGlow:IsShown())
-G.TrackBag(bag,-1,1); assert(not bag.EverfrostGearGlow:IsShown())
+G.TrackBag(bag,0,1); assert(bag.EverfrostGearGlow:IsShown() and arrow:IsShown() and bag.EverfrostGearArrow==arrow)
+G.TrackBag(bag,-1,1); assert(not bag.EverfrostGearGlow:IsShown() and not arrow:IsShown())
 G.TrackBag(bag,0,1); bag.hooks.OnEnter(bag); assert(#GameTooltip.lines>0)
 fire('START_LOOT_ROLL',1); tick()
 local frame=GroupLootFrame1
 assert(frame.NeedButton.EverfrostGearGlow:IsShown())
+-- Roll buttons keep the glow only: the arrow marks items, not the Need button.
+assert(not frame.NeedButton.EverfrostGearArrow)
 assertColor(frame.NeedButton,0.12,1,0)
 local rollPlays=frame.NeedButton.EverfrostGearPulses[1].plays
 G.PaintRoll(frame); assert(frame.NeedButton.EverfrostGearPulses[1].plays==rollPlays)
@@ -337,13 +393,18 @@ fixture('item:999',{ITEM_MOD_STRENGTH_SHORT=12}); fire('GET_ITEM_INFO_RECEIVED',
 assert(frame.NeedButton.EverfrostGearGlow:IsShown())
 -- Combat events do not read item APIs or modify protected roll actions.
 local before=metadataCalls; combat=true; fire('PLAYER_REGEN_DISABLED'); fire('BAG_UPDATE',0); tick()
-assert(G.pending and metadataCalls==before and not bag.EverfrostGearGlow:IsShown())
+assert(G.pending and metadataCalls==before and not bag.EverfrostGearGlow:IsShown() and not arrow:IsShown())
 for _,edge in ipairs(bag.EverfrostGearEdges) do assert(not edge:IsShown()) end
 GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip); assert(#GameTooltip.lines==0)
 assert(not frame.NeedButton.EverfrostGearGlow:IsShown())
 combat=false; fire('PLAYER_REGEN_ENABLED'); tick(); assert(frame.NeedButton.EverfrostGearGlow:IsShown())
 fire('CANCEL_LOOT_ROLL',1); tick()
 assert(G.rolls[1]==nil and not frame.NeedButton.EverfrostGearGlow:IsShown())
+-- A plain armor upgrade explains itself without a meaningless 0.0 vs 0.0 score.
+GameTooltip:ClearLines()
+G.Tooltip(GameTooltip,{kind='need',reason='More armor, no useful stats lost (+32 Armor)',armorOnly=true,score=0,previous=0,delta=0})
+local armorLines=table.concat(GameTooltip.lines,'|')
+assert(armorLines:find('Everfrost: UPGRADE',1,true) and armorLines:find('+32 Armor',1,true) and not armorLines:find('Estimated score',1,true))
 -- Missing and secret metadata defer rather than treating an occupied slot as empty.
 itemInfo['item:100']=nil; G.Refresh(); assert(G.bags[0][1].result.kind=='unknown')
 fixture('item:100',{ITEM_MOD_STRENGTH_SHORT=3}); rawStats['item:100'].ITEM_MOD_STRENGTH_SHORT=secret

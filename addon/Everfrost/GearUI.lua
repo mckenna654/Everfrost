@@ -16,9 +16,10 @@ local function hide(button)
   button.EverfrostGearGlow:Hide()
   for _,edge in ipairs(button.EverfrostGearEdges or {}) do edge:Hide() end
   for _,pulse in ipairs(button.EverfrostGearPulses or {}) do pulse:Stop() end
+  if button.EverfrostGearArrow then button.EverfrostGearArrow:Hide() end
  end
 end
-local function glow(button, shown, item)
+local function glow(button, shown, item, arrow)
  if not button then return end
  if not shown then hide(button); return end
  -- Never create or hook widgets in combat; pre-existing cosmetic glows are safe.
@@ -64,6 +65,16 @@ local function glow(button, shown, item)
  for _,pulse in ipairs(button.EverfrostGearPulses) do
   if not pulse:IsPlaying() then pulse:Play() end
  end
+ -- The native bag upgrade arrow, inset to clear the outline. It stays steady while the glow pulses.
+ if arrow and not button.EverfrostGearArrow and button.CreateTexture and not InCombatLockdown() then
+  local icon=button:CreateTexture(nil,"OVERLAY",nil,7)
+  if icon.SetAtlas then icon:SetAtlas("bags-greenarrow",true) end
+  icon:SetPoint("TOPLEFT",button,"TOPLEFT",2,-2)
+  button.EverfrostGearArrow=icon
+ end
+ if button.EverfrostGearArrow then
+  if arrow then button.EverfrostGearArrow:Show() else button.EverfrostGearArrow:Hide() end
+ end
 end
 function G.Tooltip(tooltip,result,roll)
  if not tooltip or not result then return end
@@ -79,7 +90,8 @@ function G.Tooltip(tooltip,result,roll)
   tooltip:AddLine("Pair with: "..result.companionName,1,0.82,0.22,true)
   tooltip:AddLine("Combined pair compared with your equipped two-hander; equip both items.",0.85,0.9,1,true)
  end
- if result.delta then tooltip:AddLine(string.format("Estimated score: %.1f vs %.1f (%+.1f)",result.score,result.previous,result.delta),0.85,0.9,1,true) end
+ -- Armor is not scored for most specs, so "0.0 vs 0.0" would only confuse here.
+ if result.delta and not result.armorOnly then tooltip:AddLine(string.format("Estimated score: %.1f vs %.1f (%+.1f)",result.score,result.previous,result.delta),0.85,0.9,1,true) end
  local c=G.context
  local p=c and c.level>=NS.gearMinLevel and NS.GearProfile(c.class,c.spec,c.role)
  if p then tooltip:AddLine("Priority: "..NS.GearPriorityText(p),0.75,0.82,0.92,true) end
@@ -90,7 +102,7 @@ function G.PaintBag(button)
  local entry=bags[button]
  if not entry then return end
  local cached=G.bags[entry.bag] and G.bags[entry.bag][entry.slot]
- glow(button,G.enabled and not G.pending and cached and cached.result.kind=="need" or false,cached and cached.item)
+ glow(button,G.enabled and not G.pending and cached and cached.result.kind=="need" or false,cached and cached.item,true)
 end
 function G.TrackBag(button,bag,slot)
  if not button then return end
