@@ -196,3 +196,17 @@ not rechecked after that. All 14 downloaded addon files match the tag (12 byte
 for byte, 2 allowing newline normalization) and the TOC reports 0.6.6; only the
 usual empty Everfrost-Source/addon/ directory is extra. Updated the public
 project description from docs/CURSEFORGE.md.
+
+## 0.6.7 — November 5, 2026
+
+Released the code review fixes from PR #5 (Need/Greed highlights on Forever's
+nested roll buttons, bag Initialize arguments, roll cancellation, gear-score
+fixes, Australian spelling) as GitHub latest v0.6.7, annotated tag at 29a4d87
+on main. GitHub Actions passed on main before tagging; npm test, luacheck and
+npm run build passed locally. Release ZIP SHA-256 matches the locally built
+archive: 75012e2d931016b08fa4131cba357e50f9328ebae20822898263db6cbfb9960c.
+The CurseForge webhook returned HTTP 200. CurseForge generated Release file
+#9451760 (Everfrost-Source-v0.6.7.zip) for 1.60.1; the ID comes from its
+download URL. Status when checked: Processing, not yet public. All 14 downloaded
+addon files match the tag; only the usual empty Everfrost-Source/addon/ directory
+is extra. Updated the public project description from docs/CURSEFORGE.md.

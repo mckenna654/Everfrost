@@ -205,3 +205,10 @@ left-overs: duplicated first/public helpers, scripts/build.ps1, no .nvmrc.
 Next steps: test a real group-loot roll in game (this is the first time the
 Need/Greed glow should reach Forever's buttons), then release when wanted.
 docs/CURSEFORGE.md uses the new spellings but the public page has not changed.
+
+Published 0.6.7 on November 5, 2026: PR #5 merged, GitHub latest v0.6.7
+(29a4d87), CurseForge Release file #9451760 for 1.60.1 (Processing when last
+checked; contents match the tag), public description updated. Not checked in
+game. Next steps: confirm the file gets approved, try a real group-loot roll in
+game (the first real test of the Need/Greed highlights on Forever), and retake
+the README screenshots that still show US spellings.
