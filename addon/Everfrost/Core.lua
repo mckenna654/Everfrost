@@ -1,8 +1,8 @@
 local _, NS = ...
 function NS.Public(value) return not (issecretvalue and issecretvalue(value)) end
+local function pack(...) return {n=select("#",...),...} end
 local function call(fn, ...)
  if type(fn)~="function" then return nil end
- local function pack(...) return {n=select("#",...),...} end
  local result=pack(pcall(fn,...))
  if not result[1] then return nil end
  local values={}; for i=2,result.n do values[i-1]=result[i] end

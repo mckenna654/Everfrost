@@ -61,7 +61,7 @@ local function copy(list)
  end; return out
 end
 NS.profiles.HUNTER[1].steps=copy(hunter)
-table.insert(NS.profiles.HUNTER[1].steps,3,S("Summon Hawk","Maintain two hawks; prioritize their mana cost."))
+table.insert(NS.profiles.HUNTER[1].steps,3,S("Summon Hawk","Maintain two hawks; prioritise their mana cost."))
 NS.profiles.HUNTER[1].steps[8].hint="Only at full mana with both hawks lasting over six seconds."
 NS.profiles.HUNTER[3].melee={
  S("Hunter's Mark","Apply before pulling."),S("Serpent Sting","Send your pet first, then apply this."),
@@ -89,12 +89,12 @@ P("MAGE",1,"arcane-mage-ranged-dps",mageSteps({
  S("Arcane Explosion","Main damage on 3+ enemies; repeat on tanked packs or while kiting.",{mode="aoe"}),
  S("Cone of Cold","Slow the pack when you need distance.",{mode="aoe"}),
  S("Blizzard","Ranged group damage; can benefit from Arcane Blast charges.",{mode="aoe"}),
-}),"Keep Intellect and an armor buff active.")
+}),"Keep Intellect and an armour buff active.")
 P("MAGE",2,"fire-mage-ranged-dps",mageSteps({
  S("Pyroblast","Open from range when learned.",{mode="single",min=20}),
  S("Fireball","Main filler; also your opener before Pyroblast.",{mode="single"}),
  S("Fire Blast","Finish a target or maintain Wake of Fire.",{mode="single"}),
-}),"Maintain Intellect and armor. Solo AoE: Nova, Flamestrike, then kite with Cone of Cold / Explosion.")
+}),"Maintain Intellect and armour. Solo AoE: Nova, Flamestrike, then kite with Cone of Cold / Explosion.")
 P("MAGE",3,"frost-mage-ranged-dps",mageSteps({
  S("Frostbolt","Main filler; slow enemies from range.",{mode="single"}),
  S("Fireball","Early filler until Frostbolt is trained.",{unless="Frostbolt",mode="single"}),
@@ -108,7 +108,7 @@ P("MAGE",3,"frost-mage-ranged-dps",mageSteps({
  S("Blizzard","5+ targets: channel between Cone of Cold casts when safe.",{mode="aoe"}),
  S("Arcane Explosion","5+ targets: use if aggro prevents safe Blizzard channels.",{mode="aoe"}),
 }),"Keep distance and react to freezes; conditions are checked by you.")
-base("MAGE",mageSteps({S("Fireball","Early damage filler.",{mode="single"}),S("Frostbolt","Slow enemies from range.",{mode="single"})}),"Maintain Intellect and an armor buff.")
+base("MAGE",mageSteps({S("Fireball","Early damage filler.",{mode="single"}),S("Frostbolt","Slow enemies from range.",{mode="single"})}),"Maintain Intellect and an armour buff.")
 local warrior={S("Battle Shout","Maintain before or early in a fight."),S("Charge","Open from range, outside combat."),
  S("Demoralizing Shout","Reduce incoming melee damage."),S("Rend","Apply early if the target will survive the bleed."),
  S("Victory Rush","Use after an eligible kill while the proc lasts.",{min=20}),
@@ -212,7 +212,7 @@ P("DRUID",2,"feral-druid-melee-dps-and-tank",{
  S("Shred","Build points from behind; spend Omen of Clarity here."),
  S("Claw","Build points when you cannot Shred."),S("Rip","Spend points if the enemy will survive the bleed.")},
  "Choose Cat or Bear. Apply Faerie Fire when appropriate; keep Mark and Thorns active.",{bear={
- S("Bear Form","Enter Bear Form."),S("Enrage","Generate rage; temporarily reduces armor."),
+ S("Bear Form","Enter Bear Form."),S("Enrage","Generate rage; temporarily reduces armour."),
  S("Primal Bite","Main rage spender; preferred Omen of Clarity use."),S("Swipe","Multiple enemies.",{mode="aoe"}),
  S("Maul","Spend excess rage; replaces a rage-generating attack."),
 },caster=druidDamage})

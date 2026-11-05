@@ -179,3 +179,29 @@ Release file #9450295 for 1.60.1; its 14 addon files match the tag. The author
 console shows it with the same status as approved files. The public description
 is updated from docs/CURSEFORGE.md. Next step: confirm v0.6.6 is the main file on
 the public CurseForge page.
+
+November 5, 2026, unreleased review fixes (branch claude/review-fixes), from a
+full-project code review checked against Gethe/wow-ui-source's forever branch:
+- Loot rolls: Need/Greed highlights now find Forever's buttons inside
+  LootButtonContainer (previously never found there), and hiding the UI no
+  longer cancels a live roll; only the loot events end one.
+- Bags: the ContainerFrameItemButtonMixin.Initialize hook now reads Forever's
+  (containerFrame, bag, slot) arguments. It was treating the frame as the bag
+  and untracking the button. Reused buttons keep one set of script hooks.
+- Scoring: Attack Power uses half the higher of Strength or Agility, plain
+  wands count for Priests, Mages and Warlocks, and Unique-Equipped category -1
+  limits duplicates.
+- Survival's role button is hidden until level 30 with Strider Kick.
+- Glow pulses keep running through bag changes outside combat. Item data stays
+  cached between rescans (/everfrost refresh and Rescan bags clear it), and the
+  full bag-button walk only runs after login, addon load or combat.
+- UI copy and docs use Australian spelling: Specialisation, Levelling, Armour,
+  Defence. Game spell names and API names are unchanged; `/everfrost spec
+  leveling` still works alongside `levelling`.
+- build.cjs now fails if the packaged README's version is wrong.
+npm test, luacheck and npm run build pass. None of this has been seen in game.
+Screenshots still show the old US spellings. Not fixed from the review's
+left-overs: duplicated first/public helpers, scripts/build.ps1, no .nvmrc.
+Next steps: test a real group-loot roll in game (this is the first time the
+Need/Greed glow should reach Forever's buttons), then release when wanted.
+docs/CURSEFORGE.md uses the new spellings but the public page has not changed.

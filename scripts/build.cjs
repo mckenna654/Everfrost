@@ -9,6 +9,7 @@ if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error('Invalid addon version');
 for (const file of [path.join(source, 'Everfrost.toc'), path.join(root, 'Everfrost-Source.toc')]) {
   if (!fs.readFileSync(file, 'utf8').includes('## Version: ' + version)) throw new Error('TOC version mismatch');
 }
+if (!fs.readFileSync(path.join(source, 'README.md'), 'utf8').startsWith('# Everfrost — v' + version + '\n')) throw new Error('Addon README version mismatch');
 const crcTable = Array.from({length:256}, (_, value) => {
   for (let i=0; i<8; i++) value = (value & 1) ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
   return value >>> 0;

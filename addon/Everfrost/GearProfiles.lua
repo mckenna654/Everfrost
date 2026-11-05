@@ -56,7 +56,7 @@ end
 function NS.GearPriorityText(p)
  local labels={dps="Weapon DPS",hit="Hit",expertise="Expertise",crit="Crit",spell="Spell power",healing="Healing power",
   strength="Strength",agility="Agility",intellect="Intellect",stamina="Stamina",spirit="Spirit",mp5="MP5",
-  haste="Haste",attack="Attack power",armor="Armor",block="Block",defense="Defense"}
+  haste="Haste",attack="Attack power",armor="Armour",block="Block",defense="Defence"}
  local groups={}
  for _,group in ipairs(p.order) do
   local parts={}; for key in group:gmatch("%S+") do parts[#parts+1]=labels[key] or key end

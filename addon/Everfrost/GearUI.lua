@@ -3,6 +3,8 @@ local G=NS.Gear
 local eventFrame=CreateFrame("Frame")
 local bags=setmetatable({},{__mode="k"})
 local rolls=setmetatable({},{__mode="k"})
+local hookedBags=setmetatable({},{__mode="k"})
+local discoverDue=true
 local hooked={}
 local queued=false
 local activeRolls={}
@@ -107,8 +109,10 @@ end
 function G.TrackBag(button,bag,slot)
  if not button then return end
  if not public(bag,"number") or not public(slot,"number") or bag<0 or bag>4 then bags[button]=nil; hide(button); return end
- if not bags[button] then
+ -- Buttons are pooled and reassigned, so hooks are remembered apart from the bag they show.
+ if not hookedBags[button] then
   if InCombatLockdown() then return end
+  hookedBags[button]=true
   if button.HookScript then
    button:HookScript("OnEnter",function(self)
     local key=bags[self]
@@ -147,10 +151,15 @@ local function discoverBags()
  for i=1,13 do container(_G["ContainerFrame"..i]) end
  container(ContainerFrameCombinedBags)
 end
+-- Forever nests the roll buttons in LootButtonContainer; older clients use the frame or its name.
+local function rollButton(frame,name)
+ local holder=frame.LootButtonContainer
+ return frame[name] or (holder and holder[name]) or (frame.GetName and _G[(frame:GetName() or "")..name])
+end
 function G.PaintRoll(frame)
  if not frame then return end
- local need=frame.NeedButton or (frame.GetName and _G[(frame:GetName() or "").."NeedButton"])
- local greed=frame.GreedButton or (frame.GetName and _G[(frame:GetName() or "").."GreedButton"])
+ local need=rollButton(frame,"NeedButton")
+ local greed=rollButton(frame,"GreedButton")
  local id=frame.rollID
  if not G.enabled or G.pending or not public(id,"number") then hide(need); hide(greed); return end
  local data=G.rolls[id]
@@ -173,14 +182,13 @@ function G.TrackRoll(frame)
   rolls[frame]=true
   if frame.HookScript then
    frame:HookScript("OnHide",function(self)
-    hide(self.NeedButton); hide(self.GreedButton)
-    local id=self.rollID
-    if public(id,"number") then G.rolls[id]=nil; activeRolls[id]=nil; cancelledRolls[id]=true end
+    -- Hiding the whole UI also lands here, so only the loot events end a roll.
+    hide(rollButton(self,"NeedButton")); hide(rollButton(self,"GreedButton"))
    end)
    frame:HookScript("OnShow",function(self) G.PaintRoll(self); G.Schedule() end)
   end
   for _,name in ipairs({"NeedButton","GreedButton"}) do
-   local button=frame[name]
+   local button=rollButton(frame,name)
    if button and button.HookScript then
     button:HookScript("OnEnter",function()
      local id=frame.rollID
@@ -240,10 +248,16 @@ local function installHooks()
  hook("GroupLootFrame_OnShow",function(frame) G.TrackRoll(frame); G.Schedule() end)
  local mixin=ContainerFrameItemButtonMixin
  if mixin and type(mixin.Initialize)=="function" and not hooked.bagMixin then
-  hooksecurefunc(mixin,"Initialize",function(button,bag,slot) G.TrackBag(button,bag,slot) end)
+  -- Forever passes the container first: Initialize(containerFrame, bag, slot).
+  hooksecurefunc(mixin,"Initialize",function(button,a,b,c)
+   if type(a)=="table" then G.TrackBag(button,b,c) else G.TrackBag(button,a,b) end
+  end)
   hooked.bagMixin=true
  end
- discoverBags()
+ -- The hooks above keep buttons current; a full walk is only needed when something may be missed.
+ if discoverDue or not (hooked.bagMixin or hooked.ContainerFrame_Update or hooked.ContainerFrame_UpdateAll or hooked.ContainerFrame_GenerateFrame) then
+  discoverDue=false; discoverBags()
+ end
  for i=1,4 do G.TrackRoll(_G["GroupLootFrame"..i]) end
  if GroupLootContainer and GroupLootContainer.rollFrames then
   for _,frame in pairs(GroupLootContainer.rollFrames) do G.TrackRoll(frame) end
@@ -273,6 +287,8 @@ for _,event in ipairs({"PLAYER_LOGIN","PLAYER_ENTERING_WORLD","BAG_UPDATE_DELAYE
  pcall(eventFrame.RegisterEvent,eventFrame,event)
 end
 eventFrame:SetScript("OnEvent",function(_,event,value)
+ -- Combat skips new buttons, and other addons can create or replace bag frames.
+ if event=="PLAYER_ENTERING_WORLD" or event=="ADDON_LOADED" or event=="PLAYER_REGEN_ENABLED" then discoverDue=true end
  if event=="START_LOOT_ROLL" and public(value,"number") then activeRolls[value]=true; cancelledRolls[value]=nil
  elseif event=="CANCEL_LOOT_ROLL" and public(value,"number") then activeRolls[value]=nil; G.rolls[value]=nil; cancelledRolls[value]=true
  elseif event=="CANCEL_ALL_LOOT_ROLLS" then
@@ -287,5 +303,7 @@ eventFrame:SetScript("OnEvent",function(_,event,value)
   for _,item in pairs(G.rolls) do if item.result and item.result.waiting then waiting=true end end
   if not waiting then return end
  end
- G.pending=true; G.Paint(); G.Schedule()
+ -- Outside combat the rescan lands next frame: keep the glows so their pulse carries on.
+ if InCombatLockdown() then G.pending=true; G.Paint() end
+ G.Schedule()
 end)
