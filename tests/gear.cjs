@@ -529,6 +529,26 @@ local armorLines=table.concat(GameTooltip.lines,'|')
 assert(armorLines:find('Everfrost: UPGRADE',1,true) and armorLines:find('+32 Armour',1,true) and not armorLines:find('Estimated score',1,true))
 -- Missing and secret metadata defer rather than treating an occupied slot as empty.
 itemInfo['item:100']=nil; G.items={}; G.Refresh(); assert(G.bags[0][1].result.kind=='unknown')
+-- Passive "Equip:" effects written on the tooltip count, for clients whose item stats leave them out.
+tooltipLines={['item:301']={{leftText='Staff of Testing'},
+ {leftText='Equip: Increases damage and healing done by magical spells and effects by up to 12.'},
+ {leftText='Use: Increases spell power by 100 for 20 sec.'},{leftText='Chance on hit: Increases attack power by 50.'},
+ {leftText='Equip: Increases damage done by Fire spells and effects by up to 7.'},{leftText='Equip: Restores 4 mana per 5 sec.'},
+ {leftText='Equip: Increases healing done by spells and effects by up to 20.'},{leftText='Equip: +14 Attack Power.'}}}
+C_TooltipInfo={GetHyperlink=function(link) assert(not combat); return tooltipLines[link] and {lines=tooltipLines[link]} end}
+fixture('item:301',{ITEM_MOD_INTELLECT_SHORT=2}); G.items={}
+local effects=G.ReadItem('item:301')
+assert(effects.stats.spell==12 and effects.stats.fire==7 and effects.stats.mp5==4 and effects.stats.healing==20 and effects.stats.attack==14)
+assert(effects.fromTooltip and effects.stats.intellect==2)
+-- An effect the client already reports is not counted twice.
+fixture('item:302',{ITEM_MOD_SPELL_POWER_SHORT=12})
+tooltipLines['item:302']={{leftText='Equip: Increases damage and healing done by magical spells and effects by up to 12.'}}
+assert(G.ReadItem('item:302').stats.spell==12 and not G.ReadItem('item:302').fromTooltip)
+-- Secret or missing tooltip text changes nothing.
+fixture('item:303',{ITEM_MOD_INTELLECT_SHORT=1}); tooltipLines['item:303']={{leftText=secret},{}}
+assert(G.ReadItem('item:303').stats.spell==0 and G.ReadItem('item:303').stats.intellect==1)
+C_TooltipInfo=nil; tooltipLines=nil; G.items={}
+print('Equip effects from tooltips: spell, healing, school, attack power and mana regeneration; no double counting; secrets ignored: passed')
 fixture('item:100',{ITEM_MOD_STRENGTH_SHORT=3}); rawStats['item:100'].ITEM_MOD_STRENGTH_SHORT=secret
 G.Refresh(); assert(G.bags[0][1].result.kind=='unknown')
 fixture('item:100',{ITEM_MOD_STRENGTH_SHORT=3})

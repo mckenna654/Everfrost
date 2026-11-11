@@ -78,6 +78,45 @@ function G.Normalize(raw)
  end
  return out
 end
+-- "Equip:" effects written out on the tooltip, for clients whose item stats leave them out:
+-- "Increases damage and healing done by magical spells and effects by up to 12." and its kin.
+-- Each pattern gives the stat it adds to. English wording only; other languages keep whatever
+-- the client's item stats report. "Chance on hit" and "Use:" effects are not modelled.
+local equipEffects={
+ {"damage and healing done by magical spells and effects by up to (%d+)","spell"},
+ {"healing done by spells and effects by up to (%d+)","healing"},
+ {"damage done by (%a+) spells and effects by up to (%d+)","school"},
+ {"spell power by (%d+)","spell"},
+ {"%+(%d+) ranged attack power","rangedAttack"},
+ {"ranged attack power by (%d+)","rangedAttack"},
+ {"%+(%d+) attack power","attack"},
+ {"attack power by (%d+)","attack"},
+ {"restores (%d+) mana per 5 sec","mp5"},
+}
+function G.EquipEffects(link)
+ local data=first(C_TooltipInfo and C_TooltipInfo.GetHyperlink,link)
+ if not public(data,"table") or not public(data.lines,"table") then return nil end
+ local found={}
+ for _,line in ipairs(data.lines) do
+  local text=public(line,"table") and line.leftText
+  if public(text,"string") then
+   text=text:lower()
+   -- Only passive effects: "Equip:" lines, never "Use:" or "Chance on hit:".
+   if text:find("^equip:") then
+    for _,effect in ipairs(equipEffects) do
+     local a,b=text:match(effect[1])
+     if a then
+      local key,amount=effect[2],tonumber(b or a)
+      if key=="school" then key=schoolKeys[a] and a or nil end
+      if key and amount then found[key]=(found[key] or 0)+amount end
+      break
+     end
+    end
+   end
+  end
+ end
+ return next(found) and found or nil
+end
 function G.ReadItem(link)
  if not public(link,"string") then return nil end
  if G.items[link] then return G.items[link] end
@@ -113,6 +152,13 @@ function G.ReadItem(link)
  local raw=first(itemAPI("GetItemStats"),link)
  item.stats=G.Normalize(raw)
  if not item.stats then return nil end
+ -- The larger of the two readings, so an effect the client already reports is never counted twice.
+ local effects=G.EquipEffects(link)
+ if effects then
+  for key,amount in pairs(effects) do
+   if amount>(item.stats[key] or 0) then item.stats[key]=amount; item.fromTooltip=true end
+  end
+ end
  -- IsUsableItem checks an item's use action, not whether it is equipment.
  -- Native Forever bags expose separate Use and Equip actions. Class/level
  -- restrictions are checked below; do not reject passive gear with no use action.

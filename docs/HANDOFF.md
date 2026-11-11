@@ -287,3 +287,9 @@ npm test, luacheck and npm run build pass. Nothing has been seen in game. The ne
 names and IDs come from the guides and standard IDs, not from the Forever client, so a
 name the client spells differently would simply never show: check a level 40+ character.
 Not done: splitting the test files, a code formatter and new screenshots.
+
+November 11, 2026, later still (same pull request): at the user's request, passive "Equip:"
+tooltip effects are read into gear scores (Gear.lua G.EquipEffects, via C_TooltipInfo.GetHyperlink;
+docs/GEAR.md rule 10). English wording only. Unverified in game: whether Forever has
+C_TooltipInfo, and the exact wording of its Equip lines. If an item with such a line still
+scores without it, hover it and report the line's exact text.

@@ -20,7 +20,7 @@ read_globals = {
   "GetQuestItemLink", "GetQuestLogItemLink", "MERCHANT_ITEMS_PER_PAGE",
   "MerchantFrame", "QuestInfoFrame", "QuestInfoRewardsFrame",
   "C_ClassTalents", "C_Container", "C_Item", "C_SpecializationInfo",
-  "C_Spell", "C_SpellBook", "C_Traits",
+  "C_Spell", "C_SpellBook", "C_TooltipInfo", "C_Traits",
   "ContainerFrameCombinedBags", "ContainerFrameItemButtonMixin",
   "CreateFrame", "Enum", "GameTooltip",
   "GetActiveTalentGroup", "GetContainerItemLink", "GetContainerNumSlots",
