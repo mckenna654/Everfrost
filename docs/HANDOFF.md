@@ -293,3 +293,13 @@ tooltip effects are read into gear scores (Gear.lua G.EquipEffects, via C_Toolti
 docs/GEAR.md rule 10). English wording only. Unverified in game: whether Forever has
 C_TooltipInfo, and the exact wording of its Equip lines. If an item with such a line still
 scores without it, hover it and report the line's exact text.
+
+Published 0.7.0 beta 1 on November 11, 2026 at the user's request ("merge and update it
+all on github and curseforge"): PR #8 merged, branch deleted, GitHub pre-release
+v0.7.0-beta.1 (c2c3088) with the ZIP. Tagged as a beta, not a release, because nothing in
+it has been seen in game; GitHub "latest" and CurseForge's Release channel stay on 0.6.9.
+The CurseForge webhook returned 200; the file itself is unconfirmed (docs/RELEASING.md).
+Next steps: the user checks the file in the CurseForge author console; walks
+docs/INGAME_CHECKLIST.md (include a level 40+ character); sends /everfrost spellids
+output. Then promote: tag v0.7.0, mark it latest, update the CurseForge description from
+docs/CURSEFORGE.md, and set the README's download link and status row to 0.7.0.

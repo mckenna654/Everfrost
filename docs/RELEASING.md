@@ -242,3 +242,19 @@ downloaded addon files match the tag; only the usual empty Everfrost-Source/addo
 directory is extra. Updated the public project description from docs/CURSEFORGE.md.
 The author console can keep showing Processing after a file appears publicly:
 v0.6.8 was on the signed-out files page while it still said so.
+
+## 0.7.0 beta 1 — November 11, 2026
+
+Published PR #8 (levels 31-60, armour scoring, Equip effects, tidier highlight, event
+batching, key binding, account-wide look, audit fixes) as GitHub pre-release
+v0.7.0-beta.1, annotated tag at c2c3088 on main. Tagged as a beta because nothing in it
+has been seen in game (docs/INGAME_CHECKLIST.md). GitHub Actions passed on main before
+tagging; npm test, luacheck and npm run build passed locally. Release ZIP SHA-256 matches
+the locally built archive:
+4a19973ddb84331fea9b0139427fe6fadf104cd815f69c861b8841015cd6248c.
+The CurseForge webhook received the refs/tags/v0.7.0-beta.1 push and returned HTTP 200.
+Not confirmed: the CurseForge file. It was not on the public files page a few minutes
+later (v0.6.9 was still the newest), and the author console was signed out in the
+browser used. Still to do in the console: check the generated file is a Beta for 1.60.1
+and its contents match the tag. The public description was left as it is (it describes
+0.6.9, the current Release); update it from docs/CURSEFORGE.md when 0.7.0 is promoted.
