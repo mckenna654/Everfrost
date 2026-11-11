@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.7.0 — Levels 31 to 60 (beta 1)
+## 0.7.0 — Levels 31 to 60
 
-A beta: the simulated tests pass, but none of this has been checked in the game yet. Please report anything odd.
+Simulated-client tests pass; this version has not been checked in the game yet. Please report anything odd.
 
 - **Levels 31 to 60.** Guides now run to level 60, following Icy Veins' updated levelling guides (read on 11 November 2026): Mortal Strike, Whirlwind, Bloodthirst, Shield Slam, Incinerate, Penance, Starfire, Chain Heal and about forty more, each shown once you've learned it. Gear hints run to 60 too, and plate (Warrior, Paladin) and mail (Hunter, Shaman) count as wearable from level 40.
 - **Stat priorities re-read from the updated guides.** Seventeen of the 27 trees changed, mostly mages, warriors, warlocks and druids.
