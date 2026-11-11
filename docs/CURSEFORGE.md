@@ -4,7 +4,12 @@
 
 A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1–60, nine classes and 27 talent trees**. Built with AI assistance. No third-party addon libraries are required.
 
-## What's new in 0.7.0
+## What's new in 0.8.0
+
+- **Talent recommendations:** Everfrost now knows the Icy Veins levelling talent build for all 27 trees, point by point from level 10 to 60. In the talent window the talent to take next glows gold, and each talent's tooltip says how many points the build puts there and at which levels. The panel's hover text, the Specialisation settings page and `/everfrost talents` name your next talent. `/everfrost talents off` turns it off. Everfrost never spends points for you.
+- **Resizable panel:** drag the corner of the rotation panel to make it bigger or smaller.
+
+## Included from 0.7.0
 
 - **Levels 31 to 60:** guides and gear hints now run to level 60, following Icy Veins' updated levelling guides. Each new ability shows once you've learned it.
 - **Armour counts for every spec,** and plate or mail counts as wearable from level 40.
@@ -102,9 +107,9 @@ Left-click the minimap logo for settings, right-click to toggle the reference pa
 
 The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling. **0.6.2** tidies the specialisation picker into a compact single-line menu. **0.6.3** fixes Subtlety Rogue Attack Power scoring and reduces background bag scans; it reached CurseForge as **0.6.4** after a packaging fix. **0.6.5** tidies status text, grey text and repeated tooltip notes. **0.6.6** counts more armour as a tie-break and adds a green up arrow to bag upgrades. **0.6.7** fixes Need/Greed highlights on Forever's loot-roll buttons, bag tracking and several gear-score cases. **0.6.8** adds starter priorities below level 10, quest reward and merchant marks, plain-word tooltips and empty slot reminders. **0.6.9** clarifies the spec menu note below level 10.
 
-**0.7.0** extends guides and gear hints to level 60, counts armour and Equip effects, and tidies the upgrade highlight.
+**0.7.0** extends guides and gear hints to level 60, counts armour and Equip effects, and tidies the upgrade highlight. **0.8.0** adds talent recommendations in the talent window and a resizable panel.
 
-Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse, settings layout, armour tie-break and green arrow. The 0.7.0 changes (levels 31–60, armour and Equip-effect scoring, the new highlight) and the 0.6.8 quest and merchant marks have not yet been checked in game. English guidance; some Forever-specific spells depend on English spellbook names.
+Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse, settings layout, armour tie-break and green arrow. The 0.8.0 talent recommendations and resize corner, the 0.7.0 changes (levels 31–60, armour and Equip-effect scoring, the new highlight) and the 0.6.8 quest and merchant marks have not yet been checked in game. English guidance; some Forever-specific spells depend on English spellbook names.
 
 **MIT licensed. Third-party addon-manager distribution is enabled.** Everfrost is independent and is not affiliated with or endorsed by Blizzard, Icy Veins or OpenAI.
 

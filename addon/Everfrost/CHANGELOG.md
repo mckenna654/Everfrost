@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.0 — Talent recommendations and a resizable panel
 
 - **Talent recommendations.** Everfrost now knows the Icy Veins levelling talent build for all 27 trees, point by point from level 10 to 60 (read from the guides on 11 November 2026). In the talent window the talent to take next has a gold glow, and hovering any talent says how many points the build puts there and at which levels. The panel's hover text and the Specialisation settings page name your next talent, and `/everfrost talents` lists the next few. It follows the tree you've chosen, or the one you have most points in. `/everfrost talents off` turns it off. Everfrost never spends points for you.
 - **Resizable panel.** Drag the corner of the rotation panel to make it bigger or smaller (60% to 200%, the same setting as the size slider). The corner hides while the panel is locked.
