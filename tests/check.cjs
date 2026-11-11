@@ -5,7 +5,7 @@ const parser = require('luaparse');
 const {lua, lauxlib, lualib, to_luastring, to_jsstring} = require('fengari');
 const root = path.resolve(__dirname, '../addon/Everfrost');
 const sources = {};
-for (const name of ['Profiles.lua','Core.lua','GearProfiles.lua','Gear.lua','GearUI.lua','Settings.lua','Main.lua']) {
+for (const name of ['Profiles.lua','Core.lua','GearProfiles.lua','Gear.lua','GearUI.lua','TalentData.lua','Talents.lua','Settings.lua','Main.lua']) {
  sources[name]=fs.readFileSync(path.join(root,name),'utf8');
  parser.parse(sources[name],{luaVersion:'5.1'});
  console.log(name+': Lua 5.1 syntax passed');
@@ -178,6 +178,8 @@ function methods:SetScale(v) self.scale=v end
 function methods:SetAlpha(v) self.alpha=v end
 function methods:SetBackdrop(v) self.backdrop=v end
 function methods:GetScale() return self.scale or 1 end
+function methods:GetLeft() return self.left end
+function methods:GetTop() return self.top end
 function methods:RegisterEvent(e) self.events[e]=true end
 function methods:Show() self.shown=true end
 function methods:Hide() if self.shown~=false then self.shown=false; if self.scripts.OnHide then self.scripts.OnHide(self) end end end
@@ -236,6 +238,8 @@ EverfrostDB={scale=1.2,locked=true,point='CENTER',relativePoint='CENTER',x=100,y
 GetTalentTabInfo=function(i) return 'Tree',nil,({0,0,2})[i] end
 `);
 load('GearProfiles.lua');
+load('TalentData.lua');
+load('Talents.lua');
 run(`
 NS.Gear={SetContext=function(...) lastGearContext={...} end,Schedule=function() gearScheduled=true end,Paint=function() end}
 `);
@@ -458,6 +462,113 @@ EverfrostAccountDB={scale='big',opacity=99,gear='yes',locked='no'}; EverfrostDB=
 assert(EverfrostDB.scale==1 and EverfrostDB.opacity==1 and EverfrostDB.gear==nil and EverfrostDB.locked==nil)
 keepAccount=nil; EverfrostAccountDB=nil; EverfrostDB={}; fire('PLAYER_LOGIN')
 print('Event batching, past-level-30 panel, Feral view choice, spell ID report, key binding and account-wide look: passed')
+-- Talent builds: every class has three builds of 51 points, level 10 to 60, within each talent's ranks.
+local T=NS.Talents
+for class,data in pairs(NS.talentData) do
+ assert(NS.trees[class] and #data.builds==3)
+ for spec=1,3 do
+  local plan=T.Plan(class,spec)
+  assert(#plan.picks==51 and plan.picks[1].level==10 and plan.picks[51].level==60)
+  for k,talent in pairs(plan.talents) do
+   local letter; for l,name in pairs(data.names) do if T.Key(name)==k then letter=l end end
+   assert(letter and #talent.levels<=data.ranks[letter],class..spec..' '..k)
+  end
+ end
+end
+assert(T.Plan('WARRIOR',0)==nil and T.Plan('DEATHKNIGHT',1)==nil and T.Key("Nature's Grasp")=='naturesgrasp')
+-- Arms takes Improved Rend at 10, 11 and 12, then Deflection at 13 and 14.
+local arms=T.Plan('WARRIOR',1)
+assert(arms.picks[1].name=='Improved Rend' and arms.picks[3].rank==3 and arms.picks[4].name=='Deflection' and arms.picks[4].level==13)
+-- Talents taken are read from the trait tree, by name, never in combat.
+local taken={['Improved Rend']=2,['Deflection']=0,['Improved Overpower']=0,['Improved Charge']=0,['Mortal Strike']=0}
+local nodeNames={}; for name in pairs(taken) do nodeNames[#nodeNames+1]=name end; table.sort(nodeNames)
+local savedTraits,savedClassTalents=C_Traits,C_ClassTalents
+C_ClassTalents={GetActiveConfigID=function() assert(not combat); return 7 end}
+C_Traits={GetConfigInfo=function(id) assert(id==7); return {treeIDs={1}} end,
+ GetTreeNodes=function() local ids={}; for index in ipairs(nodeNames) do ids[index]=index end; return ids end,
+ GetNodeInfo=function(_,node) return {ranksPurchased=taken[nodeNames[node]],activeEntry={entryID=node+100}} end,
+ GetEntryInfo=function(_,entry) return {definitionID=entry+100} end,
+ GetDefinitionInfo=function(definition) return {overrideName=nodeNames[definition-200]} end}
+T.enabled=true; T.Refresh('WARRIOR',1,12,'Arms')
+assert(T.state.next.name=='Improved Rend' and T.state.next.rank==3 and T.state.index==3)
+assert(T.Summary()=='Next talent, Icy Veins Arms build: Improved Rend 3/3')
+-- A point the guide takes later says when.
+taken['Improved Rend']=3; T.Refresh('WARRIOR',1,12,'Arms')
+assert(T.Summary()=='Next talent, Icy Veins Arms build: Deflection 1/2 (the guide takes it at level 13)')
+local upcoming=T.Upcoming(3); assert(upcoming[1]=='13: Deflection' and upcoming[2]=='14: Deflection' and #upcoming==3)
+-- A talent the client names differently is passed over rather than recommended for ever.
+local kept=taken['Deflection']; taken['Deflection']=nil; nodeNames={}; for name in pairs(taken) do nodeNames[#nodeNames+1]=name end; table.sort(nodeNames)
+T.Refresh('WARRIOR',1,12,'Arms'); assert(T.state.next.name=='Improved Overpower')
+taken['Deflection']=kept; nodeNames={}; for name in pairs(taken) do nodeNames[#nodeNames+1]=name end; table.sort(nodeNames)
+-- Restricted values and combat leave nothing to say, and nothing is read.
+local realNode=C_Traits.GetNodeInfo
+C_Traits.GetNodeInfo=function() return {ranksPurchased='SECRET',activeEntry={entryID=101}} end
+T.Refresh('WARRIOR',1,12,'Arms'); assert(T.state.ranks==nil and T.Summary()==nil)
+C_Traits.GetNodeInfo=realNode
+combat=true; assert(T.Read()==nil); combat=false
+-- The talent window: the next talent's button is highlighted, and every button explains itself.
+local glowing={}
+NS.Glow=function(button,shown) glowing[button]=shown or nil end
+local function talentButton(node)
+ local b=CreateFrame('Button'); b.hooks={}
+ function b:GetNodeID() return node end
+ function b:HookScript(name,fn) self.hooks[name]=fn end
+ return b
+end
+local talentButtons={}; for index in ipairs(nodeNames) do talentButtons[index]=talentButton(index) end
+local shownHooks={}
+PlayerSpellsFrame={TalentsFrame={EnumerateAllTalentButtons=function() return pairs(talentButtons) end,
+ HookScript=function(_,name,fn) shownHooks[name]=fn end}}
+T.Refresh('WARRIOR',1,13,'Arms'); T.Show()
+local function buttonFor(name) for index,n in ipairs(nodeNames) do if n==name then return talentButtons[index] end end end
+assert(glowing[buttonFor('Deflection')]==true and not glowing[buttonFor('Improved Rend')] and shownHooks.OnShow)
+local lines={}; GameTooltip.AddLine=function(_,text) lines[#lines+1]=text end
+buttonFor('Deflection').hooks.OnEnter(buttonFor('Deflection'))
+assert(lines[2]:find('puts 2 points here, at level 13, 14',1,true) and lines[3]=='Your next point goes here.')
+lines={}; buttonFor('Mortal Strike').hooks.OnEnter(buttonFor('Mortal Strike'))
+assert(lines[2]:find('puts 1 point here, at level 40',1,true) and #lines==2)
+-- Turning recommendations off clears the highlight and the tooltip lines.
+T.enabled=false; T.Refresh('WARRIOR',1,13,'Arms'); assert(not glowing[buttonFor('Deflection')] and T.Summary()==nil)
+lines={}; buttonFor('Deflection').hooks.OnEnter(buttonFor('Deflection')); assert(#lines==0)
+T.enabled=true
+-- The older numbered-talent API works too.
+C_Traits=nil; C_ClassTalents=nil; PlayerSpellsFrame=nil
+GetNumTalentTabs=function() return 1 end; GetNumTalents=function() return 2 end
+GetTalentInfo=function(tab,index) return ({'Improved Rend','Deflection'})[index],nil,1,index,({3,1})[index],({3,5})[index] end
+T.Refresh('WARRIOR',1,14,'Arms'); assert(T.state.next.name=='Deflection' and T.state.next.rank==2)
+GetNumTalentTabs=nil; GetNumTalents=nil; GetTalentInfo=nil
+-- In the addon: the panel's hover text, the settings page and /everfrost talents all carry the next talent.
+C_ClassTalents={GetActiveConfigID=function() return 7 end}
+C_Traits={GetConfigInfo=function() return {treeIDs={1}} end,GetTreeNodes=function() return {1} end,
+ GetNodeInfo=function() return {ranksPurchased=1,activeEntry={entryID=1}} end,GetEntryInfo=function() return {definitionID=1} end,
+ GetDefinitionInfo=function() return {overrideName='Improved Rend'} end}
+currentClass='WARRIOR'; currentLevel=11; EverfrostDB={spec=1}; fire('PLAYER_LOGIN')
+assert(NS.Settings.window.pages.Guide.note.text:find('Next talent, Icy Veins Arms build: Improved Rend 2/3',1,true))
+local said={}; local realPrint=print; print=function(line) said[#said+1]=line end
+cmd('talents'); assert(said[1]:find('Improved Rend 2/3',1,true))
+cmd('talents off'); assert(EverfrostDB.talents==false and not NS.Settings.window.pages.Guide.note.text:find('Next talent',1,true))
+said={}; cmd('talents'); assert(said[1]:find('OFF',1,true))
+cmd('talents on'); assert(NS.Settings.window.pages.Guide.note.text:find('Next talent',1,true))
+print=realPrint
+C_Traits=savedTraits; C_ClassTalents=savedClassTalents
+print('Talent builds: data, next pick from trait and numbered APIs, name mismatches, secrets, talent-window highlight and tooltips, on/off: passed')
+-- Dragging the corner resizes the panel about its top-left corner, within 60% to 200%.
+EverfrostDB={}; fire('PLAYER_LOGIN'); local panel=EverfrostFrame; local grip=panel.grip
+assert(grip:IsShown() and panel.scale==1)
+panel.left=100; panel.top=500; cursorX,cursorY=420,300
+grip.scripts.OnMouseDown(grip); assert(grip.Resizing() and grip.scripts.OnUpdate)
+cursorX,cursorY=580,200; grip.scripts.OnUpdate(grip)
+assert(EverfrostDB.scale==1.5 and panel.scale==1.5 and EverfrostDB.point=='TOPLEFT' and EverfrostDB.relativePoint=='BOTTOMLEFT')
+assert(math.abs(EverfrostDB.x-100/1.5)<0.001 and math.abs(EverfrostDB.y-500/1.5)<0.001)
+cursorX,cursorY=3000,-3000; grip.scripts.OnUpdate(grip); assert(EverfrostDB.scale==2)
+cursorX,cursorY=101,499; grip.scripts.OnUpdate(grip); assert(EverfrostDB.scale==0.6)
+grip.scripts.OnMouseUp(grip); assert(not grip.Resizing() and grip.scripts.OnUpdate==nil and EverfrostAccountDB.scale==0.6)
+assert(NS.Settings.window.pages.Panel.scale.text=='60%')
+-- A locked panel has no corner to drag, and nothing resizes in combat.
+cmd('lock'); assert(not grip:IsShown()); grip.scripts.OnMouseDown(grip); assert(not grip.Resizing())
+cmd('unlock'); assert(grip:IsShown()); combat=true; grip.scripts.OnMouseDown(grip); assert(not grip.Resizing()); combat=false
+cursorX,cursorY=100,200; EverfrostDB={}; fire('PLAYER_LOGIN')
+print('Resize corner: scales about the top-left corner, clamps, saves, respects lock and combat: passed')
 print('Mock UI: all classes, migration, controls, talent override, leveling, combat refresh, cooldown fallback and feral labels: passed')
 print('Settings UI: slash/minimap/native entry points, guide selection, persistent controls, scale, minimap dragging, class changes and combat deferral: passed')
 print('Leveling gear: level-10 boundary, dominant talents, ties/unspent/unavailable/partial data, overrides, respec, combat caching, Survival roles and all classes: passed')

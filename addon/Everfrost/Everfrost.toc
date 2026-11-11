@@ -3,7 +3,7 @@
 ## IconTexture: Interface\AddOns\Everfrost\Media\Icon.tga
 ## Notes: Level 1-60 spell guides and gear upgrade hints, with simple class priorities below level 10.
 ## Author: mckenna654
-## Version: 0.7.0
+## Version: 0.8.0
 ## SavedVariables: EverfrostAccountDB
 ## SavedVariablesPerCharacter: EverfrostDB
 Profiles.lua
@@ -11,6 +11,8 @@ Core.lua
 GearProfiles.lua
 Gear.lua
 GearUI.lua
+TalentData.lua
+Talents.lua
 Settings.lua
 Main.lua
 

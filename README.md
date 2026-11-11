@@ -12,7 +12,7 @@ Everfrost is a lightweight, standalone Lua addon for **WoW Forever**. It display
 
 **Built with AI assistance.** Everfrost was first written with OpenAI Codex and is now developed with Claude Code. Automated tests run against a simulated client; each release is also checked in the game against the [in-game checklist](docs/INGAME_CHECKLIST.md), and the release notes say what was and wasn't seen.
 
-[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.7.0](https://github.com/mckenna654/Everfrost/releases/tag/v0.7.0) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
+[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.8.0](https://github.com/mckenna654/Everfrost/releases/tag/v0.8.0) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
 
 CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distribution is enabled. New version tags trigger automatic packaging; file processing and moderation can delay availability.
 
@@ -20,7 +20,7 @@ CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distributio
 
 | Item | Current status |
 | --- | --- |
-| Addon version | **0.7.0** |
+| Addon version | **0.8.0** |
 | Supported levels | **1–60** |
 | Class coverage | Nine classes, 27 talent trees, and nine general levelling profiles |
 | Target interface | `16001` — compatibility with the actual Forever client remains unverified |
@@ -64,7 +64,8 @@ Open any screenshot for its full-size view. Use `/everfrost` to open these setti
 - Shows empty armour slot counts in settings, and a reminder on the panel when no weapon is equipped.
 - Provides native-style Specialisation, Rotation Panel and Gear Upgrades settings, plus a draggable minimap button.
 - Saves panel position, visibility, mode, and specialisation preferences per character; panel size, opacity, lock, minimap button and gear highlights carry over to new characters.
-- Has a key binding (Key Bindings > AddOns > Everfrost) to show or hide the panel.
+- Has a key binding (Key Bindings > AddOns > Everfrost) to show or hide the panel, and a corner you can drag to resize it.
+- Shows the Icy Veins levelling talent build in the talent window: a glow on the talent to take next, and each talent's planned points and levels in its tooltip.
 - Counts armour for every spec, and plate or mail from level 40.
 - Refreshes spellbook and talent metadata outside combat, deferring changes until combat ends when necessary.
 
@@ -90,7 +91,7 @@ Use `/everfrost gear` to print your current stat order, `/everfrost gear off` to
 
 ## Installation
 
-1. Download **`Everfrost-0.7.0.zip`** from the [v0.7.0 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.7.0).
+1. Download **`Everfrost-0.8.0.zip`** from the [v0.8.0 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.8.0).
 2. Exit WoW Forever.
 3. Extract the archive's `Everfrost` folder into your Forever client's `Interface/AddOns` directory.
 4. Confirm the resulting path is `Interface/AddOns/Everfrost/Everfrost.toc`.
@@ -210,7 +211,7 @@ The packaging command uses Node.js and works on Windows, macOS and Linux:
 npm run build
 ```
 
-It creates `dist/Everfrost-0.7.0.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
+It creates `dist/Everfrost-0.8.0.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
 
 When releasing a new version, update `addon/Everfrost/Everfrost.toc` and `package.json` together, keep lockfile metadata synchronized, run the tests, and verify the archive contents before uploading.
 

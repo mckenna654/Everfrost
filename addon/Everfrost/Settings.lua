@@ -84,7 +84,7 @@ function S:Refresh()
  end
  local guide=window.pages.Guide
  guide.detected:SetText("Detected: "..state.detected)
- guide.note:SetText(state.levelingHint or NS.gearLevelNote)
+ guide.note:SetText((state.levelingHint or NS.gearLevelNote)..(state.talents and ("\n"..state.talents) or ""))
  for index,row in ipairs(guide.rows) do
   local value=index-2
   if index==1 then value=nil end
