@@ -278,3 +278,9 @@ Everfrost-Source-v0.7.0.zip is a Release and Under Review. The public descriptio
 replaced from docs/CURSEFORGE.md (Markdown mode) and shows "What's new in 0.7.0" on the
 project page; the project summary now says levels 1-60 and no longer mentions Codex.
 Not done: downloading the generated ZIPs to compare their contents with the tag.
+
+Beta removed, same day, at the user's request (he wanted one version named 0.7.0 like the
+others): the GitHub pre-release v0.7.0-beta.1 and its tag (was 8964370, on c2c3088) were
+deleted, and CurseForge file Everfrost-Source-v0.7.0-beta.1.zip was archived (Restore
+available). v0.7.0 is the only 0.7.0 file: GitHub latest, and a Release Under Review on
+CurseForge. Earlier entries above mention the beta as it stood at the time.

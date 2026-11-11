@@ -316,3 +316,7 @@ CurseForge confirmed on November 11, 2026: v0.7.0 is a Release for 1.60.1 and Un
 Review (the beta file is Approved); the public description and summary are updated for
 0.7.0. Next steps: confirm v0.7.0 gets approved; walk docs/INGAME_CHECKLIST.md; retake
 the screenshots.
+
+November 11, 2026: the v0.7.0-beta.1 pre-release and tag were deleted from GitHub and the beta
+file archived on CurseForge, at the user's request. Only v0.7.0 remains. The user prefers plain
+version names like the earlier releases; don't publish beta-tagged versions unless he asks.
