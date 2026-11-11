@@ -4,7 +4,16 @@
 
 A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1–60, nine classes and 27 talent trees**. Built with AI assistance. No third-party addon libraries are required.
 
-## What's new in 0.6.9
+## What's new in 0.7.0
+
+- **Levels 31 to 60:** guides and gear hints now run to level 60, following Icy Veins' updated levelling guides. Each new ability shows once you've learned it.
+- **Armour counts for every spec,** and plate or mail counts as wearable from level 40.
+- **Equip effects count:** "Increases damage and healing done by magical spells and effects" and similar passive lines are scored (English clients).
+- **Tidier upgrade highlight:** a thin outline on the slot's edge and a gentle pulse; Need and Greed buttons pulse without a box around them.
+- **Key binding** to show or hide the panel, and new characters start with your panel size and opacity.
+- **Smoother at login and when zoning.**
+
+## Included from 0.6.9
 
 - **Clearer spec menu note:** below level 10, the Choose a Spec menu now says "Full stat priorities need talents."
 
