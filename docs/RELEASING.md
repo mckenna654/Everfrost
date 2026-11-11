@@ -258,3 +258,16 @@ later (v0.6.9 was still the newest), and the author console was signed out in th
 browser used. Still to do in the console: check the generated file is a Beta for 1.60.1
 and its contents match the tag. The public description was left as it is (it describes
 0.6.9, the current Release); update it from docs/CURSEFORGE.md when 0.7.0 is promoted.
+
+## 0.7.0 — November 11, 2026
+
+At the user's request the beta was promoted the same day without an in-game check:
+GitHub latest v0.7.0, annotated tag at 06c590c on main (addon code identical to
+v0.7.0-beta.1; only the changelog heading and README links differ). GitHub Actions passed
+on main before tagging; npm test, luacheck and npm run build passed locally. Release ZIP
+SHA-256 matches the locally built archive:
+16e05978a146f3a984af0110d3302ed5046098c88ae9b768e5d686cb4469f8db.
+The CurseForge webhook received the refs/tags/v0.7.0 push and returned HTTP 200.
+Not confirmed: the CurseForge files. Neither v0.7.0 nor the beta was on the public files
+page minutes later (v0.6.9 still newest), and the author console was signed out in the
+browser used, so the public description has not been updated from docs/CURSEFORGE.md.

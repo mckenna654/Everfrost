@@ -303,3 +303,11 @@ Next steps: the user checks the file in the CurseForge author console; walks
 docs/INGAME_CHECKLIST.md (include a level 40+ character); sends /everfrost spellids
 output. Then promote: tag v0.7.0, mark it latest, update the CurseForge description from
 docs/CURSEFORGE.md, and set the README's download link and status row to 0.7.0.
+
+Published 0.7.0 on November 11, 2026 at the user's request ("update and push to github and
+curseforge now"), without an in-game test: GitHub latest v0.7.0 (06c590c). The CurseForge
+webhook returned 200 for the tag, but the file was not yet on the public page and the
+author console was signed out, so the file and the public description are unconfirmed
+(docs/RELEASING.md). Next steps: in the CurseForge author console, check the v0.7.0 file
+is a Release for 1.60.1 and paste docs/CURSEFORGE.md into the description; walk
+docs/INGAME_CHECKLIST.md; retake the screenshots.
