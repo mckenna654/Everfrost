@@ -94,7 +94,8 @@ function S:Refresh()
  guide.single:SetEnabled(db.aoe==true); guide.aoe:SetEnabled(db.aoe~=true)
  guide.role:SetShown(state.hasRole); guide.role:SetText("View: "..state.roleLabel)
  local panel=window.pages.Panel
- panel.visible:SetChecked(not db.hidden); panel.locked:SetChecked(db.locked==true); panel.minimap:SetChecked(db.minimap~=false)
+ local shown=state.panelShown; if shown==nil then shown=not db.hidden end
+ panel.visible:SetChecked(shown); panel.locked:SetChecked(db.locked==true); panel.minimap:SetChecked(db.minimap~=false)
  panel.scale:SetText(string.format("%d%%",math.floor((db.scale or 1)*100+0.5)))
  panel.opacity:SetText(string.format("%d%%",math.floor((db.opacity or 1)*100+0.5)))
  panel.updating=true
@@ -179,7 +180,7 @@ function NS.CreateSettings(controller)
  local panel=window.pages.Panel
  panel.visible=check(panel,"Show reference panel",-30,function(on) command(on and "show" or "hide") end)
  panel.locked=check(panel,"Lock panel position",-58,function(on) command(on and "lock" or "unlock") end)
- panel.minimap=check(panel,"Show minimap button",-86,function(on) api.DB().minimap=on; S:Refresh() end)
+ panel.minimap=check(panel,"Show minimap button",-86,function(on) command(on and "minimap on" or "minimap off") end)
  label(panel,"Panel size",12,0,-124)
  panel.scale=label(panel,"",12,352,-124,48); panel.scale:SetJustifyH("RIGHT")
  panel.slider=CreateFrame("Slider",nil,panel,"UISliderTemplateWithLabels")

@@ -1,9 +1,9 @@
-# Codex project instructions
+# Everfrost project instructions
 
 Everfrost is a standalone WoW Forever Lua addon. Its source of truth is addon/Everfrost, not prior chat output folders.
 
 - Preserve the simple, compact UI and class/spec/level detection.
-- Current coverage is levels 1–30, nine classes and 27 talent trees.
+- Current coverage is levels 1–60, nine classes and 27 talent trees.
 - Keep recommendations learned-spell-aware. Review current Icy Veins Forever guides before changing rotation rules; preserve source links.
 - This addon displays reference priorities, not a combat-driven next-cast queue. Do not silently change this contract.
 - Cache spellbook/talent metadata outside combat. Do not compare or branch on secret combat values. Cooldown duration objects go directly to native widgets.

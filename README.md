@@ -6,13 +6,13 @@
 
 **Find your class rhythm. Forever.**
 
-Everfrost is a lightweight, standalone Lua addon for **WoW Forever**. It displays a compact, class-aware ability reference for **levels 1–30**, with profiles for all **nine classes and 27 talent trees**. Recommendations are informed by Icy Veins Forever guides and filtered against the spells your character has actually learned. Guide-based gear comparisons add a shiny border to estimated bag upgrades and highlight Need or Greed on the standard loot-roll window.
+Everfrost is a lightweight, standalone Lua addon for **WoW Forever**. It displays a compact, class-aware ability reference for **levels 1–60**, with profiles for all **nine classes and 27 talent trees**. Recommendations are informed by Icy Veins Forever guides and filtered against the spells your character has actually learned. Guide-based gear comparisons add a shiny border to estimated bag upgrades and highlight Need or Greed on the standard loot-roll window.
 
 **Built with new players in mind.** Everfrost grew out of playing alongside brand-new players and people trying WoW for the first time. Its guides focus on **basic rotations and gear stat priorities** for your class and spec, giving you a simple starting point while you learn. The aim is to keep the basics visible and make early decisions about abilities and gear easier to understand.
 
-**Written with OpenAI Codex.** The project uses Codex for AI-assisted development, review, and documentation. Automated validation uses a simulated client. Early in-game checks confirmed the gear eligibility fix, rarity pulse and settings layout; the latest talent fix and broader client compatibility still need verification.
+**Built with AI assistance.** Everfrost was first written with OpenAI Codex and is now developed with Claude Code. Automated tests run against a simulated client; each release is also checked in the game against the [in-game checklist](docs/INGAME_CHECKLIST.md), and the release notes say what was and wasn't seen.
 
-[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.6.9](https://github.com/mckenna654/Everfrost/releases/tag/v0.6.9) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
+[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.6.9](https://github.com/mckenna654/Everfrost/releases/tag/v0.6.9) · [Try the 0.7.0 beta](https://github.com/mckenna654/Everfrost/releases/tag/v0.7.0-beta.1) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
 
 CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distribution is enabled. New version tags trigger automatic packaging; file processing and moderation can delay availability.
 
@@ -20,8 +20,8 @@ CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distributio
 
 | Item | Current status |
 | --- | --- |
-| Addon version | **0.6.9** |
-| Supported levels | **1–30** |
+| Addon version | **0.7.0 beta 1** (levels 31–60, not yet checked in game); stable is **0.6.9** (levels 1–30) |
+| Supported levels | **1–60** |
 | Class coverage | Nine classes, 27 talent trees, and nine general levelling profiles |
 | Target interface | `16001` — compatibility with the actual Forever client remains unverified |
 | Runtime | Lua 5.1-compatible syntax; no third-party addon libraries required |
@@ -63,7 +63,9 @@ Open any screenshot for its full-size view. Use `/everfrost` to open these setti
 - Explains upgrades in plain words, for example "Better because it has more Strength".
 - Shows empty armour slot counts in settings, and a reminder on the panel when no weapon is equipped.
 - Provides native-style Specialisation, Rotation Panel and Gear Upgrades settings, plus a draggable minimap button.
-- Saves panel position, scale, visibility, mode, and specialisation preferences per character.
+- Saves panel position, visibility, mode, and specialisation preferences per character; panel size, opacity, lock, minimap button and gear highlights carry over to new characters.
+- Has a key binding (Key Bindings > AddOns > Everfrost) to show or hide the panel.
+- Counts armour for every spec, and plate or mail from level 40.
 - Refreshes spellbook and talent metadata outside combat, deferring changes until combat ends when necessary.
 
 ### A reference panel, not a next-cast engine
@@ -80,7 +82,7 @@ Gear hints are enabled by default. Open the standard bags: a pulsing border in t
 
 On standard dungeon or raid group-loot windows, the same border highlights **Need** for an estimated upgrade or **Greed** for a known non-upgrade, unusable item, or item irrelevant to the selected class/spec. Disabled roll options are respected. You still choose and click the roll, following your group's loot rules. Missing or restricted data produces no highlight.
 
-Stat orders were checked against all 27 Icy Veins Forever guides on **October 20, 2026**. Numeric scores are Everfrost's transparent estimates, not Icy Veins simulation weights or guaranteed best-in-slot results. Weapon speed, dual-wield damage penalties, procs, set bonuses, on-use effects, sockets, enchants, professions and hit caps can change the real result. See [gear scoring and all 27 priorities](docs/GEAR.md) for the formula and limits.
+Stat orders were checked against all 27 Icy Veins Forever guides on **November 11, 2026**. Numeric scores are Everfrost's transparent estimates, not Icy Veins simulation weights or guaranteed best-in-slot results. Weapon speed, dual-wield damage penalties, procs, set bonuses, on-use effects, sockets, enchants, professions and hit caps can change the real result. See [gear scoring and all 27 priorities](docs/GEAR.md) for the formula and limits.
 
 Metadata refreshes outside combat; changes and new loot during combat wait until combat ends. The feature supports the standard bag and group-loot frames, including modern combined bags and classic bags where those hooks exist. Custom inventory/loot replacements are not integrated. **Below level 10, gear hints use a simple starter priority for your class**, because there is usually no talent tree to read yet. These lists are Everfrost estimates, not guide rankings. Talent-based priorities start at level 10. This applies even when a spec is selected manually. Levelling uses the active talent group's dominant tree for gear, while retaining the general spell guide. All three point counts must be available; ties, unspent talents and unavailable data remain unscored. From level 10, explicit spec selections override detection. Gear comparisons cover levels 10–30; a healer's DAMAGE view keeps the healer gear profile, and Survival uses ranged priorities until its melee requirements are met or RANGED is selected.
 
@@ -208,7 +210,7 @@ The packaging command uses Node.js and works on Windows, macOS and Linux:
 npm run build
 ```
 
-It creates `dist/Everfrost-0.6.9.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
+It creates `dist/Everfrost-0.7.0.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
 
 When releasing a new version, update `addon/Everfrost/Everfrost.toc` and `package.json` together, keep lockfile metadata synchronized, run the tests, and verify the archive contents before uploading.
 
@@ -235,13 +237,14 @@ addon/Everfrost/
   Main.lua           Panel, event handling, settings controller and commands
   README.md          Packaged user instructions
   SOURCES.md         Guide links and source-review notes
-  VALIDATION.txt     Recorded validation and limitations
 scripts/build.cjs    Cross-platform addon-only ZIP packaging
 tests/check.cjs      Syntax and simulated-client regression checks
 tests/gear.cjs       Gear scoring, cache and UI regression checks
 docs/GEAR.md         Stat audit, scoring formula and limitations
 docs/HANDOFF.md      Project history and outstanding in-game checks
-AGENTS.md            Codex project instructions
+docs/INGAME_CHECKLIST.md  What to check in the game before a release
+docs/VALIDATION.txt  Recorded simulated-test runs and their limits
+AGENTS.md            Project instructions for AI coding agents
 ```
 
 ### Contribution guidelines
@@ -276,4 +279,4 @@ Everfrost is licensed under the [MIT License](LICENSE). The same license is sele
 
 Ability references are concise adaptations of the **Icy Veins WoW Forever PvE guides**. The [source index](addon/Everfrost/SOURCES.md) preserves all 27 guide links, API references, and review notes. Use `/everfrost source` to find the guide associated with the active profile.
 
-Everfrost was written with **OpenAI Codex**. See the [development handoff](docs/HANDOFF.md) for the project's evolution from ForeverRetHelper and ForeverGuide to Everfrost v0.4.0.
+Everfrost was first written with **OpenAI Codex** and is now developed with **Claude Code**. See the [development handoff](docs/HANDOFF.md) for the project's evolution from ForeverRetHelper and ForeverGuide to Everfrost v0.4.0.

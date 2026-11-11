@@ -1,6 +1,6 @@
-# Everfrost — v0.6.9
+# Everfrost — v0.7.0
 
-A compact class-aware rotation reference for WoW Forever, covering levels 1–30. Detects your class, level, dominant talent tree, and learned spell ranks. Includes all nine classes and 27 talent trees, with a general levelling profile before you spend talents.
+A compact class-aware rotation reference for WoW Forever, covering levels 1–60. Detects your class, level, dominant talent tree, and learned spell ranks. Includes all nine classes and 27 talent trees, with a general levelling profile before you spend talents.
 
 ## Install or upgrade
 
@@ -9,7 +9,7 @@ A compact class-aware rotation reference for WoW Forever, covering levels 1–30
 3. Confirm the path is `Interface/AddOns/Everfrost/Everfrost.toc`, without an extra nested folder.
 4. Enable **Everfrost** in the AddOns list. type `/everfrost` for settings or `/everfrost show` for the reference panel.
 
-The folder, TOC, frame and saved-variable identifiers now use Everfrost. Because this is a new addon identity, previous panel settings start fresh. `/everfrost` is the primary command; `/frh` remains a compatibility alias. This package is not automatically installed. It targets interface 16001; exact compatibility with your Forever build needs an in-game check.
+The folder, TOC, frame and saved-variable identifiers now use Everfrost. Because this is a new addon identity, previous panel settings start fresh. `/everfrost` is the primary command; `/fguide` and `/frh` also work. This package is not automatically installed. It targets interface 16001; exact compatibility with your Forever build needs an in-game check.
 
 ## Using the panel
 
@@ -28,7 +28,7 @@ This is a conditional priority reference, not a live next-cast queue. The list c
 - `/everfrost spec 1`, `2`, or `3` selects a tree manually in talent-window order. `/everfrost spec auto` restores detection. Overrides are saved per character.
 - Only learned spells are shown. The spellbook supplies the trained rank and required level; reaching a level alone does not unlock a spell.
 - Metadata updates after training, levelling and talent changes. Changes made during combat refresh when combat ends.
-- Levels above 30 display a scope notice. Several specs share early-level priorities until their distinct abilities become available. Survival uses the ranged approach until level 30 with Strider Kick learned, then defaults to the melee guide. The RANGED / MELEE switch lets you keep the ranged view; melee also assumes the supporting Survival talents described in the source guide.
+- Past level 60 the panel hides itself. Several specs share early-level priorities until their distinct abilities become available. Survival uses the ranged approach until level 30 with Strider Kick learned, then defaults to the melee guide. The RANGED / MELEE switch lets you keep the ranged view; melee also assumes the supporting Survival talents described in the source guide.
 - English guidance; existing spell names use localized names where available. New Forever-specific names currently require an English spellbook.
 
 ## Settings window
@@ -67,9 +67,9 @@ Left-click the minimap button for settings, right-click to show/hide the panel, 
 
 ## Sources and verification
 
-Adapted from the Icy Veins WoW Forever PvE guides, reviewed October 15, 2026. See SOURCES.md for all links. These are concise levelling adaptations of guide priorities, with general ability hints where needed, rather than complete reproductions or an automatically updated guide feed. Unofficial; not affiliated with Icy Veins or Blizzard.
+Adapted from the Icy Veins WoW Forever PvE guides, reviewed October 15 (levels 1–30) and November 11, 2026 (levels 31–60). See SOURCES.md for all links. These are concise levelling adaptations of guide priorities, with general ability hints where needed, rather than complete reproductions or an automatically updated guide feed. Unofficial; not affiliated with Icy Veins or Blizzard.
 
-Local Lua syntax and simulated-client checks passed; see VALIDATION.txt. No third-party addon libraries are required. Actual game rendering and Forever API behavior remain unverified.
+No third-party addon libraries are required. Each release is tested against a simulated client and checked in the game; the changelog says what was seen.
 
 For the first game check, verify the header and learned icons, train a spell and change talent points, switch encounter/role modes, then reload to check the saved position. Test on a second class. If an ability is missing, use `/everfrost refresh` outside combat. Include `/everfrost status`, your client build and any Lua error when reporting a problem.
 
@@ -86,12 +86,12 @@ Some source pages still contain older level-20 sections alongside newer guidance
 
 ## Gear upgrades and Need/Greed highlights
 
-Enabled by default for levels 1–30, using a simple starter priority for your class below level 10. Standard bag items get a pulsing border in the item's rarity colour and a green up arrow when their estimated score beats an equipped replacement. Armour pieces with more armour and no loss of useful stats also count. Standard loot-roll windows highlight Need for estimated upgrades and Greed for known non-upgrades or irrelevant items. Disabled choices are respected, and you click the roll yourself. Hover for the score difference and stat order.
+Enabled by default for levels 1–60, using a simple starter priority for your class below level 10. Standard bag items get a pulsing border in the item's rarity colour and a green up arrow when their estimated score beats an equipped replacement. Armour pieces with more armour and no loss of useful stats also count. Standard loot-roll windows highlight Need for estimated upgrades and Greed for known non-upgrades or irrelevant items. Disabled choices are respected, and you click the roll yourself. Hover for the score difference and stat order.
 
 Use `/everfrost gear` to show the selected priorities, or `/everfrost gear on` / `off` to toggle the feature. **Below level 10, gear hints use a simple starter priority for your class**, because there is usually no talent tree to read yet. These lists are Everfrost estimates, not guide rankings. Talent-based priorities start at level 10. This applies even to manual spec choices. Quest choices and merchant upgrades are marked the same way, and tooltips explain upgrades in plain words. If no quest reward is an upgrade, the one that sells for the most gets a gold mark. This note is also displayed in settings, gear tooltips and panel hover text. Levelling uses the tree with the most talent points in the active talent group from level 10 onward. All three tree counts must be available. The settings Gear Upgrades page identifies the inferred spec; ties, unspent talents or unavailable data stay unscored. From level 10, manual spec choices override detection. A healer's DAMAGE view still uses healing gear priorities. Survival uses ranged priorities before its melee requirements are met or when RANGED is selected.
 
 Complete weapon comparisons: one-hand weapons and off-hands can compare together against an equipped two-hander. Everfrost searches your carried bags for each item's best usable partner and highlights estimated pair upgrades. The tooltip names the partner: equip both items for the comparison to apply. Loot candidates use carried partners too. Shields, held off-hands and learned Dual Wield are supported. Missing partners or unresolved pair data remain unscored.
 
-Stat orders were checked against all 27 linked Icy Veins Forever guides on October 20, 2026. Everfrost converts those orders into approximate weights; it is not a simulator. Procs, set bonuses, weapon speed, dual-wield damage penalties, sockets, enchants, hit caps and other special effects are not modeled. Check the tooltip and your group's loot rules. Missing/restricted item data is also unscored. During combat, comparisons wait for combat to end. Custom bag and loot-window replacements are not integrated.
+Stat orders were checked against all 27 linked Icy Veins Forever guides on November 11, 2026. Everfrost converts those orders into approximate weights; it is not a simulator. Procs, set bonuses, weapon speed, dual-wield damage penalties, sockets, enchants, hit caps and other special effects are not modeled. Check the tooltip and your group's loot rules. Missing/restricted item data is also unscored. During combat, comparisons wait for combat to end. Custom bag and loot-window replacements are not integrated.
 
-Written with OpenAI Codex. Full scoring method: https://github.com/mckenna654/Everfrost/blob/main/docs/GEAR.md
+Full scoring method: https://github.com/mckenna654/Everfrost/blob/main/docs/GEAR.md

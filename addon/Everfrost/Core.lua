@@ -152,6 +152,13 @@ NS.baseIDs={
  ["Rejuvenation"]=774,["Healing Touch"]=5185,["Regrowth"]=8936,
  ["Searing Totem"]=3599,["Lightning Bolt"]=403,["Flame Shock"]=8050,["Earth Shock"]=8042,
  ["Lightning Shield"]=324,["Healing Wave"]=331,["Lesser Healing Wave"]=8004,["Healing Stream Totem"]=5394,
+ -- Level 31-60 additions.
+ ["Hammer of Wrath"]=24275,["Explosive Trap"]=13813,["Volley"]=1510,["Scorch"]=2948,["Frostfire Bolt"]=44614,
+ ["Ice Barrier"]=11426,["Mortal Strike"]=12294,["Sweeping Strikes"]=12328,["Whirlwind"]=1680,["Bloodthirst"]=23881,
+ ["Shield Slam"]=23922,["Execute"]=5308,["Cheap Shot"]=1833,["Ghostly Strike"]=14278,["Penance"]=47540,
+ ["Incinerate"]=29722,["Starfire"]=2912,["Hurricane"]=16914,["Ravage"]=6785,["Rake"]=1822,["Faerie Fire"]=770,
+ ["Lacerate"]=33745,["Tranquility"]=740,["Innervate"]=29166,["Chain Lightning"]=421,["Water Shield"]=52127,
+ ["Riptide"]=61295,["Chain Heal"]=1064,["Mana Tide Totem"]=16190,
 }
 -- Localized names never change during a session. Cache a class's map only once
 -- every known ID has resolved, so late-loading spell data is still picked up.
@@ -175,6 +182,7 @@ function NS.SpellNames(class)
  if complete then spellNameCache[class]=names end
  return names
 end
+function NS.SpellNamesReady(class) return spellNameCache[class]~=nil end
 function NS.ScanSpells(class)
  if InCombatLockdown() then return nil,"Waiting for combat to end" end
  local api=C_SpellBook or {}

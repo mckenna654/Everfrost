@@ -15,6 +15,11 @@ local slots = {
  INVTYPE_RANGED={18},INVTYPE_RANGEDRIGHT={18},INVTYPE_THROWN={18},INVTYPE_RELIC={18},
 }
 local armorMax={MAGE=1,PRIEST=1,WARLOCK=1,ROGUE=2,DRUID=2,HUNTER=2,SHAMAN=2,PALADIN=3,WARRIOR=3}
+-- At 40 Warriors and Paladins train plate, and Hunters and Shamans train mail.
+local armorMaxAt40={HUNTER=3,SHAMAN=3,PALADIN=4,WARRIOR=4}
+local function heaviestArmor(class, level)
+ return level>=40 and armorMaxAt40[class] or armorMax[class] or 0
+end
 local weaponTypes={
  WARRIOR={[0]=true,[1]=true,[2]=true,[3]=true,[4]=true,[5]=true,[6]=true,[7]=true,[8]=true,[10]=true,[13]=true,[15]=true,[16]=true,[18]=true},
  PALADIN={[0]=true,[1]=true,[4]=true,[5]=true,[6]=true,[7]=true,[8]=true},
@@ -73,6 +78,45 @@ function G.Normalize(raw)
  end
  return out
 end
+-- "Equip:" effects written out on the tooltip, for clients whose item stats leave them out:
+-- "Increases damage and healing done by magical spells and effects by up to 12." and its kin.
+-- Each pattern gives the stat it adds to. English wording only; other languages keep whatever
+-- the client's item stats report. "Chance on hit" and "Use:" effects are not modelled.
+local equipEffects={
+ {"damage and healing done by magical spells and effects by up to (%d+)","spell"},
+ {"healing done by spells and effects by up to (%d+)","healing"},
+ {"damage done by (%a+) spells and effects by up to (%d+)","school"},
+ {"spell power by (%d+)","spell"},
+ {"%+(%d+) ranged attack power","rangedAttack"},
+ {"ranged attack power by (%d+)","rangedAttack"},
+ {"%+(%d+) attack power","attack"},
+ {"attack power by (%d+)","attack"},
+ {"restores (%d+) mana per 5 sec","mp5"},
+}
+function G.EquipEffects(link)
+ local data=first(C_TooltipInfo and C_TooltipInfo.GetHyperlink,link)
+ if not public(data,"table") or not public(data.lines,"table") then return nil end
+ local found={}
+ for _,line in ipairs(data.lines) do
+  local text=public(line,"table") and line.leftText
+  if public(text,"string") then
+   text=text:lower()
+   -- Only passive effects: "Equip:" lines, never "Use:" or "Chance on hit:".
+   if text:find("^equip:") then
+    for _,effect in ipairs(equipEffects) do
+     local a,b=text:match(effect[1])
+     if a then
+      local key,amount=effect[2],tonumber(b or a)
+      if key=="school" then key=schoolKeys[a] and a or nil end
+      if key and amount then found[key]=(found[key] or 0)+amount end
+      break
+     end
+    end
+   end
+  end
+ end
+ return next(found) and found or nil
+end
 function G.ReadItem(link)
  if not public(link,"string") then return nil end
  if G.items[link] then return G.items[link] end
@@ -108,6 +152,13 @@ function G.ReadItem(link)
  local raw=first(itemAPI("GetItemStats"),link)
  item.stats=G.Normalize(raw)
  if not item.stats then return nil end
+ -- The larger of the two readings, so an effect the client already reports is never counted twice.
+ local effects=G.EquipEffects(link)
+ if effects then
+  for key,amount in pairs(effects) do
+   if amount>(item.stats[key] or 0) then item.stats[key]=amount; item.fromTooltip=true end
+  end
+ end
  -- IsUsableItem checks an item's use action, not whether it is equipment.
  -- Native Forever bags expose separate Use and Equip actions. Class/level
  -- restrictions are checked below; do not reject passive gear with no use action.
@@ -135,7 +186,7 @@ function G.Eligible(item, context, p)
  if item.usable==false then return false,"Item requirements are not met" end
  if item.classID==4 then
   local sub=item.subclassID
-  if sub>=1 and sub<=4 and sub>(armorMax[context.class] or 0) then return false,"Armour type unavailable to your class at this level" end
+  if sub>=1 and sub<=4 and sub>heaviestArmor(context.class,context.level) then return false,"Armour type unavailable to your class at this level" end
   if sub==6 and context.class~="WARRIOR" and context.class~="PALADIN" and context.class~="SHAMAN" then return false,"Your class cannot use shields" end
   if sub>=7 and sub<=11 then
    local owner=({[7]="PALADIN",[8]="DRUID",[9]="SHAMAN"})[sub]
@@ -169,6 +220,17 @@ local function effective(item, p)
  values.wand=caster and item.classID==2 and item.subclassID==19 and s.dps or 0
  return values,damageWeapon
 end
+-- Armour counts for every spec. A profile that ranks Armour scores it as one of its stats, at
+-- this rate times its weight. For the rest it is extra credit at the plain rate, reported apart
+-- from the stats so a result can say when armour, not a stat, decided it. Armour pieces and
+-- shields only: a weapon's armour is never credited.
+NS.gearArmorRate=0.1
+local function armorCredit(item, w)
+ if item.classID~=4 then return 0,0 end
+ local amount=item.stats.armor*NS.gearArmorRate
+ if w.armor then return amount*w.armor,0 end
+ return 0,amount
+end
 function G.Score(item, context, p)
  if not item or not item.stats then return nil end
  local s=item.stats; local w=p.weights
@@ -177,9 +239,10 @@ function G.Score(item, context, p)
  if damageWeapon and s.dps<=0 then return nil end
  local score=0
  for key,weight in pairs(w) do
-  local scale=key=="armor" and 0.02 or key=="dps" and 12 or 1
-  score=score+(values[key] or 0)*weight*scale
+  if key~="armor" then score=score+(values[key] or 0)*weight*(key=="dps" and 12 or 1) end
  end
+ local ranked,extra=armorCredit(item,w)
+ score=score+ranked+extra
  score=score+values.wand
  -- AP equivalents follow the relevant primary stat rather than being omitted.
  -- A profile that ranks Attack Power itself already scored it in the loop above.
@@ -195,7 +258,7 @@ function G.Score(item, context, p)
   if context.class=="PALADIN" then relevant=relevant+values.spell end
   if context.class=="HUNTER" or context.class=="PALADIN" or context.class=="SHAMAN" then relevant=relevant+s.intellect+s.spirit end
  end
- return score,relevant>0
+ return score,relevant>0,extra
 end
 local function fitsHand(item, hand, context, p)
  if not item or not G.Eligible(item,context,p) then return false end
@@ -293,13 +356,13 @@ local function explain(result, item, old, p)
  return nil
 end
 function G.Compare(item, equipped, context, carried, candidate)
- if not context or context.level<1 or context.level>NS.maxLevel then return unknown("Gear guide supports levels 1-30") end
+ if not context or context.level<1 or context.level>NS.maxLevel then return unknown("Gear guide supports levels 1-"..NS.maxLevel) end
  local p=NS.GearProfile(context.class,context.spec,context.role,context.level)
  if not p then return unknown("Select a talent tree to compare gear") end
  if not item then return waiting("Waiting for item data") end
  local eligible,reason=G.Eligible(item,context,p)
  if not eligible then return greed(reason) end
- local score,relevant=G.Score(item,context,p)
+ local score,relevant,armorExtra=G.Score(item,context,p)
  if not score then return unknown("Weapon or item stats are unavailable") end
  if (slots[item.loc][1]==16 or slots[item.loc][1]==17) and equipped[16]==nil then
   return waiting("Waiting for equipped main-hand data")
@@ -322,21 +385,21 @@ function G.Compare(item, equipped, context, carried, candidate)
   if (slot==16 or slot==17) and equipped[16] and equipped[16].loc=="INVTYPE_2HWEAPON" and item.loc~="INVTYPE_2HWEAPON" then
    return unknown("Compare a complete one-hand/off-hand setup before replacing a two-handed weapon")
   end
-  local oldScore,oldRelevant=0,false
+  local oldScore,oldRelevant,oldArmor=0,false,0
   if old then
-   oldScore,oldRelevant=G.Score(old,context,p)
+   oldScore,oldRelevant,oldArmor=G.Score(old,context,p)
    if oldScore==nil then return unknown("Equipped weapon stats are unavailable") end
   end
   local allowed=true
   if item.loc=="INVTYPE_2HWEAPON" then
    local off=equipped[17]
    if off==nil then return waiting("Waiting for off-hand item data") end
-   local extra=0
+   local extra,_,offArmor=0,nil,0
    if off then
-    extra=G.Score(off,context,p)
+    extra,_,offArmor=G.Score(off,context,p)
     if extra==nil then return unknown("Off-hand stats are unavailable") end
    end
-   oldScore=oldScore+extra
+   oldScore=oldScore+extra; oldArmor=oldArmor+(offArmor or 0)
   elseif slot==17 and p.shield and item.loc~="INVTYPE_SHIELD" then allowed=false end
   if item.unique and item.unique~=0 and item.limit and item.limit>0 then
    local count=0
@@ -350,19 +413,30 @@ function G.Compare(item, equipped, context, carried, candidate)
   if allowed and (not best or score-oldScore>best.delta) then
    best={kind="greed",score=score,previous=oldScore,delta=score-oldScore,slot=slot,source=p.source,
     oldRelevant=oldRelevant,armorGain=armorGain(item,old),old=old,
+    -- The part of the difference that comes from armour credit rather than from stats.
+    armorCredit=armorExtra-oldArmor,
     -- A two-hander also displaces the off-hand, so one stat cannot explain the result.
     plain=not (item.loc=="INVTYPE_2HWEAPON" and equipped[17])}
   end
  end
  if not best then return greed("Not a valid replacement for your current equipment") end
+ local statDelta=best.delta-best.armorCredit
  if relevant and best.delta>0.01 then
-  best.kind="need"; best.reason="Estimated stat upgrade"
-  if best.plain then best.why=explain(best,item,best.old,p) end
+  best.kind="need"
+  if statDelta>0.01 then
+   best.reason="Estimated stat upgrade"
+   if best.plain then best.why=explain(best,item,best.old,p) end
+  elseif statDelta>=-0.01 and best.armorGain>0 then
+   best.armorOnly=true
+   best.reason=string.format("More armour, no useful stats lost (+%.0f Armour)",best.armorGain)
+  else
+   best.reason=string.format("More armour (+%.0f) outweighs the stats it gives up",best.armorGain)
+  end
   return best
  end
- -- Armor only breaks ties: it never outweighs a stat loss. An item with no useful
- -- stats can only replace another one, so Stamina cannot stand in for lost Strength.
- if best.armorGain>0 and best.delta>=-0.01 and (relevant or not best.oldRelevant) then
+ -- An item with no useful stats can only replace another one, and only when nothing is lost
+ -- on stats: Stamina cannot stand in for lost Strength, however much armour comes with it.
+ if best.armorGain>0 and statDelta>=-0.01 and (relevant or not best.oldRelevant) then
   best.kind="need"; best.armorOnly=true
   best.reason=string.format("More armour, no useful stats lost (+%.0f Armour)",best.armorGain)
   return best

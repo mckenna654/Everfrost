@@ -83,10 +83,11 @@ assert(G.Compare(item(7,nil,{ITEM_MOD_INTELLECT_SHORT=100},4,3),equipment,ctx('M
 assert(G.Compare(item(7,'INVTYPE_SHIELD',{ITEM_MOD_STAMINA_SHORT=20},4,6),equipment,ctx('MAGE',1)).kind=='greed')
 assert(G.Compare(item(7,'INVTYPE_RELIC',{},4,7),equipment,ctx('DRUID',1)).kind=='greed')
 -- The same two items reverse order under the current Arcane/Fire priorities.
-equipment=empty(); equipment[5]=item(10,nil,{ITEM_MOD_SPIRIT_SHORT=10})
-local power=item(11,nil,{ITEM_MOD_SPELL_POWER_SHORT=10})
-assert(G.Compare(power,equipment,ctx('MAGE',1)).kind=='greed')
-assert(G.Compare(power,equipment,ctx('MAGE',2)).kind=='need')
+-- Arcane ranks Intellect above Crit; Fire ranks Crit above Intellect.
+equipment=empty(); equipment[5]=item(10,nil,{ITEM_MOD_CRIT_RATING_SHORT=10})
+local power=item(11,nil,{ITEM_MOD_INTELLECT_SHORT=10})
+assert(G.Compare(power,equipment,ctx('MAGE',1)).kind=='need')
+assert(G.Compare(power,equipment,ctx('MAGE',2)).kind=='greed')
 local healing=item(12,nil,{ITEM_MOD_SPELL_HEALING_DONE=30,ITEM_MOD_STAMINA_SHORT=5})
 assert(G.Compare(healing,empty(),ctx('MAGE',2)).kind=='greed')
 assert(G.Compare(healing,empty(),ctx('PALADIN',1)).kind=='need')
@@ -205,7 +206,9 @@ assert(G.Compare(agilityItem,subEquip,subtlety).kind=='need')
 -- Melee specs without an Attack Power rank use half their higher Strength or Agility weight.
 local combatProfile=NS.gearProfiles.ROGUE[2]
 assert(G.Score(apItem,ctx('ROGUE',2),combatProfile)==10*combatProfile.weights.agility/2)
-assert(G.Score(apItem,ctx('WARRIOR',1),NS.gearProfiles.WARRIOR[1])==10*NS.gearProfiles.WARRIOR[1].weights.strength/2)
+-- The warrior guides rank Attack Power beside Strength, so it scores at that rank in full.
+assert(G.Score(apItem,ctx('WARRIOR',1),NS.gearProfiles.WARRIOR[1])==10*NS.gearProfiles.WARRIOR[1].weights.attack)
+assert(NS.gearProfiles.WARRIOR[1].weights.attack==NS.gearProfiles.WARRIOR[1].weights.strength)
 local apRing=item(45,'INVTYPE_FINGER',{ITEM_MOD_ATTACK_POWER_SHORT=20}); local agiRing=item(46,'INVTYPE_FINGER',{ITEM_MOD_AGILITY_SHORT=6})
 local ringEquip=empty(); ringEquip[11]=agiRing; ringEquip[12]=agiRing
 assert(G.Compare(apRing,ringEquip,ctx('ROGUE',2)).kind=='need')
@@ -261,6 +264,25 @@ worn[6]=belt(83,2,18,{ITEM_MOD_STRENGTH_SHORT=4})
 assert(G.Compare(belt(84,3,50,{ITEM_MOD_STRENGTH_SHORT=4}),worn,ret).armorOnly)
 local robe=empty(); robe[5]=item(85,nil,{RESISTANCE0_NAME=10,ITEM_MOD_INTELLECT_SHORT=3})
 assert(G.Compare(item(86,nil,{RESISTANCE0_NAME=20,ITEM_MOD_INTELLECT_SHORT=3}),robe,ctx('MAGE',2)).armorOnly)
+-- Armour counts for every spec: a clearly better-armoured piece wins over a small stat loss,
+-- says so, and reports how much of the score it was.
+worn[6]=belt(92,2,18,{ITEM_MOD_STRENGTH_SHORT=4})
+local sturdy=G.Compare(belt(93,3,150,{ITEM_MOD_STRENGTH_SHORT=3}),worn,ret)
+assert(sturdy.kind=='need' and not sturdy.armorOnly and sturdy.reason:find('outweighs',1,true) and sturdy.reason:find('+132',1,true))
+local strengthWeight=NS.gearProfiles.PALADIN[3].weights.strength
+assert(math.abs(sturdy.armorCredit-13.2)<0.001 and math.abs(sturdy.delta-(13.2-strengthWeight))<0.001)
+-- A little more armour does not buy back a real stat loss.
+assert(G.Compare(belt(94,3,50,{ITEM_MOD_STRENGTH_SHORT=3}),worn,ret).kind=='greed')
+-- Less armour counts against a piece too: one more Strength no longer beats 100 lost armour.
+worn[6]=belt(95,3,150,{ITEM_MOD_STRENGTH_SHORT=3})
+assert(G.Compare(belt(96,2,50,{ITEM_MOD_STRENGTH_SHORT=4}),worn,ret).kind=='greed')
+-- At 40 Warriors and Paladins can wear plate, and Hunters and Shamans mail; not a level sooner.
+local function at(class,spec,level) local c=ctx(class,spec); c.level=level; return c end
+local plate=belt(97,4,300,{ITEM_MOD_STRENGTH_SHORT=5}); local mail=belt(98,3,150,{ITEM_MOD_AGILITY_SHORT=5})
+assert(G.Compare(plate,empty(),at('PALADIN',3,39)).reason:find('Armour type',1,true))
+assert(G.Compare(plate,empty(),at('PALADIN',3,40)).kind=='need' and G.Compare(plate,empty(),at('WARRIOR',1,60)).kind=='need')
+assert(G.Compare(mail,empty(),at('HUNTER',1,39)).reason:find('Armour type',1,true) and G.Compare(mail,empty(),at('SHAMAN',2,40)).kind=='need')
+assert(G.Compare(plate,empty(),at('HUNTER',1,60)).reason:find('Armour type',1,true) and G.Compare(mail,empty(),at('ROGUE',2,60)).reason:find('Armour type',1,true))
 -- Armor type and level limits still come first.
 assert(G.Compare(belt(87,4,900),empty(),ret).reason:find('Armour type',1,true))
 assert(G.Compare(belt(88,3,50),empty(),ctx('MAGE',2)).reason:find('Armour type',1,true))
@@ -271,7 +293,7 @@ assert(tankBelt.kind=='need' and not tankBelt.armorOnly)
 -- A shield swap never counts a weapon as armor, and weapons get no armor credit.
 local offhand=empty(); offhand[16]=false; offhand[17]=item(90,'INVTYPE_WEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=5},2,7)
 assert(not G.Compare(item(91,'INVTYPE_SHIELD',{RESISTANCE0_NAME=200},4,6),offhand,ret).armorOnly)
-print('Armor tie-break: plain upgrades, stat protection, ties, eligibility and tanks passed')
+print('Armour: scored for every spec, plain upgrades, stat protection, ties, eligibility and tanks passed')
 print('Gear profiles: 27 specs; stat reversals, aliases, eligibility, paired slots, unique limits and weapon layouts passed')
 `);
 run(`
@@ -287,6 +309,11 @@ function methods:SetFromAlpha(value) self.from=value end
 function methods:SetToAlpha(value) self.to=value end
 function methods:SetDuration(value) self.duration=value end
 function methods:SetLooping(value) self.looping=value end
+function methods:SetSmoothing(value) self.smoothing=value end
+function methods:SetHeight(value) self.height=value end
+function methods:SetWidth(value) self.width=value end
+function methods:GetWidth() return self.width end
+function methods:SetPoint(...) self.points=self.points or {}; self.points[#self.points+1]={...} end
 function methods:SetVertexColor(r,g,b,a) self.vertex={r,g,b,a} end
 function methods:SetAtlas(name,useSize) self.atlas=name; self.atlasSize=useSize end
 function methods:IsPlaying() return self.playing==true end
@@ -371,6 +398,13 @@ assert(G.bags[0][1].result.kind=='need')
 local bag=widget(); G.TrackBag(bag,0,1)
 assert(bag.EverfrostGearGlow and bag.EverfrostGearGlow:IsShown())
 assert(#bag.EverfrostGearEdges==4)
+-- A thin outline flush with the slot: two-pixel lines, none poking out past the button.
+for index,edge in ipairs(bag.EverfrostGearEdges) do
+ assert((index<=2 and edge.height or edge.width)==2)
+ for _,point in ipairs(edge.points) do assert(point[4]==0 and math.abs(point[5])<=2) end
+end
+-- The soft glow's overhang follows the button's size (12 where the size is unknown).
+assert(bag.EverfrostGearGlow.points[1][4]==-12 and bag.EverfrostGearGlow.points[1][5]==12)
 for _,edge in ipairs(bag.EverfrostGearEdges) do assert(edge:IsShown()) end
 local function assertColor(button,r,g,b)
  for _,layer in ipairs({button.EverfrostGearGlow,table.unpack(button.EverfrostGearEdges)}) do
@@ -384,7 +418,8 @@ assert(arrow and arrow:IsShown() and arrow.atlas=='bags-greenarrow' and arrow.at
 assert(#bag.EverfrostGearPulses==5)
 for _,pulse in ipairs(bag.EverfrostGearPulses) do
  assert(pulse:IsPlaying() and pulse.looping=='BOUNCE')
- assert(pulse.animation.from==0.18 and pulse.animation.to==1 and pulse.animation.duration==0.7)
+ -- A gentle breathe, never a blink: it stays at least 40% lit and eases in and out.
+ assert(pulse.animation.from==0.4 and pulse.animation.to==1 and pulse.animation.duration==0.9 and pulse.animation.smoothing=='IN_OUT')
 end
 local plays=bag.EverfrostGearPulses[1].plays; local calls=qualityCalls
 G.PaintBag(bag); assert(bag.EverfrostGearPulses[1].plays==plays and qualityCalls==calls)
@@ -417,6 +452,8 @@ local frame=GroupLootFrame1
 assert(frame.NeedButton.EverfrostGearGlow:IsShown())
 -- Roll buttons keep the glow only: the arrow marks items, not the Need button.
 assert(not frame.NeedButton.EverfrostGearArrow)
+-- Roll buttons are round, so they pulse without the square outline.
+assert(#frame.NeedButton.EverfrostGearEdges==0 and #frame.NeedButton.EverfrostGearPulses==1)
 assertColor(frame.NeedButton,0.12,1,0)
 local rollPlays=frame.NeedButton.EverfrostGearPulses[1].plays
 G.PaintRoll(frame); assert(frame.NeedButton.EverfrostGearPulses[1].plays==rollPlays)
@@ -492,6 +529,26 @@ local armorLines=table.concat(GameTooltip.lines,'|')
 assert(armorLines:find('Everfrost: UPGRADE',1,true) and armorLines:find('+32 Armour',1,true) and not armorLines:find('Estimated score',1,true))
 -- Missing and secret metadata defer rather than treating an occupied slot as empty.
 itemInfo['item:100']=nil; G.items={}; G.Refresh(); assert(G.bags[0][1].result.kind=='unknown')
+-- Passive "Equip:" effects written on the tooltip count, for clients whose item stats leave them out.
+tooltipLines={['item:301']={{leftText='Staff of Testing'},
+ {leftText='Equip: Increases damage and healing done by magical spells and effects by up to 12.'},
+ {leftText='Use: Increases spell power by 100 for 20 sec.'},{leftText='Chance on hit: Increases attack power by 50.'},
+ {leftText='Equip: Increases damage done by Fire spells and effects by up to 7.'},{leftText='Equip: Restores 4 mana per 5 sec.'},
+ {leftText='Equip: Increases healing done by spells and effects by up to 20.'},{leftText='Equip: +14 Attack Power.'}}}
+C_TooltipInfo={GetHyperlink=function(link) assert(not combat); return tooltipLines[link] and {lines=tooltipLines[link]} end}
+fixture('item:301',{ITEM_MOD_INTELLECT_SHORT=2}); G.items={}
+local effects=G.ReadItem('item:301')
+assert(effects.stats.spell==12 and effects.stats.fire==7 and effects.stats.mp5==4 and effects.stats.healing==20 and effects.stats.attack==14)
+assert(effects.fromTooltip and effects.stats.intellect==2)
+-- An effect the client already reports is not counted twice.
+fixture('item:302',{ITEM_MOD_SPELL_POWER_SHORT=12})
+tooltipLines['item:302']={{leftText='Equip: Increases damage and healing done by magical spells and effects by up to 12.'}}
+assert(G.ReadItem('item:302').stats.spell==12 and not G.ReadItem('item:302').fromTooltip)
+-- Secret or missing tooltip text changes nothing.
+fixture('item:303',{ITEM_MOD_INTELLECT_SHORT=1}); tooltipLines['item:303']={{leftText=secret},{}}
+assert(G.ReadItem('item:303').stats.spell==0 and G.ReadItem('item:303').stats.intellect==1)
+C_TooltipInfo=nil; tooltipLines=nil; G.items={}
+print('Equip effects from tooltips: spell, healing, school, attack power and mana regeneration; no double counting; secrets ignored: passed')
 fixture('item:100',{ITEM_MOD_STRENGTH_SHORT=3}); rawStats['item:100'].ITEM_MOD_STRENGTH_SHORT=secret
 G.Refresh(); assert(G.bags[0][1].result.kind=='unknown')
 fixture('item:100',{ITEM_MOD_STRENGTH_SHORT=3})

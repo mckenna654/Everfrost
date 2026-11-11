@@ -1,0 +1,5 @@
+<Bindings>
+ <Binding name="EVERFROST_TOGGLE" header="EVERFROST" category="ADDONS">
+  EverfrostTogglePanel()
+ </Binding>
+</Bindings>

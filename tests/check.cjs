@@ -105,13 +105,15 @@ for class,profiles in pairs(NS.profiles) do
  end
  for spec=0,3 do
   assert(profiles[spec])
-  for _,level in ipairs({1,5,6,10,19,20,21,24,25,29,30,31}) do
+  for _,level in ipairs({1,5,6,10,19,20,21,24,25,29,30,31,39,40,44,59,60,61}) do
    for _,mode in ipairs({'single','aoe'}) do
     for _,role in ipairs({'damage','heal','bear','melee','ranged'}) do
      local rows=NS.BuildRows(class,spec,level,known,mode,role)
-     assert(#rows<=12)
+     -- Three rows of six at most, so the panel stays compact with every spell learned.
+     if #rows>(MAXROWS or 0) then MAXROWS=#rows; MAXWHERE=class..spec..' '..level..' '..mode..' '..role end
+     assert(#rows<=15,class..spec..' '..level..' '..mode..' '..role..' '..#rows)
      for _,row in ipairs(rows) do assert(known[row.key] and row.hint) end
-     if level==31 then assert(#rows==0) end
+     if level==61 then assert(#rows==0) end
      assert(#NS.BuildRows(class,spec,level,{},mode,role)==0)
     end
    end
@@ -219,7 +221,15 @@ Settings={RegisterCanvasLayoutCategory=function(panel,name) assert(name=='Everfr
  RegisterAddOnCategory=function(category) settingsRegistrations=settingsRegistrations+1; registeredCategory=category end}
 function UnitLevel() return currentLevel end
 function UnitClass() return currentClass,currentClass end
-function fire(e,value) for _,f in ipairs(frames) do if f.events[e] then f.scripts.OnEvent(f,e,value) end end end
+-- Events are gathered into one refresh on the next frame; flush() is that frame.
+function flush() for _,f in ipairs(frames) do local update=f.scripts.OnUpdate; if update then update(f) end end end
+-- Each login in these tests is a different pretend character on a fresh account, unless a test
+-- sets keepAccount to check what carries over between characters.
+function dispatch(e,value)
+ if e=='PLAYER_LOGIN' and not keepAccount then EverfrostAccountDB=nil end
+ for _,f in ipairs(frames) do if f.events[e] then f.scripts.OnEvent(f,e,value) end end
+end
+function fire(e,value) dispatch(e,value); flush() end
 function visibleSpells() local n=0; for _,f in ipairs(frames) do if rawget(f,'spellID') and f:IsShown() then n=n+1 end end; return n end
 duration={}; C_Spell.GetSpellCooldownDuration=function() return duration end
 EverfrostDB={scale=1.2,locked=true,point='CENTER',relativePoint='CENTER',x=100,y=40}
@@ -334,7 +344,7 @@ cmd('spec auto'); assert(f.title.text:find('Retribution'))
 cmd('aoe'); assert(EverfrostDB.aoe)
 C_Spell.GetSpellCooldownDuration=nil; fire('SPELL_UPDATE_COOLDOWN')
 cmd('reset'); assert(EverfrostDB.scale==1)
-fire('PLAYER_LEVEL_UP',30); assert(visibleSpells()>0); fire('PLAYER_LEVEL_UP',31); assert(f.empty.text=='Level 1-30 guide')
+fire('PLAYER_LEVEL_UP',60); assert(visibleSpells()>0); fire('PLAYER_LEVEL_UP',61); assert(f.empty.text=='Level 1-60 guide')
 -- Leveling keeps its spell profile, but gear follows the dominant talent tree at 10+.
 local talentCalls=0
 local talentPoints={0,2,0}
@@ -408,6 +418,46 @@ book={{spellID=5487,name='Bear Form'},{spellID=6807,name='Maul'}}
 EverfrostDB={}; fire('PLAYER_LOGIN')
 assert(EverfrostFrame.role.text=='Bear')
 book={}; fire('SPELLS_CHANGED'); assert(EverfrostFrame.role.text=='Caster')
+-- With no form learned there is no Cat or Bear to choose, and a saved Bear view cannot empty the panel.
+assert(not EverfrostFrame.role:IsShown())
+book={{spellID=5176,name='Wrath'}}; EverfrostDB.role='bear'; fire('SPELLS_CHANGED')
+assert(visibleSpells()==1 and EverfrostFrame.role.text=='Caster' and not EverfrostFrame.role:IsShown())
+EverfrostDB.role=nil
+-- A burst of spell, talent and trait events becomes one rescan and redraw on the next frame.
+local scans=0; local skillLines=C_SpellBook.GetNumSpellBookSkillLines
+C_SpellBook.GetNumSpellBookSkillLines=function(...) scans=scans+1; return skillLines(...) end
+for i=1,50 do dispatch('SPELLS_CHANGED'); dispatch('SPELL_DATA_LOAD_RESULT',i,true); dispatch('TRAIT_CONFIG_UPDATED') end
+assert(scans==0); flush(); assert(scans==1); flush(); assert(scans==1)
+C_SpellBook.GetNumSpellBookSkillLines=skillLines
+-- Past the last guide level the panel steps aside once, with one line in chat, and can be brought back.
+local said={}; local realPrint=print; print=function(line) said[#said+1]=line end
+fire('PLAYER_LEVEL_UP',61)
+assert(not EverfrostFrame:IsShown() and #said==1 and said[1]:find('/everfrost show',1,true) and EverfrostDB.pastGuideNoted)
+fire('SPELLS_CHANGED'); assert(#said==1 and not EverfrostFrame:IsShown())
+cmd('show'); assert(EverfrostFrame:IsShown() and EverfrostDB.showPastGuide and EverfrostFrame.empty.text=='Level 1-60 guide')
+cmd('hide'); assert(not EverfrostFrame:IsShown())
+fire('PLAYER_LEVEL_UP',10); cmd('show'); assert(EverfrostFrame:IsShown())
+-- /everfrost spellids lists what the spellbook has for guide spells with no ID on record.
+book={{spellID=777,name='Primal Bite'},{spellID=5487,name='Bear Form'}}; fire('SPELLS_CHANGED'); said={}
+cmd('spellids'); assert(said[1]:find('Primal Bite=777',1,true) and not said[1]:find('Bear Form',1,true))
+print=realPrint
+-- The key binding shows and hides the panel.
+EverfrostTogglePanel(); assert(not EverfrostFrame:IsShown() and EverfrostDB.hidden==true)
+EverfrostTogglePanel(); assert(EverfrostFrame:IsShown() and EverfrostDB.hidden==false)
+assert(BINDING_HEADER_EVERFROST=='Everfrost' and BINDING_NAME_EVERFROST_TOGGLE)
+-- A new character starts with the look last used on another one; its guide choices and position are its own.
+keepAccount=true
+cmd('scale 1.4'); cmd('opacity 70'); cmd('minimap off'); cmd('gear off'); cmd('lock'); EverfrostDB.spec=2; EverfrostDB.x=55
+EverfrostDB={}; fire('PLAYER_LOGIN')
+assert(EverfrostDB.scale==1.4 and EverfrostDB.opacity==0.7 and EverfrostDB.minimap==false and EverfrostDB.gear==false and EverfrostDB.locked==true)
+assert(EverfrostDB.spec==nil and EverfrostDB.x==nil)
+-- An existing character keeps its own settings, whatever the account last used.
+EverfrostDB={scale=0.8,opacity=1}; fire('PLAYER_LOGIN'); assert(EverfrostDB.scale==0.8 and EverfrostDB.minimap==nil)
+-- Damaged account data is ignored rather than trusted.
+EverfrostAccountDB={scale='big',opacity=99,gear='yes',locked='no'}; EverfrostDB={}; fire('PLAYER_LOGIN')
+assert(EverfrostDB.scale==1 and EverfrostDB.opacity==1 and EverfrostDB.gear==nil and EverfrostDB.locked==nil)
+keepAccount=nil; EverfrostAccountDB=nil; EverfrostDB={}; fire('PLAYER_LOGIN')
+print('Event batching, past-level-30 panel, Feral view choice, spell ID report, key binding and account-wide look: passed')
 print('Mock UI: all classes, migration, controls, talent override, leveling, combat refresh, cooldown fallback and feral labels: passed')
 print('Settings UI: slash/minimap/native entry points, guide selection, persistent controls, scale, minimap dragging, class changes and combat deferral: passed')
 print('Leveling gear: level-10 boundary, dominant talents, ties/unspent/unavailable/partial data, overrides, respec, combat caching, Survival roles and all classes: passed')
@@ -420,9 +470,9 @@ local function has(class,spec,level,spells,key,mode,role)
  for _,row in ipairs(NS.BuildRows(class,spec,level,spells,mode or 'single',role or 'damage')) do if row.key==key then return true end end
  return false
 end
-assert(NS.maxLevel==30)
+assert(NS.maxLevel==60)
 local spells=learned('Slam','Spearing Strike','Holy Shock','Stormstrike','Swiftmend','Insect Swarm','Summon Hawk','Hellfire','Conflagrate','Immolate','Hemorrhage','Backstab','Sinister Strike','Rupture','Strider Kick','Raptor Strike','Auto Shot')
-assert(not has('WARRIOR',1,29,spells,'Slam')); assert(has('WARRIOR',1,30,spells,'Slam'))
+assert(not has('WARRIOR',1,19,spells,'Slam')); assert(has('WARRIOR',1,20,spells,'Slam'))
 assert(has('PALADIN',1,30,spells,'Holy Shock','single','heal'))
 assert(has('PALADIN',1,30,spells,'Holy Shock','single','damage'))
 assert(has('SHAMAN',2,30,spells,'Stormstrike'))
@@ -458,6 +508,43 @@ SlashCmdList.EVERFROST('ranged'); assert(EverfrostFrame.role.text=='Ranged')
 SlashCmdList.EVERFROST('melee'); assert(EverfrostFrame.role.text=='Melee')
 book[1].future=true; fire('SPELLS_CHANGED'); assert(EverfrostFrame.role.text=='Ranged' and not EverfrostFrame.role:IsShown())
 print('Level 21-30 additions, rank level gates, spec isolation, talent removal and Survival transition: passed')
+-- Levels 31-60: each tree's later abilities appear once learned, in the right view, and only for that tree.
+local late=learned('Mortal Strike','Sweeping Strikes','Whirlwind','Bloodthirst','Shield Slam','Execute','Thunder Clap','Rend','Slam','Charge','Cleave',
+ 'Sunder Armor','Death Wish','Hammer of Wrath','Consecration','Holy Shock',"Light's Vigil",'Sniper Shot','Serpent Sting','Multi-Shot','Explosive Trap','Volley',
+ 'Strider Kick','Raptor Strike','Mongoose Bite','Arcane Shot','Frostfire Bolt','Scorch','Fire Blast','Arcane Wrath','Frostbolt','Frost Nova','Ice Barrier',
+ 'Cheap Shot','Stealth','Ghostly Strike','Shank','Hemorrhage','Penance','Smite','Power Word: Shield','Wrack','Drain Life','Searing Pain','Incinerate','Immolate',
+ 'Starfire','Hurricane','Wrath','Cat Form','Bear Form','Ravage','Rake','Rip','Faerie Fire','Lacerate','Primal Bite','Enrage','Tranquility','Innervate','Regrowth',
+ 'Chain Lightning','Lightning Bolt','Lightning Mastery','Water Shield','Rage of the Farseer','Stormstrike','Riptide','Chain Heal','Mana Tide Totem','Healing Stream Totem')
+local function order(class,spec,level,first,second,mode,role)
+ local at={}
+ for index,row in ipairs(NS.BuildRows(class,spec,level,late,mode or 'single',role or 'damage')) do at[row.key]=index end
+ return at[first] and at[second] and at[first]<at[second]
+end
+assert(has('WARRIOR',1,40,late,'Mortal Strike') and not has('WARRIOR',2,40,late,'Mortal Strike') and order('WARRIOR',1,40,'Slam','Mortal Strike'))
+assert(has('WARRIOR',1,40,late,'Sweeping Strikes','aoe') and not has('WARRIOR',1,40,late,'Sweeping Strikes','single'))
+assert(order('WARRIOR',2,40,'Whirlwind','Bloodthirst') and not has('WARRIOR',1,40,late,'Bloodthirst'))
+assert(has('WARRIOR',3,40,late,'Shield Slam') and not has('WARRIOR',3,40,late,'Execute') and has('WARRIOR',0,40,late,'Execute'))
+assert(not has('PALADIN',3,43,late,'Hammer of Wrath') and has('PALADIN',3,44,late,'Hammer of Wrath') and not has('PALADIN',2,60,late,'Hammer of Wrath'))
+assert(has('PALADIN',1,52,late,"Light's Vigil",'single','heal') and not has('PALADIN',1,52,late,"Light's Vigil",'single','damage'))
+assert(has('HUNTER',2,40,late,'Sniper Shot') and not has('HUNTER',1,40,late,'Sniper Shot'))
+assert(has('HUNTER',1,40,late,'Volley','aoe') and not has('HUNTER',1,40,late,'Volley','single'))
+assert(order('HUNTER',3,40,'Arcane Shot','Raptor Strike','single','melee') and has('HUNTER',3,40,late,'Explosive Trap','aoe','melee'))
+assert(order('MAGE',2,40,'Frostfire Bolt','Scorch') and not has('MAGE',3,40,late,'Scorch') and has('MAGE',1,40,late,'Arcane Wrath'))
+assert(has('MAGE',3,40,late,'Ice Barrier','aoe'))
+for spec=0,3 do assert(order('ROGUE',spec,30,'Stealth','Cheap Shot')) end
+assert(order('ROGUE',3,40,'Hemorrhage','Ghostly Strike') and not has('ROGUE',2,40,late,'Shank'))
+assert(has('PRIEST',1,30,late,'Penance') and has('PRIEST',1,30,late,'Penance','single','heal') and not has('PRIEST',2,30,late,'Penance'))
+assert(has('WARLOCK',1,51,late,'Wrack') and not has('WARLOCK',3,51,late,'Wrack'))
+assert(has('WARLOCK',2,25,late,'Searing Pain') and order('WARLOCK',3,40,'Immolate','Incinerate'))
+assert(has('DRUID',1,40,late,'Starfire') and not has('DRUID',3,40,late,'Starfire'))
+assert(not has('DRUID',1,39,late,'Hurricane','aoe') and has('DRUID',1,40,late,'Hurricane','aoe') and has('DRUID',3,40,late,'Hurricane','aoe'))
+assert(order('DRUID',2,40,'Cat Form','Ravage') and order('DRUID',2,40,'Rip','Rake') and order('DRUID',2,40,'Primal Bite','Lacerate','single','bear'))
+assert(has('DRUID',3,40,late,'Innervate','single','heal') and not has('DRUID',3,39,late,'Innervate','single','heal'))
+assert(has('SHAMAN',1,40,late,'Lightning Mastery','aoe') and has('SHAMAN',1,40,late,'Chain Lightning','aoe') and not has('SHAMAN',1,40,late,'Chain Lightning','single'))
+assert(has('SHAMAN',2,40,late,'Rage of the Farseer') and order('SHAMAN',3,40,'Riptide','Chain Heal','single','heal'))
+-- The shared lists stay separate: one tree's addition never leaks into another or into the base guide.
+assert(not has('HUNTER',0,60,late,'Sniper Shot') and not has('WARRIOR',0,60,late,'Mortal Strike') and not has('DRUID',0,60,late,'Starfire'))
+print('Level 31-60 additions: tree-specific abilities, views, order, level gates and shared-list isolation: passed')
 `);
 
 
@@ -576,6 +663,20 @@ print('Legacy native settings registration and missing minimap fallback: passed'
   assert.deepEqual(packaged, [], 'Add these to .pkgmeta ignore: ' + packaged.join(', '));
   assert.deepEqual(fs.readdirSync(path.join(repo, 'addon')), ['Everfrost']);
   console.log('CurseForge packaging: only addon/Everfrost is packaged: passed');
+}
+
+// Guide spells are matched to the spellbook by name. An ID lets a non-English client find the
+// localised name; without one the step only appears in English. These are spells new to WoW Forever,
+// whose IDs have to be read in game (/everfrost spellids). Give a new guide spell an ID where it has
+// a known one rather than adding to this list.
+{
+  const ids = new Set([...sources['Core.lua'].matchAll(/\["([^"]+)"\]=\d+/g)].map(m => m[1]));
+  const names = new Set([...sources['Profiles.lua'].matchAll(/S\("([^"]+)"/g)].map(m => m[1]));
+  const missing = [...names].filter(name => !ids.has(name)).sort();
+  assert.deepEqual(missing, ['Arcane Wrath', 'Bane of Agony', 'Bane of Havoc', 'Fire Nova', 'Holy Strike', "Light's Vigil",
+    'Lightning Mastery', 'Primal Bite', 'Rage of the Farseer', 'Seal of Fury', 'Shank', 'Shifting Power', 'Sniper Shot',
+    'Spearing Strike', 'Strider Kick', 'Summon Hawk', 'Wrack'], 'Guide spells without an ID in Core.lua baseIDs');
+  console.log('Guide spell IDs: no new English-only spells: passed');
 }
 
 const packageVersion = require('../package.json').version;

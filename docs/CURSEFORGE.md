@@ -2,9 +2,18 @@
 
 **Built with new players in mind.** Everfrost started while playing alongside brand-new players and people trying WoW for the first time. It keeps basic spell rotation references and gear stat priorities close at hand while you learn your class.
 
-A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1–30, nine classes and 27 talent trees**. Written with **OpenAI Codex**. No third-party addon libraries are required.
+A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1–60, nine classes and 27 talent trees**. Built with AI assistance. No third-party addon libraries are required.
 
-## What's new in 0.6.9
+## What's new in 0.7.0
+
+- **Levels 31 to 60:** guides and gear hints now run to level 60, following Icy Veins' updated levelling guides. Each new ability shows once you've learned it.
+- **Armour counts for every spec,** and plate or mail counts as wearable from level 40.
+- **Equip effects count:** "Increases damage and healing done by magical spells and effects" and similar passive lines are scored (English clients).
+- **Tidier upgrade highlight:** a thin outline on the slot's edge and a gentle pulse; Need and Greed buttons pulse without a box around them.
+- **Key binding** to show or hide the panel, and new characters start with your panel size and opacity.
+- **Smoother at login and when zoning.**
+
+## Included from 0.6.9
 
 - **Clearer spec menu note:** below level 10, the Choose a Spec menu now says "Full stat priorities need talents."
 
@@ -74,7 +83,7 @@ Quest screens mark the best reward choice, or the one that sells for the most if
 
 Standard dungeon and raid loot-roll windows highlight **Need** for estimated upgrades and **Greed** for known non-upgrades or class-irrelevant items. Disabled choices are respected. You choose and click the roll, following your group's loot rules. Missing or restricted data stays unscored; refreshes defer during combat. Custom bag/loot replacements are not integrated.
 
-Priorities are informed by [Icy Veins Forever guides](https://www.icy-veins.com/wow-forever/) and manually maintained. The 27 stat orders were checked on October 20, 2026. Numeric weights are Everfrost estimates, not Icy Veins simulation weights or guaranteed best-in-slot results. Weapon speed, dual-wield penalties, procs, set bonuses, enchants, sockets and hit caps are not simulated.
+Priorities are informed by [Icy Veins Forever guides](https://www.icy-veins.com/wow-forever/) and manually maintained. The 27 stat orders were checked on November 11, 2026. Numeric weights are Everfrost estimates, not Icy Veins simulation weights or guaranteed best-in-slot results. Weapon speed, dual-wield penalties, procs, set bonuses, enchants, sockets and hit caps are not simulated.
 
 ## Getting started
 

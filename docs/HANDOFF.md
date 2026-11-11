@@ -247,3 +247,49 @@ code change is the spec menu note. Dependabot PR #2 (GitHub Actions bumps) was l
 open. Next steps are unchanged from 0.6.8: check the quest, merchant, Gear Upgrades
 and group-loot screens in game, compare the starter lists with the Icy Veins
 levelling sections, and retake the screenshots.
+
+November 11, 2026, unreleased, branch claude/audit-fixes (pull request open): fixes from a
+whole-project audit, plus two requests from the user (armour in gear scoring, a tidier
+upgrade and Need/Greed highlight).
+- Armour counts for every spec at 0.1 per point on armour pieces and shields (docs/GEAR.md,
+  rule 9). It replaces the 0.6.6 rule that armour only breaks ties; an item with no useful
+  stats still cannot replace one that has them. The rate is an estimate to tune in game.
+- Highlight: two-pixel outline flush with the slot, glow sized to the button, a slower
+  eased pulse (40% to 100% over 0.9 s); roll buttons get the glow without the square.
+- Spell, talent and trait events are batched into one refresh per frame (Main.lua).
+- Past level 30 the panel hides once with a chat line; /everfrost show brings it back.
+- Feral with no form learned has no Cat/Bear button. /everfrost spellids reports IDs for
+  the ten guide spells that match by English name only. Full luacheck is on.
+- VALIDATION.txt moved from the package to docs/. TOC author is mckenna654. New
+  docs/INGAME_CHECKLIST.md is the release gate (docs/RELEASING.md step 0).
+npm test, luacheck and npm run build pass. Nothing here has been seen in game: the
+highlight's look, armour results on real items and the batching are all unverified.
+Not done from the audit: splitting the two test files, a code formatter, account-wide
+settings, a smaller icon, a key binding and new screenshots. The Frost Mage stat order
+was checked against docs/GEAR.md and is as the guide has it. Next steps: walk the
+in-game checklist with the build in dist/, tune the armour rate and the pulse if they
+look wrong, add the spell IDs, then version, changelog and release.
+
+November 11, 2026, later, same branch and pull request (#8): level 60 support and the rest
+of the audit's small items, at the user's request.
+- Icy Veins blocks plain fetches (HTTP 403), so the guides were read in the user's Chrome.
+  All 27 were updated for the November 4 launch (level cap 60). The Rotation, Stats and
+  Milestones sections of each levelling guide and each stat page's table were read; what
+  was added and left out is in addon/Everfrost/SOURCES.md (last section).
+- NS.maxLevel is 60. The 31-60 steps are at the end of Profiles.lua, added by name
+  (put/own helpers) rather than by index. Slam shows from 20. Longest list is 15 icons.
+- Gear: 17 of 27 stat orders changed (docs/GEAR.md table); plate and mail from level 40.
+- Bindings.xml adds a show/hide key binding; EverfrostAccountDB (SavedVariables) carries
+  panel size, opacity, lock, minimap and gear switches to new characters; Icon.tga is
+  64x64 (was 256x256).
+- Seven new guide spells have no ID (17 in all); run /everfrost spellids in game.
+npm test, luacheck and npm run build pass. Nothing has been seen in game. The new spell
+names and IDs come from the guides and standard IDs, not from the Forever client, so a
+name the client spells differently would simply never show: check a level 40+ character.
+Not done: splitting the test files, a code formatter and new screenshots.
+
+November 11, 2026, later still (same pull request): at the user's request, passive "Equip:"
+tooltip effects are read into gear scores (Gear.lua G.EquipEffects, via C_TooltipInfo.GetHyperlink;
+docs/GEAR.md rule 10). English wording only. Unverified in game: whether Forever has
+C_TooltipInfo, and the exact wording of its Equip lines. If an item with such a line still
+scores without it, hover it and report the line's exact text.

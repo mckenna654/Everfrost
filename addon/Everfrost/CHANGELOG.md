@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.7.0 — Levels 31 to 60 (beta 1)
+
+A beta: the simulated tests pass, but none of this has been checked in the game yet. Please report anything odd.
+
+- **Levels 31 to 60.** Guides now run to level 60, following Icy Veins' updated levelling guides (read on 11 November 2026): Mortal Strike, Whirlwind, Bloodthirst, Shield Slam, Incinerate, Penance, Starfire, Chain Heal and about forty more, each shown once you've learned it. Gear hints run to 60 too, and plate (Warrior, Paladin) and mail (Hunter, Shaman) count as wearable from level 40.
+- **Stat priorities re-read from the updated guides.** Seventeen of the 27 trees changed, mostly mages, warriors, warlocks and druids.
+- **Equip effects count.** "Equip: Increases damage and healing done by magical spells and effects by up to 12" and similar passive lines (healing, school damage, attack power, mana per 5 seconds) are now read from the tooltip and scored. English clients only for now.
+- **Key binding.** Key Bindings > AddOns > Everfrost shows or hides the panel.
+- **New characters start with your look.** Panel size, opacity, lock, minimap button and gear highlights carry over from the last character you set them on. Guide choices and panel position stay per character.
+- The download is two-thirds smaller (a smaller icon file).
+- **Armour counts for every spec.** A better-armoured piece can now win over a small stat loss, and a much flimsier one can lose despite a small stat gain. The tooltip says when armour decided it and how much of the score it was. Before, armour only broke ties.
+- **Tidier upgrade highlight.** The outline is thinner and sits exactly on the slot's edge, the glow is sized to the button, and the pulse breathes gently instead of flashing. Need and Greed buttons pulse without the square box around them.
+- **Smoother at login and when zoning.** Bursts of spell and talent updates are handled once per frame instead of one full rescan each.
+- A Feral druid with no form learned no longer gets a Cat/Bear button that empties the panel.
+- `/everfrost spellids` lists spell IDs that would let ten guide spells work on non-English clients.
+- The panel's hover text says when the guides were last checked.
+
+Simulated-client tests and the full Lua lint pass. None of this has been seen in game yet.
+
 ## 0.6.9 — Clearer spec menu note
 
 - Below level 10, the Choose a Spec menu now says "Full stat priorities need talents." The old note read as if gear help stopped at level 10.

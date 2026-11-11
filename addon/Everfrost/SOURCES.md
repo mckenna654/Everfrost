@@ -1,6 +1,6 @@
 # Guide sources
 
-Icy Veins WoW Forever PvE guides, reviewed October 15, 2026. All 27 linked guides were accessible, including the full Arcane guide. This audit compares the current rotation and relevant leveling sections with the addon's learned-spell-aware references for levels 1–30. It does not reproduce gearing, professions or full talent builds.
+Icy Veins WoW Forever PvE guides. Levels 1–30 were reviewed October 15, 2026 and levels 31–60 on November 11, 2026 (see the last section). All 27 linked guides were accessible, including the full Arcane guide. This audit compares the current rotation and relevant leveling sections with the addon's learned-spell-aware references for levels 1–30 (levels 31–60: see the last section). It does not reproduce gearing, professions or full talent builds.
 
 Guide conditions remain manual hints: Everfrost does not evaluate procs, resources, enemy counts or target debuffs in combat.
 - [holy paladin healer](https://www.icy-veins.com/wow-forever/holy-paladin-healer-pve-guide)
@@ -62,3 +62,13 @@ All nine classes and 27 trees were checked. Changes include corrections to exist
 ## October 20 gear-priority audit
 
 Stat/gearing sections of all 27 linked guides were rechecked for the new gear feature. Their orders are stored separately in GearProfiles.lua; rotation rules retain their October 15 review. Gear scores use Everfrost ordinal estimates, not numeric weights published by Icy Veins. Missing item data remains unscored; loot choices are manual. Full stat table, scoring formula and limitations: https://github.com/mckenna654/Everfrost/blob/main/docs/GEAR.md
+
+## November 11 level 60 update
+
+WoW Forever launched on November 4, 2026 with a level cap of 60, and all 27 guides were updated for it (pages dated November 4 to 9). The Rotation, Stats and Milestones sections of every levelling guide (`https://www.icy-veins.com/wow-forever/<spec>-<class>-leveling`) and the priority table of every stat page were read on November 11.
+
+- **Rotation, levels 31–60:** added Hammer of Wrath and Light's Vigil (Paladin); Explosive Trap, Volley, Sniper Shot and Survival's Arcane Shot weave (Hunter); Arcane Wrath, Frostfire Bolt, Scorch and Ice Barrier (Mage); Mortal Strike, Sweeping Strikes, Whirlwind, Bloodthirst, Shield Slam, Execute and Thunder Clap (Warrior); Cheap Shot, Ghostly Strike and Shank (Rogue); Penance (Priest); Wrack, Searing Pain for Demonic Brand and Incinerate (Warlock); Starfire, Hurricane, Ravage, Rake, Faerie Fire, Lacerate, Tranquility and Innervate (Druid); Chain Lightning, Lightning Mastery, Water Shield, Rage of the Farseer, Riptide, Chain Heal and Mana Tide Totem (Shaman). Slam now appears from level 20, as the Arms guide has it. The level 1–30 entries keep their October 15 review and order.
+- **Not added:** abilities the guides name only as utility, cooldown tables or milestones (Divine Shield, Adrenaline Rush, Shadowform, Recklessness and similar), and their advice on totems, pets, poisons and stances, which stays in notes and hints.
+- **Stats:** see docs/GEAR.md for the orders now used. Some guides still mark level 60 advice as untested (Arms rage at 60, Destruction in raids); the levelling sections were used throughout.
+- **Seven new spells have no ID on record** (Arcane Wrath, Light's Vigil, Lightning Mastery, Rage of the Farseer, Shank, Sniper Shot, Wrack), so they match by English name only until `/everfrost spellids` is run in game.
+
