@@ -284,3 +284,17 @@ others): the GitHub pre-release v0.7.0-beta.1 and its tag (was 8964370, on c2c30
 deleted, and CurseForge file Everfrost-Source-v0.7.0-beta.1.zip was archived (Restore
 available). v0.7.0 is the only 0.7.0 file: GitHub latest, and a Release Under Review on
 CurseForge. Earlier entries above mention the beta as it stood at the time.
+
+## 0.8.0 — November 11, 2026
+
+Released talent recommendations and the resizable panel from PR #9 as GitHub latest
+v0.8.0, annotated tag at 1ad850c on main, at the user's request and without an in-game
+check. (The first merge attempt failed with "Base branch was modified" and the branch was
+deleted by the same command, which closed the pull request; the branch was pushed again,
+the pull request reopened and merged.) GitHub Actions passed on main before tagging;
+npm test, luacheck and npm run build passed locally. Release ZIP SHA-256 matches the
+locally built archive: 49fcb30dbc32158e2772a4f022ab162a934d11ae2c3dccf29007c425bfa346cc.
+The CurseForge webhook returned HTTP 200. The author console shows v0.8.0 as a Release for
+1.60.1, status Processing when checked. The public description was updated in Markdown
+mode to match docs/CURSEFORGE.md ("What's new in 0.8.0"). Not done: downloading the
+generated ZIP to compare its contents with the tag.

@@ -333,3 +333,10 @@ recommendations and a resizable panel, at the user's request.
   the frame name and node API are the first things to check.
 - Resize: a grip in the panel's corner scales it about its top-left (db.scale, 0.6 to 2).
 npm test, luacheck and npm run build pass. Nothing seen in game. Not released; version still 0.7.0.
+
+Published 0.8.0 on November 11, 2026 at the user's request, without an in-game test: PR #9
+merged, GitHub latest v0.8.0 (1ad850c), CurseForge Release file for 1.60.1 (Processing when
+checked), public description updated. Next steps: confirm the file is approved; in game,
+check the talent window's gold glow and tooltip lines, /everfrost talents, and the resize
+corner (docs/INGAME_CHECKLIST.md items 15 and 16). When chaining a merge with branch
+deletion, check the merge succeeded first.
