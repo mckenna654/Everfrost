@@ -34,7 +34,7 @@ A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1â
 
 ## Included from 0.6.6
 
-- **Armour upgrades:** more armour now counts as an upgrade when you lose no useful stats, so a plain mail belt beats a plain leather one instead of showing "No useful stats". Armour only breaks ties and never outweighs a stat loss. These items also highlight **Need** on group loot.
+- **Armour upgrades:** more armour now counts as an upgrade when you lose no useful stats, so a plain mail belt beats a plain leather one instead of showing "No useful stats". These items also highlight **Need** on group loot. (From 0.7.0 armour counts in every comparison.)
 - **Green up arrow:** bag upgrades now show a green up arrow alongside the glow.
 
 ## Included from 0.6.5
@@ -77,7 +77,7 @@ This is a **basic reference**, not a live next-cast queue or full class guide. I
 
 ## Gear upgrades and Need/Greed
 
-Standard bag items glow and show a green up arrow when their estimated stat score beats an equipped replacement. Below level 10 this uses a simple starter priority for your class; from level 10 it uses your talent tree and guide-based priorities. Tooltips explain why in plain words. Armour pieces with more armour and no loss of useful stats also count. Hover for the comparison and stat order. Rings and trinkets consider both slots. Complete one-hand/off-hand combinations can compare against two-handers; pair tooltips name the partner, and **both items must be equipped** for that recommendation to apply.
+Standard bag items glow and show a green up arrow when their estimated stat score beats an equipped replacement. Below level 10 this uses a simple starter priority for your class; from level 10 it uses your talent tree and guide-based priorities. Tooltips explain why in plain words. Armour counts for every spec, and passive "Equip:" effects such as extra spell damage and healing are scored too. Hover for the comparison and stat order. Rings and trinkets consider both slots. Complete one-hand/off-hand combinations can compare against two-handers; pair tooltips name the partner, and **both items must be equipped** for that recommendation to apply.
 
 Quest screens mark the best reward choice, or the one that sells for the most if none is an upgrade. Merchants highlight upgrades you can afford. You still choose and buy for yourself. Settings counts empty armour slots, and the panel reminds you if no weapon is equipped.
 
@@ -102,7 +102,9 @@ Left-click the minimap logo for settings, right-click to toggle the reference pa
 
 The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling. **0.6.2** tidies the specialisation picker into a compact single-line menu. **0.6.3** fixes Subtlety Rogue Attack Power scoring and reduces background bag scans; it reached CurseForge as **0.6.4** after a packaging fix. **0.6.5** tidies status text, grey text and repeated tooltip notes. **0.6.6** counts more armour as a tie-break and adds a green up arrow to bag upgrades. **0.6.7** fixes Need/Greed highlights on Forever's loot-roll buttons, bag tracking and several gear-score cases. **0.6.8** adds starter priorities below level 10, quest reward and merchant marks, plain-word tooltips and empty slot reminders. **0.6.9** clarifies the spec menu note below level 10.
 
-Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse, settings layout, armour tie-break and green arrow; the latest talent-detection fix, new panel styling/opacity, the 0.6.7 Need/Greed fix, the 0.6.8 quest and merchant marks and complete Forever compatibility still need in-game verification. English guidance; some Forever-specific spells depend on English spellbook names.
+**0.7.0** extends guides and gear hints to level 60, counts armour and Equip effects, and tidies the upgrade highlight.
+
+Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse, settings layout, armour tie-break and green arrow. The 0.7.0 changes (levels 31â€“60, armour and Equip-effect scoring, the new highlight) and the 0.6.8 quest and merchant marks have not yet been checked in game. English guidance; some Forever-specific spells depend on English spellbook names.
 
 **MIT licensed. Third-party addon-manager distribution is enabled.** Everfrost is independent and is not affiliated with or endorsed by Blizzard, Icy Veins or OpenAI.
 
