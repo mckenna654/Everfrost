@@ -271,3 +271,10 @@ The CurseForge webhook received the refs/tags/v0.7.0 push and returned HTTP 200.
 Not confirmed: the CurseForge files. Neither v0.7.0 nor the beta was on the public files
 page minutes later (v0.6.9 still newest), and the author console was signed out in the
 browser used, so the public description has not been updated from docs/CURSEFORGE.md.
+
+0.7.0 follow-up, same day, once the user had signed in to the author console: CurseForge
+built both files for 1.60.1. Everfrost-Source-v0.7.0-beta.1.zip is a Beta and Approved;
+Everfrost-Source-v0.7.0.zip is a Release and Under Review. The public description was
+replaced from docs/CURSEFORGE.md (Markdown mode) and shows "What's new in 0.7.0" on the
+project page; the project summary now says levels 1-60 and no longer mentions Codex.
+Not done: downloading the generated ZIPs to compare their contents with the tag.

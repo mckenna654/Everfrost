@@ -311,3 +311,8 @@ author console was signed out, so the file and the public description are unconf
 (docs/RELEASING.md). Next steps: in the CurseForge author console, check the v0.7.0 file
 is a Release for 1.60.1 and paste docs/CURSEFORGE.md into the description; walk
 docs/INGAME_CHECKLIST.md; retake the screenshots.
+
+CurseForge confirmed on November 11, 2026: v0.7.0 is a Release for 1.60.1 and Under
+Review (the beta file is Approved); the public description and summary are updated for
+0.7.0. Next steps: confirm v0.7.0 gets approved; walk docs/INGAME_CHECKLIST.md; retake
+the screenshots.
