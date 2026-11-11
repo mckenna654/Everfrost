@@ -2,7 +2,7 @@
 
 **Built with new players in mind.** Everfrost started while playing alongside brand-new players and people trying WoW for the first time. It keeps basic spell rotation references and gear stat priorities close at hand while you learn your class.
 
-A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1–30, nine classes and 27 talent trees**. Built with AI assistance. No third-party addon libraries are required.
+A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1–60, nine classes and 27 talent trees**. Built with AI assistance. No third-party addon libraries are required.
 
 ## What's new in 0.6.9
 
@@ -74,7 +74,7 @@ Quest screens mark the best reward choice, or the one that sells for the most if
 
 Standard dungeon and raid loot-roll windows highlight **Need** for estimated upgrades and **Greed** for known non-upgrades or class-irrelevant items. Disabled choices are respected. You choose and click the roll, following your group's loot rules. Missing or restricted data stays unscored; refreshes defer during combat. Custom bag/loot replacements are not integrated.
 
-Priorities are informed by [Icy Veins Forever guides](https://www.icy-veins.com/wow-forever/) and manually maintained. The 27 stat orders were checked on October 20, 2026. Numeric weights are Everfrost estimates, not Icy Veins simulation weights or guaranteed best-in-slot results. Weapon speed, dual-wield penalties, procs, set bonuses, enchants, sockets and hit caps are not simulated.
+Priorities are informed by [Icy Veins Forever guides](https://www.icy-veins.com/wow-forever/) and manually maintained. The 27 stat orders were checked on November 11, 2026. Numeric weights are Everfrost estimates, not Icy Veins simulation weights or guaranteed best-in-slot results. Weapon speed, dual-wield penalties, procs, set bonuses, enchants, sockets and hit caps are not simulated.
 
 ## Getting started
 

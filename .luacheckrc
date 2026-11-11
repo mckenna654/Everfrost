@@ -7,7 +7,8 @@ exclude_files = { "node_modules", "dist" }
 
 -- Globals the addon writes.
 globals = {
-  "EverfrostDB",
+  "EverfrostDB", "EverfrostAccountDB", "EverfrostTogglePanel",
+  "BINDING_HEADER_EVERFROST", "BINDING_NAME_EVERFROST_TOGGLE",
   "SlashCmdList",
   "SLASH_EVERFROST1", "SLASH_EVERFROST2", "SLASH_EVERFROST3",
   "UISpecialFrames",

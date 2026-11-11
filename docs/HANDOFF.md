@@ -269,3 +269,21 @@ settings, a smaller icon, a key binding and new screenshots. The Frost Mage stat
 was checked against docs/GEAR.md and is as the guide has it. Next steps: walk the
 in-game checklist with the build in dist/, tune the armour rate and the pulse if they
 look wrong, add the spell IDs, then version, changelog and release.
+
+November 11, 2026, later, same branch and pull request (#8): level 60 support and the rest
+of the audit's small items, at the user's request.
+- Icy Veins blocks plain fetches (HTTP 403), so the guides were read in the user's Chrome.
+  All 27 were updated for the November 4 launch (level cap 60). The Rotation, Stats and
+  Milestones sections of each levelling guide and each stat page's table were read; what
+  was added and left out is in addon/Everfrost/SOURCES.md (last section).
+- NS.maxLevel is 60. The 31-60 steps are at the end of Profiles.lua, added by name
+  (put/own helpers) rather than by index. Slam shows from 20. Longest list is 15 icons.
+- Gear: 17 of 27 stat orders changed (docs/GEAR.md table); plate and mail from level 40.
+- Bindings.xml adds a show/hide key binding; EverfrostAccountDB (SavedVariables) carries
+  panel size, opacity, lock, minimap and gear switches to new characters; Icon.tga is
+  64x64 (was 256x256).
+- Seven new guide spells have no ID (17 in all); run /everfrost spellids in game.
+npm test, luacheck and npm run build pass. Nothing has been seen in game. The new spell
+names and IDs come from the guides and standard IDs, not from the Forever client, so a
+name the client spells differently would simply never show: check a level 40+ character.
+Not done: splitting the test files, a code formatter and new screenshots.

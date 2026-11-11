@@ -15,6 +15,11 @@ local slots = {
  INVTYPE_RANGED={18},INVTYPE_RANGEDRIGHT={18},INVTYPE_THROWN={18},INVTYPE_RELIC={18},
 }
 local armorMax={MAGE=1,PRIEST=1,WARLOCK=1,ROGUE=2,DRUID=2,HUNTER=2,SHAMAN=2,PALADIN=3,WARRIOR=3}
+-- At 40 Warriors and Paladins train plate, and Hunters and Shamans train mail.
+local armorMaxAt40={HUNTER=3,SHAMAN=3,PALADIN=4,WARRIOR=4}
+local function heaviestArmor(class, level)
+ return level>=40 and armorMaxAt40[class] or armorMax[class] or 0
+end
 local weaponTypes={
  WARRIOR={[0]=true,[1]=true,[2]=true,[3]=true,[4]=true,[5]=true,[6]=true,[7]=true,[8]=true,[10]=true,[13]=true,[15]=true,[16]=true,[18]=true},
  PALADIN={[0]=true,[1]=true,[4]=true,[5]=true,[6]=true,[7]=true,[8]=true},
@@ -135,7 +140,7 @@ function G.Eligible(item, context, p)
  if item.usable==false then return false,"Item requirements are not met" end
  if item.classID==4 then
   local sub=item.subclassID
-  if sub>=1 and sub<=4 and sub>(armorMax[context.class] or 0) then return false,"Armour type unavailable to your class at this level" end
+  if sub>=1 and sub<=4 and sub>heaviestArmor(context.class,context.level) then return false,"Armour type unavailable to your class at this level" end
   if sub==6 and context.class~="WARRIOR" and context.class~="PALADIN" and context.class~="SHAMAN" then return false,"Your class cannot use shields" end
   if sub>=7 and sub<=11 then
    local owner=({[7]="PALADIN",[8]="DRUID",[9]="SHAMAN"})[sub]
@@ -305,7 +310,7 @@ local function explain(result, item, old, p)
  return nil
 end
 function G.Compare(item, equipped, context, carried, candidate)
- if not context or context.level<1 or context.level>NS.maxLevel then return unknown("Gear guide supports levels 1-30") end
+ if not context or context.level<1 or context.level>NS.maxLevel then return unknown("Gear guide supports levels 1-"..NS.maxLevel) end
  local p=NS.GearProfile(context.class,context.spec,context.role,context.level)
  if not p then return unknown("Select a talent tree to compare gear") end
  if not item then return waiting("Waiting for item data") end

@@ -30,6 +30,7 @@ labels as beta, or is named in the changelog as not seen.
 ## Once
 
 12. **Spell IDs.** On characters that know them, run `/everfrost spellids` and add the IDs it
-    prints to `baseIDs` in `addon/Everfrost/Core.lua` (ten guide spells still match by English
+    prints to `baseIDs` in `addon/Everfrost/Core.lua` (seventeen guide spells still match by English
     name only: see the test in `tests/check.cjs`).
-13. **Past level 30.** At 31 the panel hides with one chat line; `/everfrost show` brings it back.
+13. **Levels 31–60.** On a higher-level character, the new abilities show once learned and plate or mail counts as wearable from 40.
+14. **Key binding and new characters.** Key Bindings > AddOns has an Everfrost entry that shows and hides the panel; a new character starts with the panel size and opacity last used on another.

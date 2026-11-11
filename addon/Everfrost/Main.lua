@@ -114,6 +114,13 @@ local function makeTile(index)
 end
 -- Past the guide's last level there is nothing to show, so the panel steps aside (once, with a
 -- line in chat) instead of leaving an empty box on screen. /everfrost show brings it back.
+-- How the panel looks is remembered for the whole account, so a new character starts with the
+-- size, opacity and switches last used on another one. Guide choices and position stay per character.
+local lookKeys={"scale","opacity","minimap","minimapAngle","gear","locked"}
+local function rememberLook()
+ if type(EverfrostAccountDB)~="table" then EverfrostAccountDB={} end
+ for _,key in ipairs(lookKeys) do EverfrostAccountDB[key]=db[key] end
+end
 local function pastGuide() return level>NS.maxLevel end
 local function panelShown() return not db.hidden and (not pastGuide() or db.showPastGuide==true) end
 render=function()
@@ -122,6 +129,7 @@ render=function()
   db.pastGuideNoted=true
   if not db.hidden then say("You've outlevelled Everfrost's level 1-"..NS.maxLevel.." guides, so the panel is now hidden. Type /everfrost show to bring it back.") end
  end
+ rememberLook()
  frame:SetShown(panelShown())
  local role=effectiveRole()
  if NS.Gear then NS.Gear.SetContext(class,gearSpec,level,effectiveRole(gearSpec),known) end
@@ -258,6 +266,12 @@ local function createUI()
  createGuideMenu()
  frame:SetScript("OnHide",function() frame.guideMenu:Hide() end)
 end
+-- Key Bindings > AddOns > Everfrost (see Bindings.xml).
+BINDING_HEADER_EVERFROST="Everfrost"
+BINDING_NAME_EVERFROST_TOGGLE="Show or hide the Everfrost panel"
+function EverfrostTogglePanel()
+ if frame and db then SlashCmdList.EVERFROST(frame:IsShown() and "hide" or "show") end
+end
 SLASH_EVERFROST1="/everfrost"
 SLASH_EVERFROST2="/fguide"
 SLASH_EVERFROST3="/frh"
@@ -333,8 +347,16 @@ local function schedule()
 end
 events:SetScript("OnEvent",function(_,event,value)
  if event=="PLAYER_LOGIN" then
+  local firstLogin=type(EverfrostDB)~="table" or next(EverfrostDB)==nil
   EverfrostDB=type(EverfrostDB)=="table" and EverfrostDB or {}
-  db=EverfrostDB; db.scale=type(db.scale)=="number" and math.max(0.6,math.min(2,db.scale)) or 1
+  db=EverfrostDB
+  if firstLogin and type(EverfrostAccountDB)=="table" then
+   for _,key in ipairs(lookKeys) do if db[key]==nil then db[key]=EverfrostAccountDB[key] end end
+  end
+  if db.gear~=nil and db.gear~=true and db.gear~=false then db.gear=nil end
+  if db.minimap~=nil and db.minimap~=true and db.minimap~=false then db.minimap=nil end
+  if db.locked~=true then db.locked=nil end
+  db.scale=type(db.scale)=="number" and math.max(0.6,math.min(2,db.scale)) or 1
   local opacity=db.opacity
   db.opacity=NS.Public(opacity) and type(opacity)=="number" and opacity==opacity and opacity~=math.huge and opacity~=-math.huge and math.max(0.1,math.min(1,opacity)) or 1
   className,class=UnitClass("player"); level=UnitLevel("player"); refresh(); createUI()

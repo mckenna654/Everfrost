@@ -1,5 +1,5 @@
 local _, NS = ...
-NS.maxLevel = 30
+NS.maxLevel = 60
 NS.profiles = {}
 NS.trees = {
  PALADIN={"Holy","Protection","Retribution"}, HUNTER={"Beast Mastery","Marksmanship","Survival"},
@@ -8,9 +8,10 @@ NS.trees = {
  WARLOCK={"Affliction","Demonology","Destruction"}, DRUID={"Balance","Feral","Restoration"},
  SHAMAN={"Elemental","Enhancement","Restoration"},
 }
--- Concise adaptations of Icy Veins Forever guides, reviewed 2026-10-15.
+-- Concise adaptations of Icy Veins Forever guides. Levels 1-30 reviewed 2026-10-15; the
+-- level 31-60 additions (end of this file) come from the levelling guides as of 2026-11-11.
 -- Shown to players, so they can judge how current the advice is. Update with each review.
-NS.guideReviewed = "Guides last checked 15 October 2026."
+NS.guideReviewed = "Guides last checked 11 November 2026."
 -- Entries are conditional reference steps, never combat-evaluated instructions.
 local function S(name, hint, options)
  local t = options or {}; t.name = name; t.hint = hint; return t
@@ -118,9 +119,9 @@ local warrior={S("Battle Shout","Maintain before or early in a fight."),S("Charg
  S("Heroic Strike","Only spend excess rage; preserve rage for the next pull.",{unless="Rend"}),
  S("Cleave","Extra enemies and surplus rage only.",{mode="aoe"})}
 P("WARRIOR",1,"arms-warrior-melee-dps",warrior,"Use Bloodrage between pulls when safe. Save rage on dying targets.")
-local fury={}; for _,s in ipairs(warrior) do fury[#fury+1]=s end
-fury[4],fury[5],fury[6]=warrior[5],warrior[4],warrior[6]
-P("WARRIOR",2,"fury-warrior-melee-dps",fury,"Use Bloodrage between pulls when safe; avoid unnecessary Heroic Strikes.")
+local furySteps={}; for _,s in ipairs(warrior) do furySteps[#furySteps+1]=s end
+furySteps[4],furySteps[5],furySteps[6]=warrior[5],warrior[4],warrior[6]
+P("WARRIOR",2,"fury-warrior-melee-dps",furySteps,"Use Bloodrage between pulls when safe; avoid unnecessary Heroic Strikes.")
 P("WARRIOR",3,"protection-warrior-tank",{
  S("Battle Shout","Maintain this buff."),S("Defensive Stance","Use for tanking once learned."),
  S("Charge","Pull outside combat in Battle Stance, then switch to Defensive Stance."),
@@ -133,7 +134,7 @@ P("WARRIOR",3,"protection-warrior-tank",{
 },"Use a shield. Taunt lost enemies; spread threat between targets.")
 base("WARRIOR",warrior,"Keep auto-attacking to build rage; use Bloodrage between pulls when safe.")
 NS.profiles.WARRIOR[1].steps=copy(warrior)
-table.insert(NS.profiles.WARRIOR[1].steps,8,S("Slam","Cast immediately after a white swing; stand still.",{min=30}))
+table.insert(NS.profiles.WARRIOR[1].steps,8,S("Slam","Right after a white swing when rage allows; with Improved Slam (35) at any time.",{min=20}))
 table.insert(NS.profiles.WARRIOR[1].steps,9,S("Spearing Strike","Giants/Dragons: use when ready; otherwise spend excess rage."))
 table.insert(NS.profiles.WARRIOR[2].steps,3,S("Death Wish","Pool rage first; damage cooldown increases damage taken."))
 local rogue={S("Stealth","Prepare an opener outside combat."),S("Ambush","Stealth opener with a dagger from behind."),
@@ -242,6 +243,139 @@ P("SHAMAN",3,"restoration-shaman-healer",elemental,"Buff totems support your par
  S("Fire Nova","Group damage with an active fire totem, only when healing is covered.",{mode="aoe"}),
  S("Lightning Bolt","Deal damage only when healing is covered.")}})
 base("SHAMAN",elemental,"Maintain a weapon imbue and helpful totems.")
+
+-- Levels 31-60, from the Icy Veins Forever levelling guides as they stood on 2026-11-11.
+-- Every step is still shown only once its spell is learned, so nothing here appears early.
+-- Steps go in by the name they follow, not by position, so the lists above can change freely.
+local function own(class, spec, field)
+ local p=NS.profiles[class][spec]; field=field or "steps"
+ -- Several specs share one list above; a spec gets its own copy before it is changed.
+ if not p["own_"..field] then p[field]=copy(p[field]); p["own_"..field]=true end
+ return p[field]
+end
+local function put(list, anchor, entry)
+ for index,step in ipairs(list) do
+  if step.name==anchor then table.insert(list,index+1,entry); return end
+ end
+ list[#list+1]=entry
+end
+local function hint(list, name, text)
+ for _,step in ipairs(list) do if step.name==name then step.hint=text end end
+end
+local function each(class, specs, field, fn)
+ for _,spec in ipairs(specs) do fn(own(class,spec,field)) end
+end
+
+-- Paladin: Hammer of Wrath at 44; Holy's Light's Vigil at 52.
+each("PALADIN",{0,1,3},"steps",function(list)
+ put(list,"Consecration",S("Hammer of Wrath","Enemy below 20% health: finish it, above all one that is running away.",{min=44}))
+end)
+put(own("PALADIN",1,"healing"),"Holy Shock",S("Light's Vigil","Put on an ally: your next Holy Shock on them resets its cooldown and heals their party. Expensive."))
+
+-- Hunter: traps and Volley for groups; Marksmanship's Sniper Shot at 40.
+each("HUNTER",{0,1,2,3},"steps",function(list)
+ put(list,"Multi-Shot",S("Explosive Trap","Place it whenever it is ready.",{mode="aoe"}))
+ put(list,"Explosive Trap",S("Volley","Large groups: channel it.",{mode="aoe"}))
+end)
+put(own("HUNTER",2),"Serpent Sting",S("Sniper Shot","With Rapid Killing active, start with this.",{mode="single"}))
+do
+ local melee=own("HUNTER",3,"melee")
+ put(melee,"Serpent Sting",S("Arcane Shot","Fire before closing in, and again after Strider Kick takes you back to range.",{mode="single"}))
+ put(melee,"Serpent Sting",S("Multi-Shot","Groups: fire before closing in, and again once back at range.",{mode="aoe"}))
+ put(melee,"Mongoose Bite",S("Explosive Trap","Place it while you are in melee.",{mode="aoe"}))
+ hint(melee,"Strider Kick","Use it, then move straight back to range.")
+end
+
+-- Mage: Arcane Wrath, Fire's Scorch and Frostfire Bolt, Frost's Ice Barrier.
+do
+ local arcane=own("MAGE",1)
+ put(arcane,"Frostbolt",S("Arcane Wrath","After Frostbolt, and again after Frost Nova. A good use of Clearcasting.",{mode="single"}))
+ local fire=own("MAGE",2)
+ table.insert(fire,1,S("Frostfire Bolt","Open from range once learned.",{mode="single"}))
+ hint(fire,"Pyroblast","Open from range before Frostfire Bolt is learned; cast again at three stacks of Heating Up.")
+ hint(fire,"Fire Blast","Use when ready until Heating Up reaches three stacks.")
+ put(fire,"Fire Blast",S("Scorch","Filler, and a cheap way to finish an enemy.",{mode="single"}))
+ put(own("MAGE",3),"Frost Nova",S("Ice Barrier","Before a big pull. Its damage bonus ends when the barrier breaks.",{mode="aoe"}))
+end
+
+-- Warrior: the level 30 to 40 attacks each spec is built around.
+do
+ local arms=own("WARRIOR",1)
+ put(arms,"Slam",S("Mortal Strike","Use when ready, after Rend and Overpower; keep 30 rage for it."))
+ put(arms,"Cleave",S("Sweeping Strikes","Two enemies close together: your next five attacks hit both. Carry rage into the pull.",{mode="aoe"}))
+ put(arms,"Sweeping Strikes",S("Whirlwind","Four or more enemies, with a tank or healer. Needs Berserker Stance.",{mode="aoe"}))
+ hint(arms,"Rend","Apply early if the target will survive the bleed. From 31 it also sets up Overpower.")
+ local fury=own("WARRIOR",2)
+ put(fury,"Death Wish",S("Whirlwind","Use when ready, ahead of Bloodthirst. Needs Berserker Stance."))
+ put(fury,"Whirlwind",S("Bloodthirst","Use while Whirlwind is on cooldown; keep 30 rage for it."))
+ local protection=own("WARRIOR",3)
+ put(protection,"Charge",S("Shield Slam","Use when ready. Short of rage, use Revenge first."))
+ each("WARRIOR",{0,1,2},"steps",function(list)
+  put(list,"Sunder Armor",S("Execute","Below 20% health: on bosses, or to stop a runner. It spends all your rage."))
+  put(list,"Cleave",S("Thunder Clap","Damage and slow up to four enemies; your main group attack before Whirlwind.",{mode="aoe"}))
+ end)
+end
+
+-- Rogue: Cheap Shot for every tree; Subtlety's Ghostly Strike and Shank.
+each("ROGUE",{0,1,2,3},"steps",function(list)
+ put(list,"Stealth",S("Cheap Shot","Stealth opener on enemies that can be stunned."))
+end)
+put(own("ROGUE",1),"Ambush",S("Garrote","Stealth opener for damage when a stun isn't needed."))
+do
+ local subtlety=own("ROGUE",3)
+ put(subtlety,"Hemorrhage",S("Ghostly Strike","Use when ready. Garrote can follow it without Stealth for a few seconds."))
+ put(subtlety,"Ghostly Strike",S("Shank","Use when ready."))
+end
+
+-- Priest: Discipline's Penance.
+put(own("PRIEST",1),"Smite",S("Penance","Cast on the target while Holy Fire is burning on it."))
+put(own("PRIEST",1,"healing"),"Power Word: Shield",S("Penance","Fast healing; the first tick is instant, so it works in an emergency."))
+
+-- Warlock: Affliction's Wrack, Demonology's Demonic Brand, Destruction's Incinerate.
+put(own("WARLOCK",1),"Drain Life",S("Wrack","Channel for damage once your Shadow effects are on the enemy. Use Drain Life instead when you need health."))
+table.insert(own("WARLOCK",2),1,S("Searing Pain","From 25 it brands your demon's target, strengthening its next six attacks. Reapply when used up."))
+do
+ local destruction=own("WARLOCK",3)
+ put(destruction,"Immolate",S("Incinerate","Main cast from 40. Keep Immolate on the target for its bonus."))
+ hint(destruction,"Conflagrate","Needs Immolate. Before 39 use it near Immolate's end or to finish; after that, whenever ready.")
+ hint(destruction,"Shadow Bolt","Pre-cast before Immolate; your filler until Incinerate at 40.")
+end
+
+-- Druid: Starfire and Hurricane; Cat's Ravage and Rake; Bear's Faerie Fire and Lacerate; Restoration's cooldowns.
+each("DRUID",{0,1,3},"steps",function(list)
+ put(list,"Wrath",S("Hurricane","Three or more enemies. Barkskin stops it being interrupted.",{mode="aoe",min=40}))
+end)
+put(own("DRUID",1),"Wrath",S("Starfire","With Eclipse: one Wrath, then two Starfires.",{mode="single"}))
+do
+ local cat=own("DRUID",2)
+ put(cat,"Cat Form",S("Ravage","Open with it from Prowl."))
+ put(cat,"Rip",S("Rake","Apply when its bleed is missing and the enemy will live nine more seconds."))
+ hint(cat,"Shifting Power","Use when ready with under 50 Energy.")
+ hint(cat,"Rip","At four or more points, if the enemy will live through the whole bleed.")
+ local bear=own("DRUID",2,"bear")
+ put(bear,"Enrage",S("Faerie Fire","Lowers the target's armour, so your attacks hit harder."))
+ put(bear,"Primal Bite",S("Lacerate","Filler; from 40 use it while Primal Bite is on cooldown."))
+ local healing=own("DRUID",3,"healing")
+ put(healing,"Regrowth",S("Tranquility","Heavy damage on the whole group. Long cooldown."))
+ put(healing,"Tranquility",S("Innervate","Use whenever it is ready to keep your mana up.",{min=40}))
+end
+
+-- Shaman: Chain Lightning and Lightning Mastery; Restoration's Riptide, Chain Heal and Mana Tide.
+each("SHAMAN",{0,1,3},"steps",function(list)
+ put(list,"Lightning Bolt",S("Chain Lightning","Several enemies: open with it, then use whenever it is ready.",{mode="aoe"}))
+ table.insert(list,1,S("Water Shield","Keep it up in combat once learned; Lightning Shield until then."))
+end)
+put(own("SHAMAN",1),"Chain Lightning",S("Lightning Mastery","Burst for elites and big packs; otherwise use whenever it is ready."))
+do
+ local enhancement=own("SHAMAN",2)
+ put(enhancement,"Stormstrike",S("Rage of the Farseer","Use against dangerous enemies."))
+ hint(enhancement,"Lightning Bolt","Pull from range with Rank 1. At five Maelstrom Weapon stacks, cast your highest rank.")
+ local healing=own("SHAMAN",3,"healing")
+ table.insert(healing,1,S("Riptide","On an injured ally without it. Chain Heal is stronger on that ally."))
+ put(healing,"Riptide",S("Chain Heal","Several injured allies standing close together."))
+ put(healing,"Healing Stream Totem",S("Mana Tide Totem","Long cooldown: quickly restores mana to your group."))
+end
+for _,group in pairs(NS.profiles) do for _,p in pairs(group) do p.own_steps=nil; p.own_healing=nil; p.own_melee=nil; p.own_bear=nil end end
 
 function NS.BuildRows(class, spec, level, known, mode, role)
  local group=NS.profiles[class]; local profile=group and group[spec or 0]

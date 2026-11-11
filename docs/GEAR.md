@@ -1,6 +1,6 @@
 # Gear priorities and upgrade highlights
 
-Everfrost 0.5.0 adds estimated gear comparisons for levels 1–30, with talent-based priorities from level 10. Stat and gearing sections of all 27 [Icy Veins Forever guides](../addon/Everfrost/SOURCES.md) were checked on October 20, 2026. Rotation rules retain their separate October 15 review. Source URLs are stored on every gear profile.
+Everfrost gives estimated gear comparisons for levels 1–60, with talent-based priorities from level 10. **The orders below were re-read on November 11, 2026** from the Stats section of each levelling guide, after the guides' level 60 update; Hit, and for melee Expertise, keep the place the stat pages give them where a levelling guide leaves them out as rare on early gear. Demonology now splits school damage evenly between Fire and Shadow, and Destruction credits Fire in full and Shadow at half. (First added in 0.5.0 for levels 1–30: Stat and gearing sections of all 27 [Icy Veins Forever guides](../addon/Everfrost/SOURCES.md) were checked on October 20, 2026. Rotation rules retain their separate October 15 review. Source URLs are stored on every gear profile.)
 
 ## Stat audit
 
@@ -10,30 +10,30 @@ The following orders adapt the current guides. Equal-ranked stats share a group.
 | --- | --- | --- |
 | Paladin | Holy | Healing power > Intellect > MP5 > Crit > Haste > Spirit |
 | Paladin | Protection | Stamina > Spell power > Strength > Block > Hit > Defence > Armour > Intellect > Agility |
-| Paladin | Retribution | Weapon DPS > Hit/Expertise > Crit > Spell power > Strength > Intellect > Agility > Stamina > Spirit |
+| Paladin | Retribution | Weapon DPS > Hit/Expertise > Spell power > Intellect > Crit > Strength > Agility > Stamina > Spirit |
 | Hunter | Beast Mastery | Weapon damage > Hit > Agility > Crit > Intellect > Spirit > Stamina |
 | Hunter | Marksmanship | Weapon damage > Hit > Agility > Crit > Intellect > Spirit > Stamina |
-| Hunter | Survival | Weapon damage > Hit > Agility > Crit > Strength > Intellect > Spirit > Stamina |
-| Mage | Arcane | Hit > Spirit > Intellect > Spell power > Crit > Stamina > MP5 |
-| Mage | Fire | Hit > Spell power > Crit > Spirit > Intellect > Stamina > MP5 |
-| Mage | Frost | Hit > Spell/Frost damage > Crit > Spirit > Intellect > Stamina > Agility > Strength |
-| Warrior | Arms | Weapon damage > Hit > Crit > Strength > Agility > Stamina |
-| Warrior | Fury | Weapon damage > Hit > Crit > Strength > Agility > Stamina |
-| Warrior | Protection | Weapon damage > Hit > Strength > Agility > Armour > Stamina > Crit |
+| Hunter | Survival | Weapon damage > Hit > Agility > Crit > Intellect > Spirit > Stamina |
+| Mage | Arcane | Spell power > Intellect > Spirit > Crit > Hit > Stamina > MP5 |
+| Mage | Fire | Spell power > Crit > Intellect > Spirit > Hit > Stamina > MP5 |
+| Mage | Frost | Hit > Spell/Frost damage > Crit > Spirit > Intellect > Stamina |
+| Warrior | Arms | Weapon damage > Hit/Expertise > Agility/Crit > Strength/Attack power > Stamina |
+| Warrior | Fury | Weapon damage > Hit/Expertise > Strength/Attack power > Agility/Crit > Stamina |
+| Warrior | Protection | Weapon damage > Hit/Expertise > Strength/Attack power > Agility/Crit > Armour/Stamina > Defence/Block |
 | Rogue | Assassination | Weapon damage > Hit/Expertise > Agility > Crit > Strength > Stamina |
 | Rogue | Combat | Weapon damage > Hit/Expertise > Agility > Crit > Strength > Stamina |
 | Rogue | Subtlety | Weapon damage > Hit/Expertise > Agility > Attack power > Crit > Strength |
-| Priest | Discipline | Healing power > MP5 > Spirit > Intellect > Crit |
+| Priest | Discipline | Healing power > MP5 > Intellect > Spirit > Crit |
 | Priest | Holy | Healing power > MP5 > Spirit > Intellect > Crit |
-| Priest | Shadow | Spell power > Crit > Hit > Intellect > Stamina > MP5 |
-| Warlock | Affliction | Spell power > Hit > Crit > Intellect > Spirit > Haste > Stamina |
-| Warlock | Demonology | Spell power > Hit > Intellect > Crit > Spirit > Haste > Stamina |
-| Warlock | Destruction | Spell power > Hit > Haste > Crit > Spirit > Intellect > Stamina |
-| Druid | Balance | Intellect > Spell power > Spirit > MP5 > Crit > Haste |
-| Druid | Feral | Weapon DPS > Hit/Expertise > Crit > Strength > Agility > Stamina > Spirit > Intellect > Spell power |
-| Druid | Restoration | Intellect > Healing power > Spirit > MP5 > Crit > Haste |
+| Priest | Shadow | Spell power > Crit > Hit > Intellect > Spirit > Stamina > MP5 |
+| Warlock | Affliction | Spell power > Crit > Spirit > Intellect/Stamina > Hit > Haste |
+| Warlock | Demonology | Spell power > Crit > Hit > Intellect/Stamina > Spirit > Haste |
+| Warlock | Destruction | Spell power > Hit > Crit > Intellect/Stamina > Spirit > Haste |
+| Druid | Balance | Intellect > Spell power > Crit > Haste > Spirit > MP5 |
+| Druid | Feral | Weapon DPS > Hit/Expertise > Crit > Agility > Strength/Attack power > Stamina |
+| Druid | Restoration | Healing power > Intellect > Crit > Haste > Spirit > MP5 |
 | Shaman | Elemental | Spell damage > Crit > Hit > Intellect > MP5 > Spirit > Stamina |
-| Shaman | Enhancement | Weapon DPS > Hit/Expertise > Crit > Strength > Intellect > Agility > Spirit > Spell power > Stamina |
+| Shaman | Enhancement | Weapon DPS > Hit/Expertise > Intellect > Strength > Spirit > Agility > Crit > Spell power > Stamina |
 | Shaman | Restoration | Healing power > Crit > Intellect > Spirit > MP5 > Stamina |
 
 The Druid caster guides describe beta stats and emphasize Intellect and spell/healing power. Feral shares a base order for Cat and Bear; the guide notes that survival needs can change tank choices. Hunter Survival uses Marksmanship's ranged order until its melee requirements are met or when the RANGED override is selected. A healer's DAMAGE view changes rotation guidance, while gear retains that selected healer specialisation's priorities.
@@ -86,7 +86,7 @@ Weapon guides also value damage per hit and often slower weapons. This first gea
 - **Added in consolidated 0.5.1:** against an equipped two-hander, one-hand/off-hand candidates search all carried bag slots for a legal partner. The two item scores are added and compared with the displaced setup. The best valid pair for each candidate is used, so both items in an estimated upgrade can glow. The tooltip identifies the partner and warns that both items must be equipped. A loot candidate can pair with an item already carried, but never with another unowned loot candidate.
 - Pair checks enforce level/class/usability, hand restrictions, learned Dual Wield, tank shields and exposed unique-equipped limits across the final loadout. A physical bag entry cannot supply both hands; two carried copies may, if eligible and not uniquely restricted. Missing partners remain unknown. Unloaded partner data prevents a non-upgrade verdict while a better pair could be unresolved; a fully known upgrade can still be shown.
 - Pair scores use the existing additive item-stat estimate. Weapon speed, dual-wield damage penalties and hit penalties are not simulated, so an estimated pair upgrade is not a prediction of actual damage.
-- Generic one-hand weapons can compare against both hands only with Dual Wield learned. Mutilate builds require daggers. Armour and weapon type checks use the nine classes' level-1–30 proficiency limits; shields and class relics are checked separately. The unreleased eligibility fix reads `IsEquippableItem` where available. `IsUsableItem` describes the use action and must not gate passive equipment. The equippable flag does not prove all player-specific requirements; class and level checks remain separate, and weapon-training requirements still need client verification.
+- Generic one-hand weapons can compare against both hands only with Dual Wield learned. Mutilate builds require daggers. Plate (Warrior, Paladin) and mail (Hunter, Shaman) are allowed from level 40. Armour and weapon type checks use the nine classes' level-1–60 proficiency limits; shields and class relics are checked separately. The unreleased eligibility fix reads `IsEquippableItem` where available. `IsUsableItem` describes the use action and must not gate passive equipment. The equippable flag does not prove all player-specific requirements; class and level checks remain separate, and weapon-training requirements still need client verification.
 - Unique-equipped categories and limits are checked when exposed by the item API. Category -1 (plain Unique-Equipped) limits copies of the same item.
 - Consumables, trade goods, unsupported slots and incompatible equipment receive a non-upgrade/irrelevant result. Missing or secret metadata produces an unknown result.
 

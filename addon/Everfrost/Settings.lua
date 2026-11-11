@@ -180,7 +180,7 @@ function NS.CreateSettings(controller)
  local panel=window.pages.Panel
  panel.visible=check(panel,"Show reference panel",-30,function(on) command(on and "show" or "hide") end)
  panel.locked=check(panel,"Lock panel position",-58,function(on) command(on and "lock" or "unlock") end)
- panel.minimap=check(panel,"Show minimap button",-86,function(on) api.DB().minimap=on; S:Refresh() end)
+ panel.minimap=check(panel,"Show minimap button",-86,function(on) command(on and "minimap on" or "minimap off") end)
  label(panel,"Panel size",12,0,-124)
  panel.scale=label(panel,"",12,352,-124,48); panel.scale:SetJustifyH("RIGHT")
  panel.slider=CreateFrame("Slider",nil,panel,"UISliderTemplateWithLabels")

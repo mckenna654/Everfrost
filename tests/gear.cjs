@@ -83,10 +83,11 @@ assert(G.Compare(item(7,nil,{ITEM_MOD_INTELLECT_SHORT=100},4,3),equipment,ctx('M
 assert(G.Compare(item(7,'INVTYPE_SHIELD',{ITEM_MOD_STAMINA_SHORT=20},4,6),equipment,ctx('MAGE',1)).kind=='greed')
 assert(G.Compare(item(7,'INVTYPE_RELIC',{},4,7),equipment,ctx('DRUID',1)).kind=='greed')
 -- The same two items reverse order under the current Arcane/Fire priorities.
-equipment=empty(); equipment[5]=item(10,nil,{ITEM_MOD_SPIRIT_SHORT=10})
-local power=item(11,nil,{ITEM_MOD_SPELL_POWER_SHORT=10})
-assert(G.Compare(power,equipment,ctx('MAGE',1)).kind=='greed')
-assert(G.Compare(power,equipment,ctx('MAGE',2)).kind=='need')
+-- Arcane ranks Intellect above Crit; Fire ranks Crit above Intellect.
+equipment=empty(); equipment[5]=item(10,nil,{ITEM_MOD_CRIT_RATING_SHORT=10})
+local power=item(11,nil,{ITEM_MOD_INTELLECT_SHORT=10})
+assert(G.Compare(power,equipment,ctx('MAGE',1)).kind=='need')
+assert(G.Compare(power,equipment,ctx('MAGE',2)).kind=='greed')
 local healing=item(12,nil,{ITEM_MOD_SPELL_HEALING_DONE=30,ITEM_MOD_STAMINA_SHORT=5})
 assert(G.Compare(healing,empty(),ctx('MAGE',2)).kind=='greed')
 assert(G.Compare(healing,empty(),ctx('PALADIN',1)).kind=='need')
@@ -205,7 +206,9 @@ assert(G.Compare(agilityItem,subEquip,subtlety).kind=='need')
 -- Melee specs without an Attack Power rank use half their higher Strength or Agility weight.
 local combatProfile=NS.gearProfiles.ROGUE[2]
 assert(G.Score(apItem,ctx('ROGUE',2),combatProfile)==10*combatProfile.weights.agility/2)
-assert(G.Score(apItem,ctx('WARRIOR',1),NS.gearProfiles.WARRIOR[1])==10*NS.gearProfiles.WARRIOR[1].weights.strength/2)
+-- The warrior guides rank Attack Power beside Strength, so it scores at that rank in full.
+assert(G.Score(apItem,ctx('WARRIOR',1),NS.gearProfiles.WARRIOR[1])==10*NS.gearProfiles.WARRIOR[1].weights.attack)
+assert(NS.gearProfiles.WARRIOR[1].weights.attack==NS.gearProfiles.WARRIOR[1].weights.strength)
 local apRing=item(45,'INVTYPE_FINGER',{ITEM_MOD_ATTACK_POWER_SHORT=20}); local agiRing=item(46,'INVTYPE_FINGER',{ITEM_MOD_AGILITY_SHORT=6})
 local ringEquip=empty(); ringEquip[11]=agiRing; ringEquip[12]=agiRing
 assert(G.Compare(apRing,ringEquip,ctx('ROGUE',2)).kind=='need')
@@ -266,12 +269,20 @@ assert(G.Compare(item(86,nil,{RESISTANCE0_NAME=20,ITEM_MOD_INTELLECT_SHORT=3}),r
 worn[6]=belt(92,2,18,{ITEM_MOD_STRENGTH_SHORT=4})
 local sturdy=G.Compare(belt(93,3,150,{ITEM_MOD_STRENGTH_SHORT=3}),worn,ret)
 assert(sturdy.kind=='need' and not sturdy.armorOnly and sturdy.reason:find('outweighs',1,true) and sturdy.reason:find('+132',1,true))
-assert(math.abs(sturdy.armorCredit-13.2)<0.001 and math.abs(sturdy.delta-8.2)<0.001)
+local strengthWeight=NS.gearProfiles.PALADIN[3].weights.strength
+assert(math.abs(sturdy.armorCredit-13.2)<0.001 and math.abs(sturdy.delta-(13.2-strengthWeight))<0.001)
 -- A little more armour does not buy back a real stat loss.
 assert(G.Compare(belt(94,3,50,{ITEM_MOD_STRENGTH_SHORT=3}),worn,ret).kind=='greed')
 -- Less armour counts against a piece too: one more Strength no longer beats 100 lost armour.
 worn[6]=belt(95,3,150,{ITEM_MOD_STRENGTH_SHORT=3})
 assert(G.Compare(belt(96,2,50,{ITEM_MOD_STRENGTH_SHORT=4}),worn,ret).kind=='greed')
+-- At 40 Warriors and Paladins can wear plate, and Hunters and Shamans mail; not a level sooner.
+local function at(class,spec,level) local c=ctx(class,spec); c.level=level; return c end
+local plate=belt(97,4,300,{ITEM_MOD_STRENGTH_SHORT=5}); local mail=belt(98,3,150,{ITEM_MOD_AGILITY_SHORT=5})
+assert(G.Compare(plate,empty(),at('PALADIN',3,39)).reason:find('Armour type',1,true))
+assert(G.Compare(plate,empty(),at('PALADIN',3,40)).kind=='need' and G.Compare(plate,empty(),at('WARRIOR',1,60)).kind=='need')
+assert(G.Compare(mail,empty(),at('HUNTER',1,39)).reason:find('Armour type',1,true) and G.Compare(mail,empty(),at('SHAMAN',2,40)).kind=='need')
+assert(G.Compare(plate,empty(),at('HUNTER',1,60)).reason:find('Armour type',1,true) and G.Compare(mail,empty(),at('ROGUE',2,60)).reason:find('Armour type',1,true))
 -- Armor type and level limits still come first.
 assert(G.Compare(belt(87,4,900),empty(),ret).reason:find('Armour type',1,true))
 assert(G.Compare(belt(88,3,50),empty(),ctx('MAGE',2)).reason:find('Armour type',1,true))
