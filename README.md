@@ -64,7 +64,8 @@ Open any screenshot for its full-size view. Use `/everfrost` to open these setti
 - Shows empty armour slot counts in settings, and a reminder on the panel when no weapon is equipped.
 - Provides native-style Specialisation, Rotation Panel and Gear Upgrades settings, plus a draggable minimap button.
 - Saves panel position, visibility, mode, and specialisation preferences per character; panel size, opacity, lock, minimap button and gear highlights carry over to new characters.
-- Has a key binding (Key Bindings > AddOns > Everfrost) to show or hide the panel.
+- Has a key binding (Key Bindings > AddOns > Everfrost) to show or hide the panel, and a corner you can drag to resize it.
+- Shows the Icy Veins levelling talent build in the talent window: a glow on the talent to take next, and each talent's planned points and levels in its tooltip.
 - Counts armour for every spec, and plate or mail from level 40.
 - Refreshes spellbook and talent metadata outside combat, deferring changes until combat ends when necessary.
 

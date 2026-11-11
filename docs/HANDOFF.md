@@ -320,3 +320,16 @@ the screenshots.
 November 11, 2026: the v0.7.0-beta.1 pre-release and tag were deleted from GitHub and the beta
 file archived on CurseForge, at the user's request. Only v0.7.0 remains. The user prefers plain
 version names like the earlier releases; don't publish beta-tagged versions unless he asks.
+
+November 11, 2026, unreleased, branch claude/talents-resize (pull request open): talent
+recommendations and a resizable panel, at the user's request.
+- Talents: scripts/talent-data.py holds the 27 Icy Veins levelling builds (one letter per
+  point, level 10 to 60) and each class's talent names, read in the user's Chrome, and writes
+  addon/Everfrost/TalentData.lua. Talents.lua reads taken ranks (C_Traits nodes, else
+  GetTalentInfo), finds the next pick, glows that button in the talent window and adds tooltip
+  lines. The window's buttons are found through EnumerateAllTalentButtons on PlayerSpellsFrame
+  .TalentsFrame, ClassTalentFrame(.TalentsTab), PlayerTalentFrame or TalentFrame, or as
+  PlayerTalentFrameTalentN. None of that has been seen on the Forever client: if nothing shows,
+  the frame name and node API are the first things to check.
+- Resize: a grip in the panel's corner scales it about its top-left (db.scale, 0.6 to 2).
+npm test, luacheck and npm run build pass. Nothing seen in game. Not released; version still 0.7.0.

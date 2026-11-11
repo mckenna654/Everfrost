@@ -11,6 +11,8 @@ Core.lua
 GearProfiles.lua
 Gear.lua
 GearUI.lua
+TalentData.lua
+Talents.lua
 Settings.lua
 Main.lua
 

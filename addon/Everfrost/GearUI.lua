@@ -96,6 +96,8 @@ local function glow(button, shown, item, arrow, round)
   if arrow then button.EverfrostGearArrow:Show() else button.EverfrostGearArrow:Hide() end
  end
 end
+-- The talent window borrows the same highlight.
+NS.Glow=glow
 function G.Tooltip(tooltip,result,roll)
  if not tooltip or not result then return end
  roll=roll==true

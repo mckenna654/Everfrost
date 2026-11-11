@@ -34,3 +34,9 @@ labels as beta, or is named in the changelog as not seen.
     name only: see the test in `tests/check.cjs`).
 13. **Levels 31–60.** On a higher-level character, the new abilities show once learned and plate or mail counts as wearable from 40.
 14. **Key binding and new characters.** Key Bindings > AddOns has an Everfrost entry that shows and hides the panel; a new character starts with the panel size and opacity last used on another.
+15. **Talent window.** Open talents with a point to spend: the next talent in the Icy Veins build
+    glows gold, and hovering any talent adds an Everfrost line with its planned points and levels.
+    `/everfrost talents` names the same talent. If nothing shows, note the talent window's frame
+    name (`/fstack`) and one talent's exact name.
+16. **Resize.** Drag the panel's bottom-right corner: it grows and shrinks from the top-left, stays
+    put after `/reload`, and the settings slider shows the same size. No corner while locked.

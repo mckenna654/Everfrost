@@ -72,3 +72,6 @@ WoW Forever launched on November 4, 2026 with a level cap of 60, and all 27 guid
 - **Stats:** see docs/GEAR.md for the orders now used. Some guides still mark level 60 advice as untested (Arms rage at 60, Destruction in raids); the levelling sections were used throughout.
 - **Seven new spells have no ID on record** (Arcane Wrath, Light's Vigil, Lightning Mastery, Rage of the Farseer, Shank, Sniper Shot, Wrack), so they match by English name only until `/everfrost spellids` is run in game.
 
+## November 11 talent builds
+
+Each levelling guide embeds a talent calculator with the guide's build as an ordered list of talent points, level 10 to 60 (the `data-talentcalculator-pointsurl` attribute), and each class has a calculator page listing its talents (`https://www.icy-veins.com/wow-forever/<class>-talent-calculator`). Both were read on November 11, 2026 for all 27 trees and nine classes. The data and the script that checks it (51 points per build, no talent over its maximum rank) are in `scripts/talent-data.py`, which writes `addon/Everfrost/TalentData.lua`. Talent names are matched to the game's by name, ignoring case, spaces and punctuation; a talent the game names differently is skipped rather than recommended. These are the guides' levelling builds, not their level 60 dungeon or raid builds.

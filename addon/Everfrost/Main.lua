@@ -35,6 +35,13 @@ local function refresh()
  local spells,err=NS.ScanSpells(class)
  if spells then known=spells end
  scanError=err; pending=false
+ if NS.Talents then
+  -- The chosen tree's build, or the detected tree's while the general Levelling guide is shown.
+  local tree=spec>0 and spec or detectedSpec
+  NS.Talents.enabled=db.talents~=false
+  NS.Talents.Refresh(class,tree,level,NS.trees[class] and NS.trees[class][tree])
+  NS.Talents.Show()
+ end
 end
 local function cooldowns()
  if not frame or not frame:IsShown() then return end
@@ -131,6 +138,7 @@ render=function()
  end
  rememberLook()
  frame:SetShown(panelShown())
+ frame.grip:SetShown(not db.locked)
  local role=effectiveRole()
  if NS.Gear then NS.Gear.SetContext(class,gearSpec,level,effectiveRole(gearSpec),known) end
  local list,note,profile=NS.BuildRows(class,spec,level,known,db.aoe and "aoe" or "single",role)
@@ -234,7 +242,7 @@ local function createUI()
  drag:SetScript("OnDragStop",function()
   frame:StopMovingOrSizing(); local p,_,rp,x,y=frame:GetPoint(); db.point,db.relativePoint,db.x,db.y=p,rp,x,y
  end)
- drag:SetScript("OnEnter",function(self) tip(self,"Everfrost",frame.info.."\n\n"..NS.gearLevelNote.."\nReference priorities, not a live next-cast queue.\n"..NS.guideReviewed.."\nDrag to move. /everfrost for settings.") end)
+ drag:SetScript("OnEnter",function(self) tip(self,"Everfrost",frame.info.."\n\n"..NS.gearLevelNote.."\nReference priorities, not a live next-cast queue.\n"..NS.guideReviewed..(NS.Talents and NS.Talents.Summary() and ("\n"..NS.Talents.Summary()) or "").."\nDrag to move; drag the corner to resize. /everfrost for settings.") end)
  drag:SetScript("OnLeave",function() GameTooltip:Hide() end)
  frame.guide=CreateFrame("Button",nil,drag)
  frame.guide:SetPoint("TOPLEFT",2,-2); frame.guide:SetPoint("TOPRIGHT",-2,-2); frame.guide:SetHeight(25)
@@ -263,6 +271,54 @@ local function createUI()
  frame.role:SetScript("OnClick",toggleRole)
  frame.caption=text(frame,11); frame.caption:SetTextColor(0.8,0.8,0.8)
  frame.empty=text(frame,12); frame.empty:SetPoint("TOPLEFT",20,-75); frame.empty:SetWidth(280)
+ -- Drag the corner to resize. The size is the panel's scale, the same value as the settings slider;
+ -- the top-left corner stays where it is while the rest grows or shrinks.
+ local resizing
+ local grip=CreateFrame("Button",nil,frame); grip:SetSize(16,16); grip:SetPoint("BOTTOMRIGHT",-7,7)
+ grip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+ grip:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+ grip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+ frame.grip=grip
+ grip.Resizing=function() return resizing~=nil end
+ local function cursor()
+  local x,y=GetCursorPosition(); local ui=UIParent:GetEffectiveScale()
+  if not (NS.Public(x) and NS.Public(y) and type(x)=="number" and type(y)=="number" and type(ui)=="number" and ui>0) then return nil end
+  return x/ui,y/ui
+ end
+ local function stopResize()
+  if not resizing then return end
+  resizing=nil; grip:SetScript("OnUpdate",nil)
+  if NS.Settings then NS.Settings:Refresh() end
+ end
+ grip:SetScript("OnMouseDown",function(self)
+  if db.locked or InCombatLockdown() then return end
+  local scale,left,top=frame:GetScale(),frame:GetLeft(),frame:GetTop()
+  local x,y=cursor()
+  if not (x and type(left)=="number" and type(top)=="number") then return end
+  -- In screen units, so the same corner can be pinned at any scale.
+  left,top=left*scale,top*scale
+  local reach=math.sqrt((x-left)^2+(y-top)^2)
+  if reach<1 then return end
+  resizing={scale=scale,left=left,top=top,reach=reach}
+  self:SetScript("OnUpdate",function()
+   local start=resizing
+   if not start or InCombatLockdown() then stopResize(); return end
+   local cx,cy=cursor()
+   if not cx then return end
+   local wanted=start.scale*math.sqrt((cx-start.left)^2+(cy-start.top)^2)/start.reach
+   wanted=math.floor(math.max(0.6,math.min(2,wanted))*20+0.5)/20
+   if wanted~=db.scale then
+    db.scale=wanted; frame:SetScale(wanted)
+    frame:ClearAllPoints(); frame:SetPoint("TOPLEFT",UIParent,"BOTTOMLEFT",start.left/wanted,start.top/wanted)
+    db.point,db.relativePoint,db.x,db.y="TOPLEFT","BOTTOMLEFT",start.left/wanted,start.top/wanted
+    rememberLook()
+   end
+  end)
+ end)
+ grip:SetScript("OnMouseUp",stopResize)
+ grip:SetScript("OnHide",stopResize)
+ grip:SetScript("OnEnter",function(self) tip(self,"Resize","Drag to make the panel bigger or smaller.") end)
+ grip:SetScript("OnLeave",function() GameTooltip:Hide() end)
  createGuideMenu()
  frame:SetScript("OnHide",function() frame.guideMenu:Hide() end)
 end
@@ -309,6 +365,16 @@ SlashCmdList.EVERFROST=function(message)
    say((db.gear==false and "Gear highlights OFF. " or "Gear highlights ON. ")..(p and ((p.starter and "Starter priorities until level 10. " or spec==0 and (name.." talents. ") or "").."Stat order: "..NS.GearPriorityText(p)..". Estimated weights; inspect special effects.") or gearReason or "Select a talent tree to score gear."))
   end
  elseif command=="reset" then resetPosition(); db.scale=1; frame:SetScale(1); db.hidden=false
+ elseif command=="talents" then
+  if arg=="on" or arg=="off" then db.talents=arg=="on"; refresh()
+  elseif NS.Talents then
+   local summary=NS.Talents.Summary()
+   say(db.talents==false and "Talent recommendations are OFF. /everfrost talents on" or summary
+    or (NS.Talents.state and "Your talents can't be read right now; try again out of combat with the talent window open.")
+    or "Choose a specialisation, or spend a talent point, to see its Icy Veins talent build.")
+   local upcoming=db.talents~=false and NS.Talents.Upcoming(5)
+   if upcoming and #upcoming>1 then say("Coming up, by level: "..table.concat(upcoming,"; ")) end
+  end
  elseif command=="spellids" then
   -- Guide spells with no ID on record match by their English name only. In game, this lists the
   -- IDs this character's spellbook has for them, to report so other languages can be supported.
@@ -324,14 +390,14 @@ SlashCmdList.EVERFROST=function(message)
  elseif command=="source" then say(frame.profile and frame.profile.source or "No profile for this class.")
  elseif command=="status" then
   say(class.." / "..spec.." / "..level.." / "..status..(detectedPoints and (" / Talents: "..table.concat(detectedPoints," / ")) or "")..(detectedSource and (" / "..detectedSource) or "")..(scanError and " / "..scanError or ""))
- else say("/everfrost settings | show | hide | lock | unlock | single | aoe | heal | damage | bear | cat | ranged | melee | spec auto/1/2/3 | gear on/off | minimap on/off | scale 1 | opacity 100 | reset | refresh | source | status | spellids") end
+ else say("/everfrost settings | show | hide | lock | unlock | single | aoe | heal | damage | bear | cat | ranged | melee | spec auto/1/2/3 | gear on/off | minimap on/off | scale 1 | opacity 100 | talents on/off | reset | refresh | source | status | spellids") end
  render()
 end
 local events=CreateFrame("Frame")
 for _,event in ipairs({"PLAYER_LOGIN","PLAYER_ENTERING_WORLD","PLAYER_LEVEL_UP","SPELLS_CHANGED","LEARNED_SPELL_IN_TAB",
  "PLAYER_TALENT_UPDATE","CHARACTER_POINTS_CHANGED","ACTIVE_TALENT_GROUP_CHANGED","PLAYER_SPECIALIZATION_CHANGED",
  "ACTIVE_PLAYER_SPECIALIZATION_CHANGED","ACTIVE_COMBAT_CONFIG_CHANGED","TRAIT_CONFIG_UPDATED","TRAIT_CONFIG_LIST_UPDATED","TRAIT_TREE_CHANGED","TRAIT_TREE_CURRENCY_INFO_UPDATED",
- "PLAYER_REGEN_ENABLED","PLAYER_REGEN_DISABLED","SPELL_UPDATE_COOLDOWN","SPELL_DATA_LOAD_RESULT"}) do
+ "PLAYER_REGEN_ENABLED","PLAYER_REGEN_DISABLED","SPELL_UPDATE_COOLDOWN","SPELL_DATA_LOAD_RESULT","ADDON_LOADED"}) do
  pcall(events.RegisterEvent,events,event)
 end
 -- Spell, talent and trait events arrive in bursts (login, zoning, training, tooltips loading
@@ -345,6 +411,7 @@ local function schedule()
   refresh(); render()
  end)
 end
+if NS.Talents then NS.Talents.Schedule=schedule end
 events:SetScript("OnEvent",function(_,event,value)
  if event=="PLAYER_LOGIN" then
   local firstLogin=type(EverfrostDB)~="table" or next(EverfrostDB)==nil
@@ -375,7 +442,8 @@ events:SetScript("OnEvent",function(_,event,value)
       priority=gear and NS.GearPriorityText(gear) or nil,gearReason=gearReason,
       gearTitle=gear and gear.starter and ("Starter priority: "..className) or gearName and ("Stat priority: "..gearName..(spec==0 and " (talents)" or "")) or nil,
       emptySlots=emptySlotText(),panelShown=panelShown(),
-      levelingHint=NS.gearLevelNote.." Levelling uses your dominant talent tree for gear."}
+      levelingHint=NS.gearLevelNote.." Levelling uses your dominant talent tree for gear.",
+      talents=NS.Talents and NS.Talents.Summary() or nil}
     end})
   end
   render()
@@ -393,6 +461,9 @@ events:SetScript("OnEvent",function(_,event,value)
  elseif event=="PLAYER_LEVEL_UP" then level=value; schedule()
  elseif event=="PLAYER_REGEN_ENABLED" then
   if pending then schedule() elseif NS.Settings then NS.Settings:Refresh() end
+ elseif event=="ADDON_LOADED" then
+  -- The talent window is its own addon, loaded the first time it is opened.
+  if type(value)=="string" and (value:find("Talent") or value:find("PlayerSpells")) then schedule() end
  elseif event=="SPELL_DATA_LOAD_RESULT" then
   -- Fires for every spell the client loads. It only matters while a guide spell's name is
   -- still missing; once they have all resolved there is nothing left to pick up.
