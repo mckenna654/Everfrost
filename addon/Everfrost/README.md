@@ -9,7 +9,7 @@ A compact class-aware rotation reference for WoW Forever, covering levels 1–30
 3. Confirm the path is `Interface/AddOns/Everfrost/Everfrost.toc`, without an extra nested folder.
 4. Enable **Everfrost** in the AddOns list. type `/everfrost` for settings or `/everfrost show` for the reference panel.
 
-The folder, TOC, frame and saved-variable identifiers now use Everfrost. Because this is a new addon identity, previous panel settings start fresh. `/everfrost` is the primary command; `/frh` remains a compatibility alias. This package is not automatically installed. It targets interface 16001; exact compatibility with your Forever build needs an in-game check.
+The folder, TOC, frame and saved-variable identifiers now use Everfrost. Because this is a new addon identity, previous panel settings start fresh. `/everfrost` is the primary command; `/fguide` and `/frh` also work. This package is not automatically installed. It targets interface 16001; exact compatibility with your Forever build needs an in-game check.
 
 ## Using the panel
 
@@ -69,7 +69,7 @@ Left-click the minimap button for settings, right-click to show/hide the panel, 
 
 Adapted from the Icy Veins WoW Forever PvE guides, reviewed October 15, 2026. See SOURCES.md for all links. These are concise levelling adaptations of guide priorities, with general ability hints where needed, rather than complete reproductions or an automatically updated guide feed. Unofficial; not affiliated with Icy Veins or Blizzard.
 
-Local Lua syntax and simulated-client checks passed; see VALIDATION.txt. No third-party addon libraries are required. Actual game rendering and Forever API behavior remain unverified.
+No third-party addon libraries are required. Each release is tested against a simulated client and checked in the game; the changelog says what was seen.
 
 For the first game check, verify the header and learned icons, train a spell and change talent points, switch encounter/role modes, then reload to check the saved position. Test on a second class. If an ability is missing, use `/everfrost refresh` outside combat. Include `/everfrost status`, your client build and any Lua error when reporting a problem.
 
@@ -94,4 +94,4 @@ Complete weapon comparisons: one-hand weapons and off-hands can compare together
 
 Stat orders were checked against all 27 linked Icy Veins Forever guides on October 20, 2026. Everfrost converts those orders into approximate weights; it is not a simulator. Procs, set bonuses, weapon speed, dual-wield damage penalties, sockets, enchants, hit caps and other special effects are not modeled. Check the tooltip and your group's loot rules. Missing/restricted item data is also unscored. During combat, comparisons wait for combat to end. Custom bag and loot-window replacements are not integrated.
 
-Written with OpenAI Codex. Full scoring method: https://github.com/mckenna654/Everfrost/blob/main/docs/GEAR.md
+Full scoring method: https://github.com/mckenna654/Everfrost/blob/main/docs/GEAR.md

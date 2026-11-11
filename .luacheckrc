@@ -1,8 +1,8 @@
 -- Luacheck settings for the Everfrost WoW Forever addon (Lua 5.1).
--- Only global-variable warnings are checked: they catch misspelt names and
--- accidental globals without failing on style. Add new WoW API names here.
+-- Every check except line length (the addon's lines are long by habit): misspelt names,
+-- accidental globals, unused variables and shadowing. Add new WoW API names here.
 std = "lua51"
-only = { "1" }
+max_line_length = false
 exclude_files = { "node_modules", "dist" }
 
 -- Globals the addon writes.

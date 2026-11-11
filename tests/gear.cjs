@@ -261,6 +261,17 @@ worn[6]=belt(83,2,18,{ITEM_MOD_STRENGTH_SHORT=4})
 assert(G.Compare(belt(84,3,50,{ITEM_MOD_STRENGTH_SHORT=4}),worn,ret).armorOnly)
 local robe=empty(); robe[5]=item(85,nil,{RESISTANCE0_NAME=10,ITEM_MOD_INTELLECT_SHORT=3})
 assert(G.Compare(item(86,nil,{RESISTANCE0_NAME=20,ITEM_MOD_INTELLECT_SHORT=3}),robe,ctx('MAGE',2)).armorOnly)
+-- Armour counts for every spec: a clearly better-armoured piece wins over a small stat loss,
+-- says so, and reports how much of the score it was.
+worn[6]=belt(92,2,18,{ITEM_MOD_STRENGTH_SHORT=4})
+local sturdy=G.Compare(belt(93,3,150,{ITEM_MOD_STRENGTH_SHORT=3}),worn,ret)
+assert(sturdy.kind=='need' and not sturdy.armorOnly and sturdy.reason:find('outweighs',1,true) and sturdy.reason:find('+132',1,true))
+assert(math.abs(sturdy.armorCredit-13.2)<0.001 and math.abs(sturdy.delta-8.2)<0.001)
+-- A little more armour does not buy back a real stat loss.
+assert(G.Compare(belt(94,3,50,{ITEM_MOD_STRENGTH_SHORT=3}),worn,ret).kind=='greed')
+-- Less armour counts against a piece too: one more Strength no longer beats 100 lost armour.
+worn[6]=belt(95,3,150,{ITEM_MOD_STRENGTH_SHORT=3})
+assert(G.Compare(belt(96,2,50,{ITEM_MOD_STRENGTH_SHORT=4}),worn,ret).kind=='greed')
 -- Armor type and level limits still come first.
 assert(G.Compare(belt(87,4,900),empty(),ret).reason:find('Armour type',1,true))
 assert(G.Compare(belt(88,3,50),empty(),ctx('MAGE',2)).reason:find('Armour type',1,true))
@@ -271,7 +282,7 @@ assert(tankBelt.kind=='need' and not tankBelt.armorOnly)
 -- A shield swap never counts a weapon as armor, and weapons get no armor credit.
 local offhand=empty(); offhand[16]=false; offhand[17]=item(90,'INVTYPE_WEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=5},2,7)
 assert(not G.Compare(item(91,'INVTYPE_SHIELD',{RESISTANCE0_NAME=200},4,6),offhand,ret).armorOnly)
-print('Armor tie-break: plain upgrades, stat protection, ties, eligibility and tanks passed')
+print('Armour: scored for every spec, plain upgrades, stat protection, ties, eligibility and tanks passed')
 print('Gear profiles: 27 specs; stat reversals, aliases, eligibility, paired slots, unique limits and weapon layouts passed')
 `);
 run(`
@@ -287,6 +298,11 @@ function methods:SetFromAlpha(value) self.from=value end
 function methods:SetToAlpha(value) self.to=value end
 function methods:SetDuration(value) self.duration=value end
 function methods:SetLooping(value) self.looping=value end
+function methods:SetSmoothing(value) self.smoothing=value end
+function methods:SetHeight(value) self.height=value end
+function methods:SetWidth(value) self.width=value end
+function methods:GetWidth() return self.width end
+function methods:SetPoint(...) self.points=self.points or {}; self.points[#self.points+1]={...} end
 function methods:SetVertexColor(r,g,b,a) self.vertex={r,g,b,a} end
 function methods:SetAtlas(name,useSize) self.atlas=name; self.atlasSize=useSize end
 function methods:IsPlaying() return self.playing==true end
@@ -371,6 +387,13 @@ assert(G.bags[0][1].result.kind=='need')
 local bag=widget(); G.TrackBag(bag,0,1)
 assert(bag.EverfrostGearGlow and bag.EverfrostGearGlow:IsShown())
 assert(#bag.EverfrostGearEdges==4)
+-- A thin outline flush with the slot: two-pixel lines, none poking out past the button.
+for index,edge in ipairs(bag.EverfrostGearEdges) do
+ assert((index<=2 and edge.height or edge.width)==2)
+ for _,point in ipairs(edge.points) do assert(point[4]==0 and math.abs(point[5])<=2) end
+end
+-- The soft glow's overhang follows the button's size (12 where the size is unknown).
+assert(bag.EverfrostGearGlow.points[1][4]==-12 and bag.EverfrostGearGlow.points[1][5]==12)
 for _,edge in ipairs(bag.EverfrostGearEdges) do assert(edge:IsShown()) end
 local function assertColor(button,r,g,b)
  for _,layer in ipairs({button.EverfrostGearGlow,table.unpack(button.EverfrostGearEdges)}) do
@@ -384,7 +407,8 @@ assert(arrow and arrow:IsShown() and arrow.atlas=='bags-greenarrow' and arrow.at
 assert(#bag.EverfrostGearPulses==5)
 for _,pulse in ipairs(bag.EverfrostGearPulses) do
  assert(pulse:IsPlaying() and pulse.looping=='BOUNCE')
- assert(pulse.animation.from==0.18 and pulse.animation.to==1 and pulse.animation.duration==0.7)
+ -- A gentle breathe, never a blink: it stays at least 40% lit and eases in and out.
+ assert(pulse.animation.from==0.4 and pulse.animation.to==1 and pulse.animation.duration==0.9 and pulse.animation.smoothing=='IN_OUT')
 end
 local plays=bag.EverfrostGearPulses[1].plays; local calls=qualityCalls
 G.PaintBag(bag); assert(bag.EverfrostGearPulses[1].plays==plays and qualityCalls==calls)
@@ -417,6 +441,8 @@ local frame=GroupLootFrame1
 assert(frame.NeedButton.EverfrostGearGlow:IsShown())
 -- Roll buttons keep the glow only: the arrow marks items, not the Need button.
 assert(not frame.NeedButton.EverfrostGearArrow)
+-- Roll buttons are round, so they pulse without the square outline.
+assert(#frame.NeedButton.EverfrostGearEdges==0 and #frame.NeedButton.EverfrostGearPulses==1)
 assertColor(frame.NeedButton,0.12,1,0)
 local rollPlays=frame.NeedButton.EverfrostGearPulses[1].plays
 G.PaintRoll(frame); assert(frame.NeedButton.EverfrostGearPulses[1].plays==rollPlays)

@@ -64,7 +64,7 @@ local function effectiveRole(selectedSpec)
  end
  if p.healing then return db.role=="damage" and "damage" or "heal" end
  if p.bear then
-  if db.role=="bear" or (not known["Cat Form"] and known["Bear Form"]) then return "bear" end
+  if known["Bear Form"] and (db.role=="bear" or not known["Cat Form"]) then return "bear" end
   return known["Cat Form"] and "damage" or "caster"
  end
  return "damage"
@@ -80,7 +80,9 @@ end
 local function hasRoleChoice(p)
  if not p then return false end
  if p.melee then return level>=30 and known["Strider Kick"]~=nil end
- return (p.healing or p.bear) and true or false
+ -- Cat or Bear is a choice only with both forms learned.
+ if p.bear then return known["Cat Form"]~=nil and known["Bear Form"]~=nil end
+ return p.healing and true or false
 end
 local function emptySlotText()
  if not (NS.Gear and NS.Gear.EmptySlots) then return nil end
@@ -110,9 +112,17 @@ local function makeTile(index)
  tile:SetScript("OnLeave",function() GameTooltip:Hide(); frame.hoveringTile=false; frame.caption:SetText(frame.defaultCaption) end)
  tiles[index]=tile; return tile
 end
+-- Past the guide's last level there is nothing to show, so the panel steps aside (once, with a
+-- line in chat) instead of leaving an empty box on screen. /everfrost show brings it back.
+local function pastGuide() return level>NS.maxLevel end
+local function panelShown() return not db.hidden and (not pastGuide() or db.showPastGuide==true) end
 render=function()
  if not frame then return end
- frame:SetShown(not db.hidden)
+ if pastGuide() and not db.pastGuideNoted then
+  db.pastGuideNoted=true
+  if not db.hidden then say("You've outlevelled Everfrost's level 1-"..NS.maxLevel.." guides, so the panel is now hidden. Type /everfrost show to bring it back.") end
+ end
+ frame:SetShown(panelShown())
  local role=effectiveRole()
  if NS.Gear then NS.Gear.SetContext(class,gearSpec,level,effectiveRole(gearSpec),known) end
  local list,note,profile=NS.BuildRows(class,spec,level,known,db.aoe and "aoe" or "single",role)
@@ -216,7 +226,7 @@ local function createUI()
  drag:SetScript("OnDragStop",function()
   frame:StopMovingOrSizing(); local p,_,rp,x,y=frame:GetPoint(); db.point,db.relativePoint,db.x,db.y=p,rp,x,y
  end)
- drag:SetScript("OnEnter",function(self) tip(self,"Everfrost",frame.info.."\n\n"..NS.gearLevelNote.."\nReference priorities, not a live next-cast queue.\nDrag to move. /everfrost for settings.") end)
+ drag:SetScript("OnEnter",function(self) tip(self,"Everfrost",frame.info.."\n\n"..NS.gearLevelNote.."\nReference priorities, not a live next-cast queue.\n"..NS.guideReviewed.."\nDrag to move. /everfrost for settings.") end)
  drag:SetScript("OnLeave",function() GameTooltip:Hide() end)
  frame.guide=CreateFrame("Button",nil,drag)
  frame.guide:SetPoint("TOPLEFT",2,-2); frame.guide:SetPoint("TOPRIGHT",-2,-2); frame.guide:SetHeight(25)
@@ -257,7 +267,7 @@ SlashCmdList.EVERFROST=function(message)
  if command=="" or command=="settings" or command=="config" then
   if NS.Settings then NS.Settings:Open() end
   return
- elseif command=="show" then db.hidden=false
+ elseif command=="show" then db.hidden=false; if pastGuide() then db.showPastGuide=true end
  elseif command=="hide" then db.hidden=true
  elseif command=="lock" then db.locked=true
  elseif command=="unlock" then db.locked=false
@@ -285,6 +295,13 @@ SlashCmdList.EVERFROST=function(message)
    say((db.gear==false and "Gear highlights OFF. " or "Gear highlights ON. ")..(p and ((p.starter and "Starter priorities until level 10. " or spec==0 and (name.." talents. ") or "").."Stat order: "..NS.GearPriorityText(p)..". Estimated weights; inspect special effects.") or gearReason or "Select a talent tree to score gear."))
   end
  elseif command=="reset" then resetPosition(); db.scale=1; frame:SetScale(1); db.hidden=false
+ elseif command=="spellids" then
+  -- Guide spells with no ID on record match by their English name only. In game, this lists the
+  -- IDs this character's spellbook has for them, to report so other languages can be supported.
+  local found={}
+  for key,spell in pairs(known) do if not NS.baseIDs[key] then found[#found+1]=key.."="..tostring(spell.id) end end
+  table.sort(found)
+  say(#found>0 and ("Spell IDs to report: "..table.concat(found,", ")) or "This character has learned none of the guide spells that still need an ID.")
  elseif command=="scale" then
   local n=tonumber(arg); if n and n>=0.6 and n<=2 then db.scale=n; frame:SetScale(n) else say("Scale must be 0.6-2.") end
  elseif command=="opacity" then
@@ -293,7 +310,7 @@ SlashCmdList.EVERFROST=function(message)
  elseif command=="source" then say(frame.profile and frame.profile.source or "No profile for this class.")
  elseif command=="status" then
   say(class.." / "..spec.." / "..level.." / "..status..(detectedPoints and (" / Talents: "..table.concat(detectedPoints," / ")) or "")..(detectedSource and (" / "..detectedSource) or "")..(scanError and " / "..scanError or ""))
- else say("/everfrost settings | show | hide | lock | unlock | single | aoe | heal | damage | bear | cat | ranged | melee | spec auto/1/2/3 | gear on/off | minimap on/off | scale 1 | opacity 100 | reset | refresh | source | status") end
+ else say("/everfrost settings | show | hide | lock | unlock | single | aoe | heal | damage | bear | cat | ranged | melee | spec auto/1/2/3 | gear on/off | minimap on/off | scale 1 | opacity 100 | reset | refresh | source | status | spellids") end
  render()
 end
 local events=CreateFrame("Frame")
@@ -303,6 +320,17 @@ for _,event in ipairs({"PLAYER_LOGIN","PLAYER_ENTERING_WORLD","PLAYER_LEVEL_UP",
  "PLAYER_REGEN_ENABLED","PLAYER_REGEN_DISABLED","SPELL_UPDATE_COOLDOWN","SPELL_DATA_LOAD_RESULT"}) do
  pcall(events.RegisterEvent,events,event)
 end
+-- Spell, talent and trait events arrive in bursts (login, zoning, training, tooltips loading
+-- spell data). They are gathered into one rescan and redraw on the next frame.
+local queued=false
+local function schedule()
+ if queued then return end
+ queued=true
+ events:SetScript("OnUpdate",function(self)
+  self:SetScript("OnUpdate",nil); queued=false
+  refresh(); render()
+ end)
+end
 events:SetScript("OnEvent",function(_,event,value)
  if event=="PLAYER_LOGIN" then
   EverfrostDB=type(EverfrostDB)=="table" and EverfrostDB or {}
@@ -311,7 +339,7 @@ events:SetScript("OnEvent",function(_,event,value)
   db.opacity=NS.Public(opacity) and type(opacity)=="number" and opacity==opacity and opacity~=math.huge and opacity~=-math.huge and math.max(0.1,math.min(1,opacity)) or 1
   className,class=UnitClass("player"); level=UnitLevel("player"); refresh(); createUI()
   if NS.CreateSettings then
-   NS.CreateSettings({DB=function() return db end,Command=function(value) SlashCmdList.EVERFROST(value) end,
+   NS.CreateSettings({DB=function() return db end,Command=function(message) SlashCmdList.EVERFROST(message) end,
     SelectGuide=selectGuide,ToggleRole=toggleRole,CloseGuide=function() frame.guideMenu:Hide() end,
     State=function()
      local p=NS.profiles[class] and NS.profiles[class][spec]
@@ -324,7 +352,7 @@ events:SetScript("OnEvent",function(_,event,value)
       hasRole=hasRoleChoice(p),roleLabel=roleLabel,
       priority=gear and NS.GearPriorityText(gear) or nil,gearReason=gearReason,
       gearTitle=gear and gear.starter and ("Starter priority: "..className) or gearName and ("Stat priority: "..gearName..(spec==0 and " (talents)" or "")) or nil,
-      emptySlots=emptySlotText(),
+      emptySlots=emptySlotText(),panelShown=panelShown(),
       levelingHint=NS.gearLevelNote.." Levelling uses your dominant talent tree for gear."}
     end})
   end
@@ -340,10 +368,14 @@ events:SetScript("OnEvent",function(_,event,value)
  elseif not frame then return
  elseif event=="PLAYER_REGEN_DISABLED" then if NS.Settings then NS.Settings:Refresh() end
  elseif event=="SPELL_UPDATE_COOLDOWN" then cooldowns()
- elseif event=="PLAYER_LEVEL_UP" then level=value; refresh(); render()
+ elseif event=="PLAYER_LEVEL_UP" then level=value; schedule()
  elseif event=="PLAYER_REGEN_ENABLED" then
-  if pending then refresh(); render() elseif NS.Settings then NS.Settings:Refresh() end
- else refresh(); render() end
+  if pending then schedule() elseif NS.Settings then NS.Settings:Refresh() end
+ elseif event=="SPELL_DATA_LOAD_RESULT" then
+  -- Fires for every spell the client loads. It only matters while a guide spell's name is
+  -- still missing; once they have all resolved there is nothing left to pick up.
+  if not NS.SpellNamesReady(class) then schedule() end
+ else schedule() end
 end)
 
 

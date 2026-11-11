@@ -1,4 +1,4 @@
-# Codex project instructions
+# Everfrost project instructions
 
 Everfrost is a standalone WoW Forever Lua addon. Its source of truth is addon/Everfrost, not prior chat output folders.
 

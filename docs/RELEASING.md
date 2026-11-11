@@ -17,6 +17,9 @@ repository, screenshots, release notes, or logs.
 
 ## Before pushing a new tag
 
+0. **Check it in the game.** Walk through [INGAME_CHECKLIST.md](INGAME_CHECKLIST.md) with the
+   build from `npm run build`. A version nobody has seen in game is tagged as a beta, not a release.
+
 1. Update `addon/Everfrost/Everfrost.toc`, the metadata-only root
    `Everfrost-Source.toc`, `package.json`, and lockfile versions together.
 2. Update `addon/Everfrost/CHANGELOG.md` for the release.

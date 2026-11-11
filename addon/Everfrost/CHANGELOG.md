@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- **Armour counts for every spec.** A better-armoured piece can now win over a small stat loss, and a much flimsier one can lose despite a small stat gain. The tooltip says when armour decided it and how much of the score it was. Before, armour only broke ties.
+- **Tidier upgrade highlight.** The outline is thinner and sits exactly on the slot's edge, the glow is sized to the button, and the pulse breathes gently instead of flashing. Need and Greed buttons pulse without the square box around them.
+- **Smoother at login and when zoning.** Bursts of spell and talent updates are handled once per frame instead of one full rescan each.
+- **Past level 30 the panel hides itself**, with one line in chat. `/everfrost show` brings it back.
+- A Feral druid with no form learned no longer gets a Cat/Bear button that empties the panel.
+- `/everfrost spellids` lists spell IDs that would let ten guide spells work on non-English clients.
+- The panel's hover text says when the guides were last checked.
+
+Simulated-client tests and the full Lua lint pass. None of this has been seen in game yet.
+
 ## 0.6.9 — Clearer spec menu note
 
 - Below level 10, the Choose a Spec menu now says "Full stat priorities need talents." The old note read as if gear help stopped at level 10.

@@ -25,7 +25,11 @@ local function hide(button)
   if button.EverfrostGearArrow then button.EverfrostGearArrow:Hide() end
  end
 end
-local function glow(button, shown, item, arrow)
+-- The highlight's look, in one place. A soft glow sized to the button, with a thin outline that
+-- sits exactly on a square button's edge. Roll buttons are round, so they get the glow alone:
+-- a square drawn around a round button read as a stray box.
+local GLOW={line=2,dim=0.4,bright=1,seconds=0.9}
+local function glow(button, shown, item, arrow, round)
  if not button then return end
  if not shown then hide(button); return end
  -- Never create or hook widgets in combat; pre-existing cosmetic glows are safe.
@@ -34,8 +38,12 @@ local function glow(button, shown, item, arrow)
   local texture=button:CreateTexture(nil,"OVERLAY",nil,7)
   texture:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
   texture:SetBlendMode("ADD")
-  texture:SetPoint("TOPLEFT",button,"TOPLEFT",-12,12)
-  texture:SetPoint("BOTTOMRIGHT",button,"BOTTOMRIGHT",12,-12)
+  -- The border art's ring sits about a third of the way in, so the overhang follows the
+  -- button's size rather than a fixed 12 pixels that only suited bag slots.
+  local width=first(button.GetWidth,button)
+  local pad=public(width,"number") and width>0 and math.floor(width*0.32+0.5) or 12
+  texture:SetPoint("TOPLEFT",button,"TOPLEFT",-pad,pad)
+  texture:SetPoint("BOTTOMRIGHT",button,"BOTTOMRIGHT",pad,-pad)
   button.EverfrostGearGlow=texture
   -- Animate every layer together, so the outline also fades visibly.
   button.EverfrostGearEdges={}
@@ -44,7 +52,9 @@ local function glow(button, shown, item, arrow)
    if not layer.CreateAnimationGroup then return end
    local group=layer:CreateAnimationGroup()
    local alpha=group:CreateAnimation("Alpha")
-   alpha:SetFromAlpha(0.18); alpha:SetToAlpha(1); alpha:SetDuration(0.7)
+   alpha:SetFromAlpha(GLOW.dim); alpha:SetToAlpha(GLOW.bright); alpha:SetDuration(GLOW.seconds)
+   -- Eases in and out, so it breathes rather than blinks.
+   if alpha.SetSmoothing then alpha:SetSmoothing("IN_OUT") end
    group:SetLooping("BOUNCE")
    button.EverfrostGearPulses[#button.EverfrostGearPulses+1]=group
   end
@@ -53,14 +63,18 @@ local function glow(button, shown, item, arrow)
    local line=button:CreateTexture(nil,"OVERLAY",nil,7)
    line:SetColorTexture(1,1,1,1)
    line:SetPoint(from,button,from,x1,y1); line:SetPoint(to,button,to,x2,y2)
-   if horizontal then line:SetHeight(3) else line:SetWidth(3) end
+   if horizontal then line:SetHeight(GLOW.line) else line:SetWidth(GLOW.line) end
    button.EverfrostGearEdges[#button.EverfrostGearEdges+1]=line
    pulse(line)
   end
-  edge("TOPLEFT",-1,1,"TOPRIGHT",1,1,true)
-  edge("BOTTOMLEFT",-1,-1,"BOTTOMRIGHT",1,-1,true)
-  edge("TOPLEFT",-1,1,"BOTTOMLEFT",-1,-1,false)
-  edge("TOPRIGHT",1,1,"BOTTOMRIGHT",1,-1,false)
+  if not round then
+   -- Flush with the button: top and bottom run the full width, the sides fit between them,
+   -- so no corner is drawn twice and nothing pokes out past the slot.
+   edge("TOPLEFT",0,0,"TOPRIGHT",0,0,true)
+   edge("BOTTOMLEFT",0,0,"BOTTOMRIGHT",0,0,true)
+   edge("TOPLEFT",0,-GLOW.line,"BOTTOMLEFT",0,GLOW.line,false)
+   edge("TOPRIGHT",0,-GLOW.line,"BOTTOMRIGHT",0,GLOW.line,false)
+  end
  end
  local color=item and item.color or {1,1,1}
  button.EverfrostGearGlow:SetVertexColor(color[1],color[2],color[3],1)
@@ -103,7 +117,11 @@ function G.Tooltip(tooltip,result,roll)
  local starter=p and p.starter
  -- Armor is not scored for most specs, so "0.0 vs 0.0" would only confuse here.
  -- Scores mean little on starter gear, where the reason above says enough.
- if result.delta and not result.armorOnly and not starter then tooltip:AddLine(string.format("Estimated score: %.1f vs %.1f (%+.1f)",result.score,result.previous,result.delta),0.85,0.9,1,true) end
+ if result.delta and not result.armorOnly and not starter then
+  tooltip:AddLine(string.format("Estimated score: %.1f vs %.1f (%+.1f)",result.score,result.previous,result.delta),0.85,0.9,1,true)
+  local armour=result.armorCredit
+  if armour and (armour>0.05 or armour<-0.05) then tooltip:AddLine(string.format("Armour accounts for %+.1f of that.",armour),0.85,0.9,1,true) end
+ end
  if p then tooltip:AddLine((starter and "Starter priority: " or "Priority: ")..NS.GearPriorityText(p),0.75,0.82,0.92,true) end
  tooltip:AddLine(starter and "Simple estimate from your class's usual stats. Check effects and group loot rules." or "Guide-based stat estimate. Check effects, weapon setup and group loot rules.",0.65,0.72,0.82,true)
  tooltip:Show()
@@ -180,8 +198,8 @@ function G.PaintRoll(frame)
   return public(enabled,"boolean") and enabled and public(shown,"boolean") and shown
  end
  -- A disabled Need option never changes an upgrade into a Greed recommendation.
- glow(need,result.kind=="need" and data.canNeed and available(need),data.item)
- glow(greed,result.kind=="greed" and data.canGreed and available(greed),data.item)
+ glow(need,result.kind=="need" and data.canNeed and available(need),data.item,false,true)
+ glow(greed,result.kind=="greed" and data.canGreed and available(greed),data.item,false,true)
 end
 function G.TrackRoll(frame)
  if not frame then return end
@@ -324,9 +342,12 @@ local function installHooks()
    hooksecurefunc(name,fn); hooked[name]=true
   end
  end
- hook("ContainerFrame_Update",function(frame) discoverBags(); G.Schedule() end)
- hook("ContainerFrame_UpdateAll",function() discoverBags(); G.Schedule() end)
- hook("ContainerFrame_GenerateFrame",function() discoverBags(); G.Schedule() end)
+ -- These fire once per bag per change. The walk over every bag button waits for the batched
+ -- rescan (see G.Schedule) instead of running each time.
+ local function bagsChanged() discoverDue=true; G.Schedule() end
+ hook("ContainerFrame_Update",bagsChanged)
+ hook("ContainerFrame_UpdateAll",bagsChanged)
+ hook("ContainerFrame_GenerateFrame",bagsChanged)
  hook("GroupLootFrame_OnShow",function(frame) G.TrackRoll(frame); G.Schedule() end)
  hook("QuestInfo_Display",function() G.Schedule() end)
  hook("MerchantFrame_Update",function() G.Schedule() end)

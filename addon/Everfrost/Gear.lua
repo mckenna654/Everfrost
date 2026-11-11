@@ -169,6 +169,17 @@ local function effective(item, p)
  values.wand=caster and item.classID==2 and item.subclassID==19 and s.dps or 0
  return values,damageWeapon
 end
+-- Armour counts for every spec. A profile that ranks Armour scores it as one of its stats, at
+-- this rate times its weight. For the rest it is extra credit at the plain rate, reported apart
+-- from the stats so a result can say when armour, not a stat, decided it. Armour pieces and
+-- shields only: a weapon's armour is never credited.
+NS.gearArmorRate=0.1
+local function armorCredit(item, w)
+ if item.classID~=4 then return 0,0 end
+ local amount=item.stats.armor*NS.gearArmorRate
+ if w.armor then return amount*w.armor,0 end
+ return 0,amount
+end
 function G.Score(item, context, p)
  if not item or not item.stats then return nil end
  local s=item.stats; local w=p.weights
@@ -177,9 +188,10 @@ function G.Score(item, context, p)
  if damageWeapon and s.dps<=0 then return nil end
  local score=0
  for key,weight in pairs(w) do
-  local scale=key=="armor" and 0.02 or key=="dps" and 12 or 1
-  score=score+(values[key] or 0)*weight*scale
+  if key~="armor" then score=score+(values[key] or 0)*weight*(key=="dps" and 12 or 1) end
  end
+ local ranked,extra=armorCredit(item,w)
+ score=score+ranked+extra
  score=score+values.wand
  -- AP equivalents follow the relevant primary stat rather than being omitted.
  -- A profile that ranks Attack Power itself already scored it in the loop above.
@@ -195,7 +207,7 @@ function G.Score(item, context, p)
   if context.class=="PALADIN" then relevant=relevant+values.spell end
   if context.class=="HUNTER" or context.class=="PALADIN" or context.class=="SHAMAN" then relevant=relevant+s.intellect+s.spirit end
  end
- return score,relevant>0
+ return score,relevant>0,extra
 end
 local function fitsHand(item, hand, context, p)
  if not item or not G.Eligible(item,context,p) then return false end
@@ -299,7 +311,7 @@ function G.Compare(item, equipped, context, carried, candidate)
  if not item then return waiting("Waiting for item data") end
  local eligible,reason=G.Eligible(item,context,p)
  if not eligible then return greed(reason) end
- local score,relevant=G.Score(item,context,p)
+ local score,relevant,armorExtra=G.Score(item,context,p)
  if not score then return unknown("Weapon or item stats are unavailable") end
  if (slots[item.loc][1]==16 or slots[item.loc][1]==17) and equipped[16]==nil then
   return waiting("Waiting for equipped main-hand data")
@@ -322,21 +334,21 @@ function G.Compare(item, equipped, context, carried, candidate)
   if (slot==16 or slot==17) and equipped[16] and equipped[16].loc=="INVTYPE_2HWEAPON" and item.loc~="INVTYPE_2HWEAPON" then
    return unknown("Compare a complete one-hand/off-hand setup before replacing a two-handed weapon")
   end
-  local oldScore,oldRelevant=0,false
+  local oldScore,oldRelevant,oldArmor=0,false,0
   if old then
-   oldScore,oldRelevant=G.Score(old,context,p)
+   oldScore,oldRelevant,oldArmor=G.Score(old,context,p)
    if oldScore==nil then return unknown("Equipped weapon stats are unavailable") end
   end
   local allowed=true
   if item.loc=="INVTYPE_2HWEAPON" then
    local off=equipped[17]
    if off==nil then return waiting("Waiting for off-hand item data") end
-   local extra=0
+   local extra,_,offArmor=0,nil,0
    if off then
-    extra=G.Score(off,context,p)
+    extra,_,offArmor=G.Score(off,context,p)
     if extra==nil then return unknown("Off-hand stats are unavailable") end
    end
-   oldScore=oldScore+extra
+   oldScore=oldScore+extra; oldArmor=oldArmor+(offArmor or 0)
   elseif slot==17 and p.shield and item.loc~="INVTYPE_SHIELD" then allowed=false end
   if item.unique and item.unique~=0 and item.limit and item.limit>0 then
    local count=0
@@ -350,19 +362,30 @@ function G.Compare(item, equipped, context, carried, candidate)
   if allowed and (not best or score-oldScore>best.delta) then
    best={kind="greed",score=score,previous=oldScore,delta=score-oldScore,slot=slot,source=p.source,
     oldRelevant=oldRelevant,armorGain=armorGain(item,old),old=old,
+    -- The part of the difference that comes from armour credit rather than from stats.
+    armorCredit=armorExtra-oldArmor,
     -- A two-hander also displaces the off-hand, so one stat cannot explain the result.
     plain=not (item.loc=="INVTYPE_2HWEAPON" and equipped[17])}
   end
  end
  if not best then return greed("Not a valid replacement for your current equipment") end
+ local statDelta=best.delta-best.armorCredit
  if relevant and best.delta>0.01 then
-  best.kind="need"; best.reason="Estimated stat upgrade"
-  if best.plain then best.why=explain(best,item,best.old,p) end
+  best.kind="need"
+  if statDelta>0.01 then
+   best.reason="Estimated stat upgrade"
+   if best.plain then best.why=explain(best,item,best.old,p) end
+  elseif statDelta>=-0.01 and best.armorGain>0 then
+   best.armorOnly=true
+   best.reason=string.format("More armour, no useful stats lost (+%.0f Armour)",best.armorGain)
+  else
+   best.reason=string.format("More armour (+%.0f) outweighs the stats it gives up",best.armorGain)
+  end
   return best
  end
- -- Armor only breaks ties: it never outweighs a stat loss. An item with no useful
- -- stats can only replace another one, so Stamina cannot stand in for lost Strength.
- if best.armorGain>0 and best.delta>=-0.01 and (relevant or not best.oldRelevant) then
+ -- An item with no useful stats can only replace another one, and only when nothing is lost
+ -- on stats: Stamina cannot stand in for lost Strength, however much armour comes with it.
+ if best.armorGain>0 and statDelta>=-0.01 and (relevant or not best.oldRelevant) then
   best.kind="need"; best.armorOnly=true
   best.reason=string.format("More armour, no useful stats lost (+%.0f Armour)",best.armorGain)
   return best

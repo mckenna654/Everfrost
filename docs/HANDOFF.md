@@ -247,3 +247,25 @@ code change is the spec menu note. Dependabot PR #2 (GitHub Actions bumps) was l
 open. Next steps are unchanged from 0.6.8: check the quest, merchant, Gear Upgrades
 and group-loot screens in game, compare the starter lists with the Icy Veins
 levelling sections, and retake the screenshots.
+
+November 11, 2026, unreleased, branch claude/audit-fixes (pull request open): fixes from a
+whole-project audit, plus two requests from the user (armour in gear scoring, a tidier
+upgrade and Need/Greed highlight).
+- Armour counts for every spec at 0.1 per point on armour pieces and shields (docs/GEAR.md,
+  rule 9). It replaces the 0.6.6 rule that armour only breaks ties; an item with no useful
+  stats still cannot replace one that has them. The rate is an estimate to tune in game.
+- Highlight: two-pixel outline flush with the slot, glow sized to the button, a slower
+  eased pulse (40% to 100% over 0.9 s); roll buttons get the glow without the square.
+- Spell, talent and trait events are batched into one refresh per frame (Main.lua).
+- Past level 30 the panel hides once with a chat line; /everfrost show brings it back.
+- Feral with no form learned has no Cat/Bear button. /everfrost spellids reports IDs for
+  the ten guide spells that match by English name only. Full luacheck is on.
+- VALIDATION.txt moved from the package to docs/. TOC author is mckenna654. New
+  docs/INGAME_CHECKLIST.md is the release gate (docs/RELEASING.md step 0).
+npm test, luacheck and npm run build pass. Nothing here has been seen in game: the
+highlight's look, armour results on real items and the batching are all unverified.
+Not done from the audit: splitting the two test files, a code formatter, account-wide
+settings, a smaller icon, a key binding and new screenshots. The Frost Mage stat order
+was checked against docs/GEAR.md and is as the guide has it. Next steps: walk the
+in-game checklist with the build in dist/, tune the armour rate and the pulse if they
+look wrong, add the spell IDs, then version, changelog and release.

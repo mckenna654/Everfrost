@@ -10,7 +10,7 @@ Everfrost is a lightweight, standalone Lua addon for **WoW Forever**. It display
 
 **Built with new players in mind.** Everfrost grew out of playing alongside brand-new players and people trying WoW for the first time. Its guides focus on **basic rotations and gear stat priorities** for your class and spec, giving you a simple starting point while you learn. The aim is to keep the basics visible and make early decisions about abilities and gear easier to understand.
 
-**Written with OpenAI Codex.** The project uses Codex for AI-assisted development, review, and documentation. Automated validation uses a simulated client. Early in-game checks confirmed the gear eligibility fix, rarity pulse and settings layout; the latest talent fix and broader client compatibility still need verification.
+**Built with AI assistance.** Everfrost was first written with OpenAI Codex and is now developed with Claude Code. Automated tests run against a simulated client; each release is also checked in the game against the [in-game checklist](docs/INGAME_CHECKLIST.md), and the release notes say what was and wasn't seen.
 
 [CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.6.9](https://github.com/mckenna654/Everfrost/releases/tag/v0.6.9) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
 
@@ -235,13 +235,14 @@ addon/Everfrost/
   Main.lua           Panel, event handling, settings controller and commands
   README.md          Packaged user instructions
   SOURCES.md         Guide links and source-review notes
-  VALIDATION.txt     Recorded validation and limitations
 scripts/build.cjs    Cross-platform addon-only ZIP packaging
 tests/check.cjs      Syntax and simulated-client regression checks
 tests/gear.cjs       Gear scoring, cache and UI regression checks
 docs/GEAR.md         Stat audit, scoring formula and limitations
 docs/HANDOFF.md      Project history and outstanding in-game checks
-AGENTS.md            Codex project instructions
+docs/INGAME_CHECKLIST.md  What to check in the game before a release
+docs/VALIDATION.txt  Recorded simulated-test runs and their limits
+AGENTS.md            Project instructions for AI coding agents
 ```
 
 ### Contribution guidelines
@@ -276,4 +277,4 @@ Everfrost is licensed under the [MIT License](LICENSE). The same license is sele
 
 Ability references are concise adaptations of the **Icy Veins WoW Forever PvE guides**. The [source index](addon/Everfrost/SOURCES.md) preserves all 27 guide links, API references, and review notes. Use `/everfrost source` to find the guide associated with the active profile.
 
-Everfrost was written with **OpenAI Codex**. See the [development handoff](docs/HANDOFF.md) for the project's evolution from ForeverRetHelper and ForeverGuide to Everfrost v0.4.0.
+Everfrost was first written with **OpenAI Codex** and is now developed with **Claude Code**. See the [development handoff](docs/HANDOFF.md) for the project's evolution from ForeverRetHelper and ForeverGuide to Everfrost v0.4.0.

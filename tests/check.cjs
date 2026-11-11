@@ -219,7 +219,10 @@ Settings={RegisterCanvasLayoutCategory=function(panel,name) assert(name=='Everfr
  RegisterAddOnCategory=function(category) settingsRegistrations=settingsRegistrations+1; registeredCategory=category end}
 function UnitLevel() return currentLevel end
 function UnitClass() return currentClass,currentClass end
-function fire(e,value) for _,f in ipairs(frames) do if f.events[e] then f.scripts.OnEvent(f,e,value) end end end
+-- Events are gathered into one refresh on the next frame; flush() is that frame.
+function flush() for _,f in ipairs(frames) do local update=f.scripts.OnUpdate; if update then update(f) end end end
+function dispatch(e,value) for _,f in ipairs(frames) do if f.events[e] then f.scripts.OnEvent(f,e,value) end end end
+function fire(e,value) dispatch(e,value); flush() end
 function visibleSpells() local n=0; for _,f in ipairs(frames) do if rawget(f,'spellID') and f:IsShown() then n=n+1 end end; return n end
 duration={}; C_Spell.GetSpellCooldownDuration=function() return duration end
 EverfrostDB={scale=1.2,locked=true,point='CENTER',relativePoint='CENTER',x=100,y=40}
@@ -408,6 +411,30 @@ book={{spellID=5487,name='Bear Form'},{spellID=6807,name='Maul'}}
 EverfrostDB={}; fire('PLAYER_LOGIN')
 assert(EverfrostFrame.role.text=='Bear')
 book={}; fire('SPELLS_CHANGED'); assert(EverfrostFrame.role.text=='Caster')
+-- With no form learned there is no Cat or Bear to choose, and a saved Bear view cannot empty the panel.
+assert(not EverfrostFrame.role:IsShown())
+book={{spellID=5176,name='Wrath'}}; EverfrostDB.role='bear'; fire('SPELLS_CHANGED')
+assert(visibleSpells()==1 and EverfrostFrame.role.text=='Caster' and not EverfrostFrame.role:IsShown())
+EverfrostDB.role=nil
+-- A burst of spell, talent and trait events becomes one rescan and redraw on the next frame.
+local scans=0; local skillLines=C_SpellBook.GetNumSpellBookSkillLines
+C_SpellBook.GetNumSpellBookSkillLines=function(...) scans=scans+1; return skillLines(...) end
+for i=1,50 do dispatch('SPELLS_CHANGED'); dispatch('SPELL_DATA_LOAD_RESULT',i,true); dispatch('TRAIT_CONFIG_UPDATED') end
+assert(scans==0); flush(); assert(scans==1); flush(); assert(scans==1)
+C_SpellBook.GetNumSpellBookSkillLines=skillLines
+-- Past the last guide level the panel steps aside once, with one line in chat, and can be brought back.
+local said={}; local realPrint=print; print=function(line) said[#said+1]=line end
+fire('PLAYER_LEVEL_UP',31)
+assert(not EverfrostFrame:IsShown() and #said==1 and said[1]:find('/everfrost show',1,true) and EverfrostDB.pastGuideNoted)
+fire('SPELLS_CHANGED'); assert(#said==1 and not EverfrostFrame:IsShown())
+cmd('show'); assert(EverfrostFrame:IsShown() and EverfrostDB.showPastGuide and EverfrostFrame.empty.text=='Level 1-30 guide')
+cmd('hide'); assert(not EverfrostFrame:IsShown())
+fire('PLAYER_LEVEL_UP',10); cmd('show'); assert(EverfrostFrame:IsShown())
+-- /everfrost spellids lists what the spellbook has for guide spells with no ID on record.
+book={{spellID=777,name='Primal Bite'},{spellID=5487,name='Bear Form'}}; fire('SPELLS_CHANGED'); said={}
+cmd('spellids'); assert(said[1]:find('Primal Bite=777',1,true) and not said[1]:find('Bear Form',1,true))
+print=realPrint
+print('Event batching, past-level-30 panel, Feral view choice and spell ID report: passed')
 print('Mock UI: all classes, migration, controls, talent override, leveling, combat refresh, cooldown fallback and feral labels: passed')
 print('Settings UI: slash/minimap/native entry points, guide selection, persistent controls, scale, minimap dragging, class changes and combat deferral: passed')
 print('Leveling gear: level-10 boundary, dominant talents, ties/unspent/unavailable/partial data, overrides, respec, combat caching, Survival roles and all classes: passed')
@@ -576,6 +603,18 @@ print('Legacy native settings registration and missing minimap fallback: passed'
   assert.deepEqual(packaged, [], 'Add these to .pkgmeta ignore: ' + packaged.join(', '));
   assert.deepEqual(fs.readdirSync(path.join(repo, 'addon')), ['Everfrost']);
   console.log('CurseForge packaging: only addon/Everfrost is packaged: passed');
+}
+
+// Guide spells are matched to the spellbook by name. An ID lets a non-English client find the
+// localised name; without one the step only appears in English. These ten still need their IDs
+// read in game (/everfrost spellids). Give every new guide spell an ID rather than adding to this list.
+{
+  const ids = new Set([...sources['Core.lua'].matchAll(/\["([^"]+)"\]=\d+/g)].map(m => m[1]));
+  const names = new Set([...sources['Profiles.lua'].matchAll(/S\("([^"]+)"/g)].map(m => m[1]));
+  const missing = [...names].filter(name => !ids.has(name)).sort();
+  assert.deepEqual(missing, ['Bane of Agony', 'Bane of Havoc', 'Fire Nova', 'Holy Strike', 'Primal Bite', 'Seal of Fury',
+    'Shifting Power', 'Spearing Strike', 'Strider Kick', 'Summon Hawk'], 'Guide spells without an ID in Core.lua baseIDs');
+  console.log('Guide spell IDs: no new English-only spells: passed');
 }
 
 const packageVersion = require('../package.json').version;

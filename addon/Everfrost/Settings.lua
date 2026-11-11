@@ -94,7 +94,8 @@ function S:Refresh()
  guide.single:SetEnabled(db.aoe==true); guide.aoe:SetEnabled(db.aoe~=true)
  guide.role:SetShown(state.hasRole); guide.role:SetText("View: "..state.roleLabel)
  local panel=window.pages.Panel
- panel.visible:SetChecked(not db.hidden); panel.locked:SetChecked(db.locked==true); panel.minimap:SetChecked(db.minimap~=false)
+ local shown=state.panelShown; if shown==nil then shown=not db.hidden end
+ panel.visible:SetChecked(shown); panel.locked:SetChecked(db.locked==true); panel.minimap:SetChecked(db.minimap~=false)
  panel.scale:SetText(string.format("%d%%",math.floor((db.scale or 1)*100+0.5)))
  panel.opacity:SetText(string.format("%d%%",math.floor((db.opacity or 1)*100+0.5)))
  panel.updating=true

@@ -175,6 +175,7 @@ function NS.SpellNames(class)
  if complete then spellNameCache[class]=names end
  return names
 end
+function NS.SpellNamesReady(class) return spellNameCache[class]~=nil end
 function NS.ScanSpells(class)
  if InCombatLockdown() then return nil,"Waiting for combat to end" end
  local api=C_SpellBook or {}

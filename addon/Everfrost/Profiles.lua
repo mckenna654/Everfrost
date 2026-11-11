@@ -9,6 +9,8 @@ NS.trees = {
  SHAMAN={"Elemental","Enhancement","Restoration"},
 }
 -- Concise adaptations of Icy Veins Forever guides, reviewed 2026-10-15.
+-- Shown to players, so they can judge how current the advice is. Update with each review.
+NS.guideReviewed = "Guides last checked 15 October 2026."
 -- Entries are conditional reference steps, never combat-evaluated instructions.
 local function S(name, hint, options)
  local t = options or {}; t.name = name; t.hint = hint; return t
@@ -249,7 +251,7 @@ function NS.BuildRows(class, spec, level, known, mode, role)
  if role=="melee" and profile.melee and level>=30 then list=profile.melee end
  if role=="heal" and profile.healing then list=profile.healing end
  if class=="DRUID" and spec==2 then
-  if role=="bear" or (not known["Cat Form"] and known["Bear Form"]) then list=profile.bear
+  if known["Bear Form"] and (role=="bear" or not known["Cat Form"]) then list=profile.bear
   elseif not known["Cat Form"] then list=profile.caster end
  end
  local rows={}
