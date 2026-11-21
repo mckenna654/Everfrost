@@ -14,3 +14,17 @@ Everfrost is a standalone WoW Forever Lua addon. Its source of truth is addon/Ev
 - Do not install into a game folder, publish, or upload unless requested.
 
 See README.md for setup and docs/HANDOFF.md for project history.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in this repo's GitHub Issues, managed with the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human` and `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root, created when first needed. See `docs/agents/domain.md`.
