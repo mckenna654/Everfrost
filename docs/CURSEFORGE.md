@@ -4,7 +4,20 @@
 
 A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1–60, nine classes and 27 talent trees**. Built with AI assistance. No third-party addon libraries are required.
 
-## What's new in 0.8.0
+## What's new in 0.9.0
+
+- **Rotation HUD:** the reference panel is replaced by a compact HUD. A fixed **NOW** icon shows the spell to press, from Blizzard's own rotation assistant where the game offers it, otherwise the top guide spell that's ready. Up to six upcoming spells slide towards it in guide priority order. Layouts: Guitar Hero, Classic, Minimal and Tank. Combat-only by default, with a preview to place it; clicks pass through in combat.
+- **Automatic single target, cleave and AoE:** an estimate from enemy nameplates switches at 2 and 3 enemies (adjustable per spec) and shows as `~3`, or `?` when the game won't share it. Click the mode, use `/everfrost mode` or a key binding for AUTO, ST, CLV or AOE.
+- **Controller and keyboard layouts:** the HUD follows the game's input style (gamepad mode, Steam Deck, ConsolePort): bigger icons above the gamepad bars, and each layout keeps its own position and size.
+- **Defensive row:** interrupts, taunts and defensive cooldowns, on by default for tanks; big cooldowns are marked situational, never urgent. Missing buffs such as Righteous Fury show as a reminder out of combat.
+- **All 27 rotations re-read** from Icy Veins' new rotation pages (24 November 2026). Protection Paladin gets Holy Shield; every tree changed.
+- **Gear marks reworked:** one scoring engine for bags, loot rolls, quest rewards and vendors, with clear and minor upgrades, sidegrades and downgrades. A thin green border replaces the glow. Tank scoring focus: Balanced Tank, Survivability, Threat or Solo Levelling. Two-handers are compared with weapon and shield together. The best quest reward is labelled **Recommended**.
+- **Talent highlights fixed:** the next build talent you can actually take, with the reason when a pick is locked.
+- **Settings** reorganised into Rotation, HUD, Controller, Detection, Gear & Loot and Talents. Your existing settings carry over.
+
+Nothing in 0.9.0 has been checked in game yet; please report anything odd.
+
+## Included from 0.8.0
 
 - **Talent recommendations:** Everfrost now knows the Icy Veins levelling talent build for all 27 trees, point by point from level 10 to 60. In the talent window the talent to take next glows gold, and each talent's tooltip says how many points the build puts there and at which levels. The panel's hover text, the Specialisation settings page and `/everfrost talents` name your next talent. `/everfrost talents off` turns it off. Everfrost never spends points for you.
 - **Resizable panel:** drag the corner of the rotation panel to make it bigger or smaller.
@@ -71,14 +84,14 @@ A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1�
 - **Levelling gear guidance from level 10:** keep the general Levelling spell guide while the active talent tree with the most points determines your gear priorities. Manual specialisation choices can override detection. Talent-based priorities start at level 10; spell guides remain available from level 1.
 - **Corrected Forever talent detection:** use the native talent window's trait-group totals, refresh after talent changes and show the detected split in settings. Ties, unspent points and unavailable data leave Levelling gear unscored.
 
-## Spell reference panel
+## Rotation HUD
 
-- Learned-spell-aware ability references using your trained ranks, with short hover guidance.
-- Automatic class, level and talent-tree detection, plus Automatic, Levelling and manual specialisation choices.
-- Single-target/AoE views and supported healing, Feral and Survival role views.
-- Compact, movable panel with saved position, visibility, locking and size; native cooldown sweeps where supported.
+- A fixed NOW icon (Blizzard's rotation assistant where available, otherwise the top guide spell that's ready), with upcoming spells in guide priority order and native cooldown sweeps.
+- Automatic single target, cleave and AoE from an enemy-nameplate estimate, or a manual mode that stays until you change it.
+- Separate controller and keyboard layouts, four HUD layouts, and a defensive and utility row for tanks.
+- Learned-spell-aware, with automatic class, level and talent-tree detection, plus Automatic, Levelling and manual specialisation choices, and healing, Feral and Survival role views.
 
-This is a **basic reference**, not a live next-cast queue or full class guide. It does not choose abilities from combat resources, target health or procs, and it never casts for you.
+Forever hides much of combat from addons, so the upcoming icons are a priority, not a promise, and the enemy count is an estimate. Everfrost never casts, rolls or clicks for you.
 
 ## Gear upgrades and Need/Greed
 
@@ -95,21 +108,23 @@ Priorities are informed by [Icy Veins Forever guides](https://www.icy-veins.com/
 Install through CurseForge or extract the release ZIP's `Everfrost` folder into `Interface/AddOns` while the game is closed. Keep the folder and saved-variable names as Everfrost; existing Everfrost preferences remain per character.
 
 - `/everfrost` — open settings.
-- `/everfrost show` — show the rotation reference.
+- `/everfrost preview` — show the rotation HUD out of combat to place it.
+- `/everfrost mode auto` / `st` / `cleave` / `aoe` — rotation mode.
+- `/everfrost layout track` / `classic` / `minimal` / `tank` — HUD layout.
 - `/everfrost gear` — print the current stat order; add `on` or `off` to toggle hints.
 - `/everfrost minimap on` — restore a hidden minimap button.
 - `/everfrost refresh` — refresh cached metadata outside combat.
 - `/everfrost status` — report class/spec/level, cached talent totals and detection source.
 
-Left-click the minimap logo for settings, right-click to toggle the reference panel, or drag it around the minimap. Settings includes guide/role selection, a 60%–200% panel-size slider, gear controls and a bag rescan button.
+Left-click the minimap logo for settings, right-click to show or hide the HUD, or drag it around the minimap. Settings has Rotation, HUD, Controller, Detection, Gear & Loot and Talents pages.
 
 ## Releases and verification
 
 The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling. **0.6.2** tidies the specialisation picker into a compact single-line menu. **0.6.3** fixes Subtlety Rogue Attack Power scoring and reduces background bag scans; it reached CurseForge as **0.6.4** after a packaging fix. **0.6.5** tidies status text, grey text and repeated tooltip notes. **0.6.6** counts more armour as a tie-break and adds a green up arrow to bag upgrades. **0.6.7** fixes Need/Greed highlights on Forever's loot-roll buttons, bag tracking and several gear-score cases. **0.6.8** adds starter priorities below level 10, quest reward and merchant marks, plain-word tooltips and empty slot reminders. **0.6.9** clarifies the spec menu note below level 10.
 
-**0.7.0** extends guides and gear hints to level 60, counts armour and Equip effects, and tidies the upgrade highlight. **0.8.0** adds talent recommendations in the talent window and a resizable panel.
+**0.7.0** extends guides and gear hints to level 60, counts armour and Equip effects, and tidies the upgrade highlight. **0.8.0** adds talent recommendations in the talent window and a resizable panel. **0.9.0** replaces the panel with a rotation HUD (automatic single target, cleave and AoE; controller layouts; a defensive row), re-reads all 27 rotations, reworks gear marks and fixes talent highlights.
 
-Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse, settings layout, armour tie-break and green arrow. The 0.8.0 talent recommendations and resize corner, the 0.7.0 changes (levels 31–60, armour and Equip-effect scoring, the new highlight) and the 0.6.8 quest and merchant marks have not yet been checked in game. English guidance; some Forever-specific spells depend on English spellbook names.
+Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse, settings layout, armour tie-break and green arrow. Everything in 0.9.0, the 0.8.0 talent recommendations and resize corner, the 0.7.0 changes (levels 31–60, armour and Equip-effect scoring, the new highlight) and the 0.6.8 quest and merchant marks have not yet been checked in game. English guidance; some Forever-specific spells depend on English spellbook names.
 
 **MIT licensed. Third-party addon-manager distribution is enabled.** Everfrost is independent and is not affiliated with or endorsed by Blizzard, Icy Veins or OpenAI.
 

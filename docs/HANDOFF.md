@@ -340,3 +340,46 @@ checked), public description updated. Next steps: confirm the file is approved; 
 check the talent window's gold glow and tooltip lines, /everfrost talents, and the resize
 corner (docs/INGAME_CHECKLIST.md items 15 and 16). When chaining a merge with branch
 deletion, check the merge succeeded first.
+
+November 24, 2026, unreleased, branch claude/rotation-hud (uncommitted at the user's request:
+"Do not commit, publish, or push changes ... unless explicitly instructed"): the user's
+"complete UI/UX and rotation engine overhaul" brief.
+- Forever facts used (Gethe/wow-ui-source branch `forever`, 1.60.1.71037): the combat log is
+  restricted; spell cooldowns, threat, auras and unit identity can be secret in combat;
+  C_AssistedCombat (GetNextCastSpell, IsAvailable) exists and drives Blizzard's own action-bar
+  highlight; C_InputInterfaceStyle.GetCurrentStyle and INPUT_DEVICE_INTERFACE_TRANSITION report
+  keyboard or gamepad; C_Spell.IsSpellUsable returns plain booleans.
+- Rotation HUD replaces the panel (Combat.lua engine, enemy estimate, modes and input; HUD.lua
+  drawing; Main.lua wiring). NOW = Blizzard's assistant if available, else the first guide spell
+  the game says is ready. Upcoming = guide order. Upkeep spells (NS.upkeep) only as reminders when
+  the game says the buff is missing (out of combat). Utility row from NS.utility, never "urgent".
+  Four layouts, one engine. Combat-only by default; click-through in combat.
+- AUTO mode: nameplate estimate (alive, attackable, in combat, not pets/totems, on threat list
+  where readable; group fallback), thresholds per spec (db.hud.thresholds["PALADIN2"]), step down
+  after db.hud.grace (1.5 s), unseen enemies kept db.hud.stale (5 s). Secret -> "?" and single.
+  Cleave = single list + NS.cleaveSpells.
+- Input: game input style with 0.75 s debounce; keyboard layout keeps db.point/x/y and db.scale,
+  controller layout uses db.hud.pad and db.hud.padScale.
+- Saved variables: EverfrostDB.version=2, EverfrostDB.hud (see hudDefaults in Main.lua); db.aoe
+  migrates to hud.mode "aoe" and is removed. Gear focus per spec: db.gearFocus["PALADIN2"].
+- Settings: six tabs (Rotation, HUD, Controller, Detection, Gear & Loot, Talents).
+- Gear (helper agent): one engine with verdict tiers (clear >=10%, minor >=3%), tank focus profiles,
+  two-hander vs weapon+shield, thin borders, quest "Recommended". See docs/GEAR.md.
+- Talents (helper agent): next legal build pick, prerequisites/row gates/level, reasons, one
+  overlay per button. See docs/INGAME_CHECKLIST.md item 15.
+- Not done: no new Protection Paladin rotation rules (Icy Veins refused automated reading; the
+  11 November guide data stands, so Holy Shield isn't in the track). Profile import/export doesn't
+  exist and wasn't added. No screenshots.
+npm test (check, gear, gear-verdicts, talents, hud), luacheck and npm run build pass. Nothing seen
+in game. Next: the user commits/merges when ready; walk docs/INGAME_CHECKLIST.md items 15 and
+17-25 on the Protection Paladin; report /everfrost status (says whether Blizzard's assistant is
+available) and whether the enemy count shows numbers or "?" in dungeons.
+
+November 24, 2026, later (same branch, still uncommitted): all 27 Icy Veins rotation pages were
+read in the user's Chrome (Claude in Chrome; Icy Veins refuses plain fetches) and every tree's
+list rebuilt at the end of Profiles.lua. New `proc` flag on steps: never NOW from the guide alone.
+BuildRows shows a spell once even if listed for single and AoE. ~45 spell IDs added from Icy
+Veins' Forever spell links (Penance changed to 402174); only Sniper Shot is still English-only.
+Details and ambiguities: addon/Everfrost/SOURCES.md, "November 24 review". Not done: stat
+priorities and talent builds weren't re-read. Check in game: `/everfrost spellids` on a few
+classes to confirm the new IDs resolve.

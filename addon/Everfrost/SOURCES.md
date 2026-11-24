@@ -75,3 +75,31 @@ WoW Forever launched on November 4, 2026 with a level cap of 60, and all 27 guid
 ## November 11 talent builds
 
 Each levelling guide embeds a talent calculator with the guide's build as an ordered list of talent points, level 10 to 60 (the `data-talentcalculator-pointsurl` attribute), and each class has a calculator page listing its talents (`https://www.icy-veins.com/wow-forever/<class>-talent-calculator`). Both were read on November 11, 2026 for all 27 trees and nine classes. The data and the script that checks it (51 points per build, no talent over its maximum rank) are in `scripts/talent-data.py`, which writes `addon/Everfrost/TalentData.lua`. Talent names are matched to the game's by name, ignoring case, spaces and punctuation; a talent the game names differently is skipped rather than recommended. These are the guides' levelling builds, not their level 60 dungeon or raid builds.
+
+## November 24 review (rotation pages)
+
+Icy Veins added a separate *Rotation, Cooldowns and Abilities* page for every tree on 4 November 2026; ten were updated later (Retribution 14 Nov, Survival 20 Nov, Arcane and Fire 10 Nov, Frost 9 Nov, Fury 16 Nov, Shadow 17 Nov, Affliction 16 Nov, Elemental 7 Nov, Enhancement 13 Nov). All 27 were read on 24 November 2026 in the user's browser and every tree's list was rebuilt from them (end of Profiles.lua). The level 31–60 levelling-guide steps that the max-level pages don't mention were kept, below the fillers, marked "Levelling" in their hints.
+
+Because the lists now drive the rotation HUD, fillers sit below the spells they wait for, and steps that depend on something the addon can't see in combat (a proc, a debuff running out, mana) are marked `proc` and never become NOW on the guide's word alone. Highlights:
+
+| Class | Main changes |
+| --- | --- |
+| Paladin | Protection: Holy Shield added; Judgement as often as possible; Exorcism only on Undead/Demon packs. Holy: Oath of Light, Seal of Wisdom, Light's Vigil before Flash of Light; its damage list follows the guide. Retribution: Hammer of Wrath first, Consecration on one target too, Holy Wrath for Undead packs, Unsealed Wrath and Shockadin seals. Divine Shield is an emergency button (it drops your threat). |
+| Hunter | Rapid Fire, Bestial Wrath, Immolation Trap and the Aspects added; Marksmanship rebuilt (Sniper Shot first); Survival's melee list per the 20 Nov update; Disengage moved to the defensive row. |
+| Mage | Pyroblast at Heating Up and Fire Blast first for Arcane and Fire; Fire's own AoE; Frost rebuilt around Winter's Chill, Fingers of Frost and Frigid Power, with Cold Snap. Blink in the defensive row. |
+| Warrior | All three rebuilt: Arms (Overpower, Mortal Strike, Execute, Slam, Spearing Strike, Hamstring), Fury (Whirlwind first, Bloodthirst, Reckless Swings, Berserker Rage), Protection (Shield Block, Shield Slam, Revenge, Thunder Clap on one target too). Concussion Blow, Disarm and Intimidating Shout in the defensive row. |
+| Rogue | Expose Armor, Rupture, Shank, Cold Blood and Adrenaline Rush added; Garrote opens; Subtlety rebuilt around Death Mark, Ghostly Strike and Premeditation. Blind in the defensive row. |
+| Priest | Shadow rebuilt (Shadowform, Shadow Word: Death, Vampiric Embrace, Inner Focus); Discipline's Penance and Holy Nova moved per the guide. |
+| Warlock | Fillers below damage effects; Life Tap; Bane of Doom; Bane of Havoc counts for cleave; Hellfire before Rain of Fire. Shadow Ward and Howl of Terror in the defensive row. |
+| Druid | Balance's Insect Swarm first and Hurricane at five or more; Cat's Ferocious Bite and Faerie Fire; Bear's Demoralizing Roar; Restoration's Wild Growth and Regrowth-first healing. Rebirth and Nature's Grasp in the defensive row. |
+| Shaman | Elemental rebuilt around totems, Flame Shock and Lightning Mastery; Enhancement drops Flametongue Totem for Magma and keeps Lightning Bolt for five Maelstrom stacks; Restoration's Riptide and Mana Tide hints. Earthbind Totem and Nature's Swiftness in the defensive row. |
+
+Spell IDs for new and Forever-only spells come from the pages' own spell links (Icy Veins' Forever database), rank 1 where known. They only translate names for other languages; check them with `/everfrost spellids`. Sniper Shot's link (7032) looked wrong, so it still matches by English name.
+
+### Ambiguities in the November pages
+
+- Elemental says to cast Chain Lightning "outside the Lightning Mastery buff window"; the hint keeps only the Clearcasting part.
+- Retribution's seal swaps depend on weapon speed; the hint gives the slow-weapon case.
+- Fire and Combat each describe two builds the addon can't tell apart; hints name the build.
+- Survival's text swaps the Frost Trap and Freezing Trap names.
+- Affliction puts the Curse before the Bane; Demonology and Destruction put the Bane first. Each list follows its own page.

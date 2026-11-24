@@ -7,7 +7,6 @@ local hookedBags=setmetatable({},{__mode="k"})
 -- Quest reward and merchant buttons, each with its comparison and how to mark it.
 local overlays=setmetatable({},{__mode="k"})
 local hookedOverlays=setmetatable({},{__mode="k"})
-local sellValueColour={color={1,0.82,0}}
 local discoverDue=true
 local hooked={}
 local queued=false
@@ -17,122 +16,212 @@ local function public(v,kind) return NS.Public(v) and type(v)==kind end
 local function first(fn,...)
  local result=NS.Call(fn,...); return result and result[1]
 end
+
+-- Marks are deliberately quiet. Square item buttons get a thin border drawn just inside their
+-- edge, never past it and never over the whole icon; a clear upgrade's border is a little
+-- thicker and brighter than a minor one's, and only a clear upgrade gets the native green arrow.
+-- Round loot-roll buttons get a faint ring instead, since a square around a round button reads
+-- as a stray box; only a clear upgrade's Need ring breathes, slowly. Sidegrades get no mark.
+NS.gearMarkStyles={
+ clear={color={0.30,0.90,0.35},alpha=0.95,line=2,arrow=true},
+ minor={color={0.45,0.80,0.50},alpha=0.70,line=1},
+ sell={color={1,0.82,0},alpha=0.75,line=1},
+ -- Roll buttons.
+ needClear={color={0.30,0.90,0.35},alpha=0.70,ring=true,pulse={from=0.55,to=1,seconds=1.6}},
+ needMinor={color={0.45,0.80,0.50},alpha=0.45,ring=true},
+ greedHint={color={0.60,0.60,0.60},alpha=0.30,ring=true},
+}
+local STYLE=NS.gearMarkStyles
+local RING_TEXTURE="Interface\\Buttons\\UI-ActionButton-Border"
+
 local function hide(button)
- if button and button.EverfrostGearGlow then
-  button.EverfrostGearGlow:Hide()
-  for _,edge in ipairs(button.EverfrostGearEdges or {}) do edge:Hide() end
-  for _,pulse in ipairs(button.EverfrostGearPulses or {}) do pulse:Stop() end
-  if button.EverfrostGearArrow then button.EverfrostGearArrow:Hide() end
+ local m=button and button.EverfrostMark
+ if not m then return end
+ for _,edge in ipairs(m.edges) do edge:Hide() end
+ if m.ring then m.ring:Hide() end
+ if m.pulse then m.pulse:Stop() end
+ if m.arrow then m.arrow:Hide() end
+ if m.label then m.label:Hide() end
+ m.style=nil
+end
+-- The mark's widgets, created once per button and reused when the button is.
+local function parts(button,target)
+ local m=button.EverfrostMark
+ if m then return m end
+ -- Never create widgets in combat; existing marks can still be shown or hidden.
+ if InCombatLockdown() or not button.CreateTexture then return nil end
+ m={edges={},target=target or button}
+ for i=1,4 do
+  local edge=button:CreateTexture(nil,"OVERLAY",nil,6)
+  edge:SetColorTexture(1,1,1,1); edge:Hide(); m.edges[i]=edge
+ end
+ button.EverfrostMark=m
+ return m
+end
+local function layoutEdges(m,line)
+ if m.line==line then return end
+ m.line=line
+ local t,e=m.target,m.edges
+ -- Top and bottom run the full width; the sides fit between them, so no corner doubles up.
+ local spots={
+  {"TOPLEFT",0,0,"TOPRIGHT",0,0,true},{"BOTTOMLEFT",0,0,"BOTTOMRIGHT",0,0,true},
+  {"TOPLEFT",0,-line,"BOTTOMLEFT",0,line},{"TOPRIGHT",0,-line,"BOTTOMRIGHT",0,line}}
+ for i,spot in ipairs(spots) do
+  local edge=e[i]
+  edge:ClearAllPoints()
+  edge:SetPoint(spot[1],t,spot[1],spot[2],spot[3]); edge:SetPoint(spot[4],t,spot[4],spot[5],spot[6])
+  if spot[7] then edge:SetHeight(line) else edge:SetWidth(line) end
  end
 end
--- The highlight's look, in one place. A soft glow sized to the button, with a thin outline that
--- sits exactly on a square button's edge. Roll buttons are round, so they get the glow alone:
--- a square drawn around a round button read as a stray box.
-local GLOW={line=2,dim=0.4,bright=1,seconds=0.9}
-local function glow(button, shown, item, arrow, round)
- if not button then return end
- if not shown then hide(button); return end
- -- Never create or hook widgets in combat; pre-existing cosmetic glows are safe.
- if not button.EverfrostGearGlow then
-  if InCombatLockdown() then return end
-  local texture=button:CreateTexture(nil,"OVERLAY",nil,7)
-  texture:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-  texture:SetBlendMode("ADD")
-  -- The border art's ring sits about a third of the way in, so the overhang follows the
-  -- button's size rather than a fixed 12 pixels that only suited bag slots.
+local function ring(button,m,style)
+ if not m.ring then
+  if InCombatLockdown() then return nil end
+  local texture=button:CreateTexture(nil,"OVERLAY",nil,6)
+  texture:SetTexture(RING_TEXTURE); texture:SetBlendMode("ADD")
+  -- The border art's ring sits about a third of the way in, so the overhang follows the button.
   local width=first(button.GetWidth,button)
   local pad=public(width,"number") and width>0 and math.floor(width*0.32+0.5) or 12
   texture:SetPoint("TOPLEFT",button,"TOPLEFT",-pad,pad)
   texture:SetPoint("BOTTOMRIGHT",button,"BOTTOMRIGHT",pad,-pad)
-  button.EverfrostGearGlow=texture
-  -- Animate every layer together, so the outline also fades visibly.
-  button.EverfrostGearEdges={}
-  button.EverfrostGearPulses={}
-  local function pulse(layer)
-   if not layer.CreateAnimationGroup then return end
-   local group=layer:CreateAnimationGroup()
-   local alpha=group:CreateAnimation("Alpha")
-   alpha:SetFromAlpha(GLOW.dim); alpha:SetToAlpha(GLOW.bright); alpha:SetDuration(GLOW.seconds)
-   -- Eases in and out, so it breathes rather than blinks.
-   if alpha.SetSmoothing then alpha:SetSmoothing("IN_OUT") end
-   group:SetLooping("BOUNCE")
-   button.EverfrostGearPulses[#button.EverfrostGearPulses+1]=group
-  end
-  pulse(texture)
-  local function edge(from,x1,y1,to,x2,y2,horizontal)
-   local line=button:CreateTexture(nil,"OVERLAY",nil,7)
-   line:SetColorTexture(1,1,1,1)
-   line:SetPoint(from,button,from,x1,y1); line:SetPoint(to,button,to,x2,y2)
-   if horizontal then line:SetHeight(GLOW.line) else line:SetWidth(GLOW.line) end
-   button.EverfrostGearEdges[#button.EverfrostGearEdges+1]=line
-   pulse(line)
-  end
-  if not round then
-   -- Flush with the button: top and bottom run the full width, the sides fit between them,
-   -- so no corner is drawn twice and nothing pokes out past the slot.
-   edge("TOPLEFT",0,0,"TOPRIGHT",0,0,true)
-   edge("BOTTOMLEFT",0,0,"BOTTOMRIGHT",0,0,true)
-   edge("TOPLEFT",0,-GLOW.line,"BOTTOMLEFT",0,GLOW.line,false)
-   edge("TOPRIGHT",0,-GLOW.line,"BOTTOMRIGHT",0,GLOW.line,false)
-  end
+  m.ring=texture
  end
- local color=item and item.color or {1,1,1}
- button.EverfrostGearGlow:SetVertexColor(color[1],color[2],color[3],1)
- button.EverfrostGearGlow:Show()
- for _,edge in ipairs(button.EverfrostGearEdges) do
-  edge:SetVertexColor(color[1],color[2],color[3],1); edge:Show()
+ if style.pulse and not m.pulse and m.ring.CreateAnimationGroup and not InCombatLockdown() then
+  local group=m.ring:CreateAnimationGroup()
+  local alpha=group:CreateAnimation("Alpha")
+  alpha:SetFromAlpha(style.pulse.from); alpha:SetToAlpha(style.pulse.to); alpha:SetDuration(style.pulse.seconds)
+  if alpha.SetSmoothing then alpha:SetSmoothing("IN_OUT") end
+  group:SetLooping("BOUNCE")
+  m.pulse=group
  end
- for _,pulse in ipairs(button.EverfrostGearPulses) do
-  if not pulse:IsPlaying() then pulse:Play() end
+ return m.ring
+end
+-- Shows one style on a button (nil hides). target is the region the border outlines (default
+-- the button). Repainting the same style keeps a running pulse going.
+local function mark(button,style,target,label,labelColor)
+ if not button then return end
+ if not style then hide(button); return end
+ local m=parts(button,target)
+ if not m then return end
+ local c=style.color
+ if style.ring then
+  for _,edge in ipairs(m.edges) do edge:Hide() end
+  local texture=ring(button,m,style)
+  if texture then
+   texture:SetVertexColor(c[1],c[2],c[3],style.alpha); texture:Show()
+   if m.pulse then
+    if style.pulse then if not m.pulse:IsPlaying() then m.pulse:Play() end else m.pulse:Stop() end
+   end
+  end
+ else
+  if m.ring then m.ring:Hide() end
+  if m.pulse then m.pulse:Stop() end
+  layoutEdges(m,style.line or 1)
+  for _,edge in ipairs(m.edges) do edge:SetVertexColor(c[1],c[2],c[3],style.alpha); edge:Show() end
  end
- -- The native bag upgrade arrow, inset to clear the outline. It stays steady while the glow pulses.
- if arrow and not button.EverfrostGearArrow and button.CreateTexture and not InCombatLockdown() then
+ -- The native bag upgrade arrow, in the corner opposite the stack count.
+ if style.arrow and not m.arrow and not InCombatLockdown() then
   local icon=button:CreateTexture(nil,"OVERLAY",nil,7)
   if icon.SetAtlas then icon:SetAtlas("bags-greenarrow",true) end
-  icon:SetPoint("TOPLEFT",button,"TOPLEFT",2,-2)
-  button.EverfrostGearArrow=icon
+  icon:SetPoint("TOPLEFT",m.target,"TOPLEFT",2,-2)
+  m.arrow=icon
  end
- if button.EverfrostGearArrow then
-  if arrow then button.EverfrostGearArrow:Show() else button.EverfrostGearArrow:Hide() end
+ if m.arrow then if style.arrow then m.arrow:Show() else m.arrow:Hide() end end
+ -- A small word in the button's bottom-right corner (quest rewards only).
+ if label and not m.label and button.CreateFontString and not InCombatLockdown() then
+  local text=button:CreateFontString(nil,"OVERLAY","GameFontNormalSmall")
+  text:SetPoint("BOTTOMRIGHT",button,"BOTTOMRIGHT",-4,3)
+  m.label=text
  end
+ if m.label then
+  if label then
+   local lc=labelColor or c
+   m.label:SetText(label); m.label:SetTextColor(lc[1],lc[2],lc[3]); m.label:Show()
+  else m.label:Hide() end
+ end
+ m.style=style
 end
--- The talent window borrows the same highlight.
-NS.Glow=glow
+-- The talent window borrows a gentle ring: NS.Glow(button, shown, {color={r,g,b}}).
+local talentStyles=setmetatable({},{__mode="k"})
+NS.Glow=function(button,shown,item)
+ if not shown then mark(button,nil); return end
+ local color=item and item.color or {1,1,1}
+ local style=talentStyles[color]
+ if not style then
+  style={color=color,alpha=0.85,ring=true,pulse={from=0.5,to=1,seconds=1.6}}
+  talentStyles[color]=style
+ end
+ mark(button,style)
+end
+-- The style for a square item button, from the verdict.
+local function itemStyle(result)
+ if not result or result.kind~="need" then return nil end
+ return result.verdict=="clear" and STYLE.clear or result.verdict=="minor" and STYLE.minor or nil
+end
+
+-- Tooltip wording ----------------------------------------------------------------------------
+local headColour={clear={0.35,0.95,0.45},minor={0.6,0.88,0.6},sidegrade={0.82,0.82,0.82},spec={0.55,0.75,1},
+ unusable={0.85,0.5,0.45},downgrade={0.78,0.62,0.55},unknown={0.7,0.7,0.7}}
+local function percent(result)
+ if not result.pct or (result.previous or 0)<1 then return "" end
+ local n=math.floor(math.abs(result.pct)*100+0.5)
+ if n>200 then return result.pct>0 and " (over +200%)" or "" end
+ return string.format(" (%s%d%%)",result.pct>=0 and "+" or "-",n)
+end
+-- The verdict in two or three words, as the tooltip's first line shows it.
+function G.Headline(result)
+ local v=result.verdict
+ local text
+ if v=="clear" then text=result.empty and "Clear upgrade (empty slot)" or "Clear upgrade"..percent(result)
+ elseif v=="minor" then text="Minor upgrade"..percent(result)
+ elseif v=="sidegrade" then text="Sidegrade"
+ elseif v=="spec" then text="Better for "..(result.altLabel or "another spec")
+ elseif v=="unusable" then text="Not usable"
+ elseif v=="downgrade" then text="Downgrade"..((result.pct and result.pct<0) and percent(result) or "")
+ else text="Not scored" end
+ if result.combined and result.kind=="need" then text=text.." (equip both)" end
+ return text
+end
+local effectWords={use="Use effect",proc="chance-on-hit effect",equip="Equip effect"}
+local function effectText(set)
+ local words={}
+ for _,key in ipairs({"use","proc","equip"}) do if set[key] then words[#words+1]=effectWords[key] end end
+ return table.concat(words," and ")
+end
+local white,gold,dim={0.85,0.9,1},{1,0.82,0.22},{0.65,0.72,0.82}
 function G.Tooltip(tooltip,result,roll)
  if not tooltip or not result then return end
  roll=roll==true
  if tooltip.EverfrostGearResult==result and tooltip.EverfrostGearRoll==roll then return end
  tooltip.EverfrostGearResult=result; tooltip.EverfrostGearRoll=roll
+ local function line(text,colour) tooltip:AddLine(text,colour[1],colour[2],colour[3],true) end
  tooltip:AddLine(" ")
- local label=result.kind=="need" and (result.combined and "UPGRADE (equip both)" or "UPGRADE") or result.kind=="greed" and "No upgrade" or "Not scored"
- if roll and result.kind~="unknown" then label=label..(result.kind=="need" and " / Need" or " / Greed") end
- tooltip:AddLine("Everfrost: "..label,1,0.82,0.22)
- tooltip:AddLine(result.reason,0.85,0.9,1,true)
- if result.why then tooltip:AddLine(result.why,0.85,0.9,1,true) end
- if result.note then tooltip:AddLine(result.note,1,0.82,0.22,true) end
- if result.combined then
-  tooltip:AddLine("Pair with: "..result.companionName,1,0.82,0.22,true)
-  tooltip:AddLine("Combined pair compared with your equipped two-hander; equip both items.",0.85,0.9,1,true)
- end
+ local head=G.Headline(result)
+ if roll and result.kind~="unknown" then head=head..(result.kind=="need" and " / Need" or " / Greed") end
+ line("Everfrost: "..head,headColour[result.verdict] or headColour.unknown)
+ -- One or two short lines of why: the specific reason, then the stat that decided it.
+ if result.reason and not (result.generic and result.why) then line(result.reason,white) end
+ if result.why then line(result.why,white) end
+ if result.unscored then line("Its "..effectText(result.unscored).." can't be scored; judge that part yourself.",gold) end
+ if result.oldUnscored then line("Your current item's "..effectText(result.oldUnscored).." isn't counted.",gold) end
+ if result.slotNote then line(result.slotNote,dim) end
+ for _,note in ipairs(result.notes or {}) do line(note,gold) end
+ if result.combined then line("Pair with: "..result.companionName,gold) end
  local c=G.context
  local p=c and NS.GearProfile(c.class,c.spec,c.role,c.level)
- local starter=p and p.starter
- -- Armor is not scored for most specs, so "0.0 vs 0.0" would only confuse here.
- -- Scores mean little on starter gear, where the reason above says enough.
- if result.delta and not result.armorOnly and not starter then
-  tooltip:AddLine(string.format("Estimated score: %.1f vs %.1f (%+.1f)",result.score,result.previous,result.delta),0.85,0.9,1,true)
-  local armour=result.armorCredit
-  if armour and (armour>0.05 or armour<-0.05) then tooltip:AddLine(string.format("Armour accounts for %+.1f of that.",armour),0.85,0.9,1,true) end
+ if p then
+  local title=p.starter and "Starter priority: " or p.focusLabel and (p.focusLabel.." priority: ") or "Priority: "
+  line(title..NS.GearOrderText(p),dim)
+  if p.starter then line("Simple estimate from your class's usual stats.",dim) end
  end
- if p then tooltip:AddLine((starter and "Starter priority: " or "Priority: ")..NS.GearPriorityText(p),0.75,0.82,0.92,true) end
- tooltip:AddLine(starter and "Simple estimate from your class's usual stats. Check effects and group loot rules." or "Guide-based stat estimate. Check effects, weapon setup and group loot rules.",0.65,0.72,0.82,true)
  tooltip:Show()
 end
+
+-- Bags ---------------------------------------------------------------------------------------
 function G.PaintBag(button)
  local entry=bags[button]
  if not entry then return end
- local cached=G.bags[entry.bag] and G.bags[entry.bag][entry.slot]
- glow(button,G.enabled and not G.pending and cached and cached.result.kind=="need" or false,cached and cached.item,true)
+ local cached=G.enabled and not G.pending and G.bags[entry.bag] and G.bags[entry.bag][entry.slot]
+ mark(button,cached and itemStyle(cached.result) or nil)
 end
 function G.TrackBag(button,bag,slot)
  if not button then return end
@@ -179,6 +268,8 @@ local function discoverBags()
  for i=1,13 do container(_G["ContainerFrame"..i]) end
  container(ContainerFrameCombinedBags)
 end
+
+-- Loot rolls ---------------------------------------------------------------------------------
 -- Forever nests the roll buttons in LootButtonContainer; older clients use the frame or its name.
 local function rollButton(frame,name)
  local holder=frame.LootButtonContainer
@@ -200,8 +291,12 @@ function G.PaintRoll(frame)
   return public(enabled,"boolean") and enabled and public(shown,"boolean") and shown
  end
  -- A disabled Need option never changes an upgrade into a Greed recommendation.
- glow(need,result.kind=="need" and data.canNeed and available(need),data.item,false,true)
- glow(greed,result.kind=="greed" and data.canGreed and available(greed),data.item,false,true)
+ local needStyle=result.kind=="need" and data.canNeed and available(need) and
+  (result.verdict=="clear" and STYLE.needClear or STYLE.needMinor) or nil
+ -- Greed gets only a faint hint, and only for items you would not wear.
+ local greedStyle=result.kind=="greed" and (result.verdict=="downgrade" or result.verdict=="unusable") and
+  data.canGreed and available(greed) and STYLE.greedHint or nil
+ mark(need,needStyle); mark(greed,greedStyle)
 end
 function G.TrackRoll(frame)
  if not frame then return end
@@ -236,11 +331,18 @@ local function readRoll(id)
  if not public(info[6],"boolean") or not public(info[7],"boolean") then return end
  G.rolls[id]={link=link,item=G.ReadItem(link),result=G.Evaluate(link),canNeed=info[6],canGreed=info[7]}
 end
+
+-- Quest rewards and merchants -----------------------------------------------------------------
 local function paintOverlay(button)
  local entry=overlays[button]
  if not entry then return end
- local shown=G.enabled and not G.pending and entry.mark~=nil
- glow(button,shown,entry.mark=="sell" and sellValueColour or entry.item,entry.mark=="upgrade")
+ if not (G.enabled and not G.pending and entry.mark) then hide(button); return end
+ -- Quest rewards outline the icon only, leaving the reward's name clear.
+ local icon=entry.kind=="quest" and button.Icon
+ local target=type(icon)=="table" and icon or nil
+ if entry.mark=="sell" then mark(button,STYLE.sell,target,"Best sell value")
+ elseif entry.mark=="recommended" then mark(button,itemStyle(entry.result) or STYLE.minor,target,"Recommended",STYLE.clear.color)
+ else mark(button,itemStyle(entry.result),target) end
 end
 function G.Paint()
  for button in pairs(bags) do G.PaintBag(button) end
@@ -265,7 +367,23 @@ local function addOverlay(button,kind,link)
  end
  return entry
 end
--- Mark the best quest choice. With no upgrade on offer, mark what sells for the most instead.
+local function note(entry,text)
+ local notes=entry.result.notes or {}
+ for _,existing in ipairs(notes) do if existing==text then return end end
+ notes[#notes+1]=text; entry.result.notes=notes
+end
+-- The choice with the largest estimated gain that is a real upgrade under one profile.
+local function bestChoice(entries,results)
+ local best
+ for index in ipairs(entries) do
+  local r=results[index]
+  if r.kind=="need" and (not best or r.delta>results[best].delta) then best=index end
+ end
+ return best and entries[best],best
+end
+-- Rewards within this share of the best gain are called a close call.
+NS.gearCompetitive=0.85
+-- Recommend the best quest upgrade. With none on offer, mark what sells for the most instead.
 local function readQuestChoices()
  clearOverlays("quest")
  local info=QuestInfoFrame
@@ -280,20 +398,46 @@ local function readQuestChoices()
   end
  end
  if #entries<2 then return end
- local best,seller
- for _,entry in ipairs(entries) do
+ local results={}
+ for index,entry in ipairs(entries) do
   -- Wait for every choice's data, so the mark never settles on a partial list.
   if not entry.item or entry.result.waiting then return end
-  if entry.result.kind=="need" and (not best or entry.result.delta>best.result.delta) then best=entry end
-  if entry.item.sellPrice>0 and (not seller or entry.item.sellPrice>seller.item.sellPrice) then seller=entry end
+  results[index]=entry.result
  end
+ local best,bestIndex=bestChoice(entries,results)
  if best then
-  best.mark="upgrade"; best.result.note="Best reward choice for you."
- elseif seller then
-  seller.mark="sell"; seller.result.note="None of these is an upgrade, so this one is marked because it sells for the most."
+  best.mark="recommended"
+  local close={}
+  for index,entry in ipairs(entries) do
+   local r=results[index]
+   if index~=bestIndex and r.kind=="need" and r.delta>=results[bestIndex].delta*NS.gearCompetitive then
+    close[#close+1]=entry; note(entry,"Close to the recommended reward; either is a good pick.")
+   end
+  end
+  note(best,#close>0 and "Recommended, but it's a close call with "..#close..(#close==1 and " other reward." or " others.") or "Recommended: the best upgrade among these rewards.")
+ else
+  local seller
+  for _,entry in ipairs(entries) do
+   if entry.item.sellPrice>0 and (not seller or entry.item.sellPrice>seller.item.sellPrice) then seller=entry end
+  end
+  if seller then
+   seller.mark="sell"; note(seller,"None of these is an upgrade, so this one is marked because it sells for the most.")
+  end
  end
+ -- When another focus or talent tree of your class would pick a different reward, say so.
+ local p=G.context and NS.GearProfile(G.context.class,G.context.spec,G.context.role,G.context.level)
+ local differs=false
+ for _,alt in ipairs(G.Alternatives(G.context)) do
+  local altResults={}
+  for index,entry in ipairs(entries) do
+   altResults[index]=G.Compare(entry.item,G.equipment,alt.context,G.carried,nil,alt.profile)
+  end
+  local altBest=bestChoice(entries,altResults)
+  if altBest and altBest~=best then differs=true; note(altBest,"Best for "..alt.bestFor..".") end
+ end
+ if differs and best and p and p.bestFor then note(best,"Best for "..p.bestFor..".") end
 end
--- Upgrades on the current merchant page. The glow waits until you can afford the item.
+-- Upgrades on the current merchant page. The mark waits until you can afford the item.
 local function readMerchant()
  clearOverlays("merchant")
  local merchant=MerchantFrame
@@ -306,13 +450,15 @@ local function readMerchant()
    if public(link,"string") then
     local entry=addOverlay(button,"merchant",link)
     if entry.result.kind=="need" then
-     if first(CanAffordMerchantItem,index)==false then entry.result.note="You can't afford this yet."
+     if first(CanAffordMerchantItem,index)==false then note(entry,"You can't afford this yet.")
      else entry.mark="upgrade" end
     end
    end
   end
  end
 end
+
+-- Hooks and scheduling -----------------------------------------------------------------------
 local function installHooks()
  if InCombatLockdown() or not hooksecurefunc then return end
  if GameTooltip and not hooked.tooltipClear and GameTooltip.HookScript then
@@ -412,7 +558,7 @@ eventFrame:SetScript("OnEvent",function(_,event,value)
   for _,entry in pairs(overlays) do if entry.result.waiting then waiting=true end end
   if not waiting then return end
  end
- -- Outside combat the rescan lands next frame: keep the glows so their pulse carries on.
+ -- Outside combat the rescan lands next frame: keep the marks so a running pulse carries on.
  if InCombatLockdown() then G.pending=true; G.Paint() end
  G.Schedule()
 end)
