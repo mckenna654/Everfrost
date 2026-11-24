@@ -298,3 +298,8 @@ The CurseForge webhook returned HTTP 200. The author console shows v0.8.0 as a R
 1.60.1, status Processing when checked. The public description was updated in Markdown
 mode to match docs/CURSEFORGE.md ("What's new in 0.8.0"). Not done: downloading the
 generated ZIP to compare its contents with the tag.
+
+November 24, 2026: v0.9.0 (merge 3a4133e) generated CurseForge file #9784693
+(`Everfrost-Source-v0.9.0.zip`) as a Release for Forever 1.60.1, Under Review when
+checked. Its file notes came from the changelog automatically. The ZIP was not downloaded
+and checked this time.

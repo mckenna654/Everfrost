@@ -383,3 +383,12 @@ Veins' Forever spell links (Penance changed to 402174); only Sniper Shot is stil
 Details and ambiguities: addon/Everfrost/SOURCES.md, "November 24 review". Not done: stat
 priorities and talent builds weren't re-read. Check in game: `/everfrost spellids` on a few
 classes to confirm the new IDs resolve.
+
+Published 0.9.0 on November 24, 2026 at the user's request ("merge and update github and
+curseforge including release notes"), without an in-game test: PR #10 merged (3a4133e), branch
+deleted, GitHub latest v0.9.0 with Everfrost-0.9.0.zip and notes from the changelog. The webhook
+returned 200; CurseForge built file 9784693 (Everfrost-Source-v0.9.0.zip) as a Release for 1.60.1,
+Under Review when checked, with the changelog as its notes. The CurseForge description
+(docs/CURSEFORGE.md) and summary were updated in the author console. The CurseForge ZIP itself was
+not downloaded and inspected. Next: confirm approval; walk docs/INGAME_CHECKLIST.md items 15 and
+17-25 on the Protection Paladin; `/everfrost spellids` to confirm the new IDs; new screenshots.
