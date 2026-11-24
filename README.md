@@ -26,27 +26,41 @@ CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distributio
 | Target interface | `16001` — compatibility with the actual Forever client remains unverified |
 | Runtime | Lua 5.1-compatible syntax; no third-party addon libraries required |
 | Validation | Lua syntax checks, a luacheck globals check and mocked-client regression tests, run automatically on GitHub Actions |
-| In-game verification | Selected gear/glow/settings behavior confirmed by user in earlier versions; the rotation HUD, enemy estimate, controller layouts, gear rework and talent fix are untested in game |
+| In-game verification | Selected gear/glow/settings behavior confirmed by user in earlier versions. On 24 November 2026 the 0.9.0 settings, HUD (out of combat), gear tooltips and talent tooltips were seen rendering in game; HUD behaviour in combat, the enemy estimate and controller layouts are still untested |
 
 Everfrost is an independent project. It is not an official Icy Veins, Blizzard, or OpenAI addon and is not affiliated with or endorsed by those organizations.
 
 ## Screenshots
 
-Captured in WoW Forever on a level-18 Elemental Shaman, with version 0.8.0. They show the old reference panel and settings; the rotation HUD hasn't been captured in game yet.
+Captured in WoW Forever on 24 November 2026 with version 0.9.0, on a level-35 Protection Paladin.
 
-| Rotation reference | Spell hover guidance |
+**Rotation HUD:** the NOW icon, upcoming guide priorities and the tank defensive row. Hovering an icon shows the spell and Everfrost's note on why it's there.
+
+| Rotation HUD | HUD hover guidance |
 | --- | --- |
-| ![Compact Elemental Shaman rotation reference with native WoW styling](docs/assets/screenshots/rotation-panel.png) | ![Searing Totem tooltip showing the spell and Everfrost's usage guidance](docs/assets/screenshots/spell-guidance-tooltip.png) |
+| ![Rotation HUD in the Tank layout: AUTO · ST mode, Consecration as NOW, two upcoming spells and a defensive row](docs/assets/screenshots/v0.9-rotation-hud.png) | ![Consecration tooltip from the HUD explaining it is the highest Everfrost guide priority that is ready](docs/assets/screenshots/v0.9-rotation-hud-tooltip.png) |
 
-**Gear upgrade comparison:** an estimated upgrade is labelled in the tooltip, alongside its score and stat priority. The carried staff is highlighted in the bag.
+**Gear upgrades:** the tooltip names a clear upgrade and says why, or says when an item suits another tree of your class better.
 
-![Everfrost upgrade tooltip and highlighted staff in the bag](docs/assets/screenshots/gear-upgrade-tooltip.png)
+| Clear upgrade | Better for another tree |
+| --- | --- |
+| ![Blade of Silverlaine tooltip marked as an Everfrost clear upgrade because it has more Spell power](docs/assets/screenshots/v0.9-gear-clear-upgrade.png) | ![Glimmering Flamberge tooltip marked Better for Retribution, compared with the main hand and shield together](docs/assets/screenshots/v0.9-gear-better-for-other-spec.png) |
 
-| Specialisation | Rotation Panel | Gear Upgrades |
+**Talent build:** each talent's tooltip shows where the Icy Veins levelling build puts its points.
+
+![Talent window with the Precision tooltip showing the Icy Veins Protection build puts 3 points there at levels 27, 28 and 29](docs/assets/screenshots/v0.9-talent-build-tooltip.png)
+
+**Settings** (`/everfrost`):
+
+| Rotation | HUD | Controller |
 | --- | --- | --- |
-| ![Specialisation settings detecting Elemental talents at 9 / 0 / 0](docs/assets/screenshots/specialization-settings.png) | ![Rotation Panel settings with size and opacity sliders](docs/assets/screenshots/rotation-panel-settings.png) | ![Gear Upgrades settings showing Elemental stat priorities](docs/assets/screenshots/gear-upgrade-settings.png) |
+| ![Rotation settings: spec choice, rotation mode, NOW source, upcoming icons and defensive row](docs/assets/screenshots/v0.9-settings-rotation.png) | ![HUD settings: Guitar Hero, Classic, Minimal and Tank layouts, visibility options, size and opacity](docs/assets/screenshots/v0.9-settings-hud.png) | ![Controller settings: automatic, controller, keyboard or one position](docs/assets/screenshots/v0.9-settings-controller.png) |
 
-Open any screenshot for its full-size view. Use `/everfrost` to open these settings.
+| Detection | Gear & Loot | Talents |
+| --- | --- | --- |
+| ![Detection settings: automatic single target, cleave and AoE with per-spec thresholds](docs/assets/screenshots/v0.9-settings-detection.png) | ![Gear & Loot settings: upgrade highlights, Protection stat priority and tank scoring focus](docs/assets/screenshots/v0.9-settings-gear-loot.png) | ![Talents settings: next talent in the Icy Veins build and the points coming up by level](docs/assets/screenshots/v0.9-settings-talents.png) |
+
+Open any screenshot for its full-size view. Player names have been cropped out.
 
 ## What Everfrost does
 
