@@ -1,10 +1,10 @@
 {
   "name": "everfrost",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "description": "WoW Forever rotation guides, gear upgrades and Need/Greed highlights",
   "scripts": {
-    "test": "node tests/check.cjs && node tests/gear.cjs",
+    "test": "node tests/check.cjs && node tests/gear.cjs && node tests/gear-verdicts.cjs && node tests/talents.cjs && node tests/hud.cjs",
     "build": "node scripts/build.cjs"
   },
   "dependencies": {

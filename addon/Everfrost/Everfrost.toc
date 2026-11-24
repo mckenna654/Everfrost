@@ -1,9 +1,9 @@
 ## Interface: 16001
 ## Title: Everfrost
 ## IconTexture: Interface\AddOns\Everfrost\Media\Icon.tga
-## Notes: Level 1-60 spell guides and gear upgrade hints, with simple class priorities below level 10.
+## Notes: Rotation HUD with automatic single-target, cleave and AoE modes, plus gear and talent hints for levels 1-60.
 ## Author: mckenna654
-## Version: 0.8.0
+## Version: 0.9.0
 ## SavedVariables: EverfrostAccountDB
 ## SavedVariablesPerCharacter: EverfrostDB
 Profiles.lua
@@ -14,6 +14,8 @@ GearUI.lua
 TalentData.lua
 Talents.lua
 Settings.lua
+Combat.lua
+HUD.lua
 Main.lua
 
 

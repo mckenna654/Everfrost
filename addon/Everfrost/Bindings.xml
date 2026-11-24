@@ -2,4 +2,19 @@
  <Binding name="EVERFROST_TOGGLE" header="EVERFROST" category="ADDONS">
   EverfrostTogglePanel()
  </Binding>
+ <Binding name="EVERFROST_MODE_CYCLE" category="ADDONS">
+  EverfrostSetMode("cycle")
+ </Binding>
+ <Binding name="EVERFROST_MODE_AUTO" category="ADDONS">
+  EverfrostSetMode("auto")
+ </Binding>
+ <Binding name="EVERFROST_MODE_SINGLE" category="ADDONS">
+  EverfrostSetMode("single")
+ </Binding>
+ <Binding name="EVERFROST_MODE_CLEAVE" category="ADDONS">
+  EverfrostSetMode("cleave")
+ </Binding>
+ <Binding name="EVERFROST_MODE_AOE" category="ADDONS">
+  EverfrostSetMode("aoe")
+ </Binding>
 </Bindings>

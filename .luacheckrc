@@ -8,7 +8,9 @@ exclude_files = { "node_modules", "dist" }
 -- Globals the addon writes.
 globals = {
   "EverfrostDB", "EverfrostAccountDB", "EverfrostTogglePanel",
-  "BINDING_HEADER_EVERFROST", "BINDING_NAME_EVERFROST_TOGGLE",
+  "BINDING_HEADER_EVERFROST", "BINDING_NAME_EVERFROST_TOGGLE", "EverfrostSetMode",
+  "BINDING_NAME_EVERFROST_MODE_CYCLE", "BINDING_NAME_EVERFROST_MODE_AUTO", "BINDING_NAME_EVERFROST_MODE_SINGLE",
+  "BINDING_NAME_EVERFROST_MODE_CLEAVE", "BINDING_NAME_EVERFROST_MODE_AOE",
   "SlashCmdList",
   "SLASH_EVERFROST1", "SLASH_EVERFROST2", "SLASH_EVERFROST3",
   "UISpecialFrames",
@@ -32,4 +34,8 @@ read_globals = {
   "IsPlayerSpell", "Minimap", "Settings", "TooltipDataProcessor",
   "UIParent", "UnitClass", "UnitLevel",
   "hooksecurefunc", "issecretvalue",
+  -- Rotation HUD (Combat.lua, HUD.lua): checked against the Forever 1.60.1 API definitions.
+  "C_AssistedCombat", "C_UnitAuras", "C_InputInterfaceStyle", "C_GamePad", "GetTime",
+  "UnitExists", "UnitCanAttack", "UnitIsDead", "UnitPlayerControlled", "UnitCreatureType",
+  "UnitAffectingCombat", "UnitThreatSituation", "UnitIsUnit", "IsInGroup",
 }

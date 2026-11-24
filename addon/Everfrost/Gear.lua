@@ -43,6 +43,7 @@ local stats={
  expertise={"ITEM_MOD_EXPERTISE_RATING_SHORT","ITEM_MOD_EXPERTISE_RATING"},
  defense={"ITEM_MOD_DEFENSE_SKILL_RATING_SHORT","ITEM_MOD_DEFENSE_SKILL_RATING"},
  block={"ITEM_MOD_BLOCK_RATING_SHORT","ITEM_MOD_BLOCK_RATING","ITEM_MOD_BLOCK_VALUE_SHORT","ITEM_MOD_BLOCK_VALUE"},
+ dodge={"ITEM_MOD_DODGE_RATING_SHORT","ITEM_MOD_DODGE_RATING"},parry={"ITEM_MOD_PARRY_RATING_SHORT","ITEM_MOD_PARRY_RATING"},
 }
 local schoolKeys={holy="HOLY",fire="FIRE",nature="NATURE",frost="FROST",shadow="SHADOW",arcane="ARCANE"}
 local function maximum(raw, keys)
@@ -81,7 +82,9 @@ end
 -- "Equip:" effects written out on the tooltip, for clients whose item stats leave them out:
 -- "Increases damage and healing done by magical spells and effects by up to 12." and its kin.
 -- Each pattern gives the stat it adds to. English wording only; other languages keep whatever
--- the client's item stats report. "Chance on hit" and "Use:" effects are not modelled.
+-- the client's item stats report. Percentage lines count one point per percent, the same way
+-- the client's own item stats report them. "Use:" and "Chance on hit:" effects, and any "Equip:"
+-- line none of these patterns read, are recorded as effects Everfrost cannot score.
 local equipEffects={
  {"damage and healing done by magical spells and effects by up to (%d+)","spell"},
  {"healing done by spells and effects by up to (%d+)","healing"},
@@ -92,30 +95,46 @@ local equipEffects={
  {"%+(%d+) attack power","attack"},
  {"attack power by (%d+)","attack"},
  {"restores (%d+) mana per 5 sec","mp5"},
+ {"chance to hit with spells by (%d+)%%","hitSPELL"},
+ {"critical strike with spells by (%d+)%%","critSPELL"},
+ {"chance to hit by (%d+)%%","hit"},
+ {"critical strike by (%d+)%%","crit"},
+ {"chance to dodge an attack by (%d+)%%","dodge"},
+ {"chance to parry an attack by (%d+)%%","parry"},
+ {"chance to block attacks with a shield by (%d+)%%","block"},
+ {"block value of your shield by (%d+)","block"},
+ {"increased defense %+(%d+)","defense"},
+ {"defense rating by (%d+)","defense"},
+ {"defense by (%d+)","defense"},
 }
+-- Returns the stats read from "Equip:" lines, and the kinds of effect that cannot be scored
+-- ({use=true, proc=true, equip=true}); either is nil when there is nothing to report.
 function G.EquipEffects(link)
  local data=first(C_TooltipInfo and C_TooltipInfo.GetHyperlink,link)
  if not public(data,"table") or not public(data.lines,"table") then return nil end
- local found={}
+ local found,unscored={},{}
  for _,line in ipairs(data.lines) do
   local text=public(line,"table") and line.leftText
   if public(text,"string") then
    text=text:lower()
-   -- Only passive effects: "Equip:" lines, never "Use:" or "Chance on hit:".
-   if text:find("^equip:") then
+   if text:find("^use:") then unscored.use=true
+   elseif text:find("^chance on hit:") then unscored.proc=true
+   elseif text:find("^equip:") then
+    local matched=false
     for _,effect in ipairs(equipEffects) do
      local a,b=text:match(effect[1])
      if a then
       local key,amount=effect[2],tonumber(b or a)
       if key=="school" then key=schoolKeys[a] and a or nil end
-      if key and amount then found[key]=(found[key] or 0)+amount end
+      if key and amount then found[key]=(found[key] or 0)+amount; matched=true end
       break
      end
     end
+    if not matched then unscored.equip=true end
    end
   end
  end
- return next(found) and found or nil
+ return next(found) and found or nil,next(unscored) and unscored or nil
 end
 function G.ReadItem(link)
  if not public(link,"string") then return nil end
@@ -153,7 +172,8 @@ function G.ReadItem(link)
  item.stats=G.Normalize(raw)
  if not item.stats then return nil end
  -- The larger of the two readings, so an effect the client already reports is never counted twice.
- local effects=G.EquipEffects(link)
+ local effects,unscored=G.EquipEffects(link)
+ item.unscored=unscored
  if effects then
   for key,amount in pairs(effects) do
    if amount>(item.stats[key] or 0) then item.stats[key]=amount; item.fromTooltip=true end
@@ -176,11 +196,24 @@ function G.ReadItem(link)
  end
  G.items[link]=item; return item
 end
-local function unknown(reason) return {kind="unknown",reason=reason} end
+-- Every result has a kind ("need" = an upgrade worth a Need roll, "greed" = anything else that
+-- was judged, "unknown" = not judged) and a verdict tier:
+--   clear      upgrade of at least NS.gearTiers.clear (or fills an empty slot)
+--   minor      upgrade of at least NS.gearTiers.minor
+--   sidegrade  within NS.gearTiers.minor either way
+--   spec       not an upgrade for you, but one for another focus or talent tree of your class
+--   unusable   your class, level or setup cannot use it
+--   downgrade  worse, or nothing your spec uses
+--   unknown    not scored (no tree, missing data, or an effect that cannot be scored)
+-- The percentage is the score difference over the replaced item's score (at least 1 point).
+NS.gearTiers={clear=0.10,minor=0.03}
+local function unknown(reason) return {kind="unknown",verdict="unknown",reason=reason} end
 -- Only these results can change when item data finishes loading.
-local function waiting(reason) return {kind="unknown",reason=reason,waiting=true} end
-local function greed(reason) return {kind="greed",reason=reason} end
-function G.Eligible(item, context, p)
+local function waiting(reason) return {kind="unknown",verdict="unknown",reason=reason,waiting=true} end
+local function greed(reason,verdict) return {kind="greed",verdict=verdict or "downgrade",reason=reason} end
+-- specLimited: only this spec's setup rules it out, so another spec or focus may still want it.
+local function unusable(reason,specLimited) local r=greed(reason,"unusable"); r.specLimited=specLimited or nil; return r end
+function G.Eligible(item, context)
  if item.unsupported then return false,"Not equipment for this guide" end
  if item.level>context.level then return false,"Requires a higher level" end
  if item.usable==false then return false,"Item requirements are not met" end
@@ -195,8 +228,9 @@ function G.Eligible(item, context, p)
  elseif item.classID==2 then
   if not (weaponTypes[context.class] and weaponTypes[context.class][item.subclassID]) then return false,"Your class cannot use this weapon type" end
  end
- if p.shield and item.loc=="INVTYPE_2HWEAPON" then return false,"The tank guide requires a shield" end
- if context.daggers and item.classID==2 and (item.loc=="INVTYPE_WEAPON" or item.loc=="INVTYPE_WEAPONMAINHAND" or item.loc=="INVTYPE_WEAPONOFFHAND") and item.subclassID~=15 then return false,"Mutilate requires daggers" end
+ -- Two-handers stay eligible for shield specs: Compare weighs them against the weapon and
+ -- shield they would displace, then refuses to call them an upgrade (see shieldBlocked).
+ if context.daggers and item.classID==2 and (item.loc=="INVTYPE_WEAPON" or item.loc=="INVTYPE_WEAPONMAINHAND" or item.loc=="INVTYPE_WEAPONOFFHAND") and item.subclassID~=15 then return false,"Mutilate requires daggers",true end
  return true
 end
 -- The amounts a profile actually credits, including its school and rating aliases.
@@ -254,7 +288,7 @@ function G.Score(item, context, p)
  local relevant
  if caster then relevant=values.spell+(p.kind=="healer" and values.healing or 0)+s.intellect+s.spirit+s.mp5+values.hit+values.crit+values.haste+values.wand
  else relevant=s.strength+s.agility+s.attack+s.rangedAttack+values.dps+values.hit+values.crit+(s.expertise or 0)
-  if p.kind=="tank" then relevant=relevant+s.stamina+s.armor+s.block+s.defense end
+  if p.kind=="tank" then relevant=relevant+s.stamina+s.armor+s.block+s.defense+s.dodge+s.parry end
   if context.class=="PALADIN" then relevant=relevant+values.spell end
   if context.class=="HUNTER" or context.class=="PALADIN" or context.class=="SHAMAN" then relevant=relevant+s.intellect+s.spirit end
  end
@@ -335,33 +369,57 @@ local function armorGain(item, old)
  if item.classID~=4 or (old and old.classID~=4) then return 0 end
  return item.stats.armor-(old and old.stats.armor or 0)
 end
--- The most important stat that favours one item, in the words a new player would use.
+-- Sorts a judged result into its verdict tier from the score difference.
+local function settle(result)
+ if result.kind=="unknown" or result.delta==nil then return result end
+ local tiers=NS.gearTiers
+ local pct=result.delta/math.max(result.previous or 0,1)
+ result.pct=pct
+ if result.kind=="need" then
+  if result.empty or pct>=tiers.clear then result.verdict="clear"
+  elseif pct>=tiers.minor then result.verdict="minor"
+  else result.kind="greed"; result.verdict="sidegrade" end
+ else
+  result.verdict=pct>-tiers.minor and "sidegrade" or "downgrade"
+ end
+ return result
+end
+-- The most important stat that favours each item, in the words a new player would use.
 local function explain(result, item, old, p)
  if result.armorOnly or result.combined then return nil end
  if old==false then return result.kind=="need" and "Better because that slot is empty." or nil end
  if not old or not old.stats then return nil end
  local mine,theirs=effective(item,p),effective(old,p)
- local winner=result.kind=="need" and mine or theirs
- local loser=result.kind=="need" and theirs or mine
+ local gain,top,loss
  for rank,group in ipairs(p.order) do
   for key in group:gmatch("%S+") do
-   if (winner[key] or 0)>(loser[key] or 0)+0.001 then
-    local label=NS.gearStatLabels[key] or key
-    if result.kind=="need" then return "Better because it has more "..label..(rank==1 and ", your top priority." or ".") end
-    return "Your current item has more "..label.."."
-   end
+   if not gain and (mine[key] or 0)>(theirs[key] or 0)+0.001 then gain=key; top=rank==1 end
+   if not loss and (theirs[key] or 0)>(mine[key] or 0)+0.001 then loss=key end
   end
  end
- if winner.wand>loser.wand then return result.kind=="need" and "Better because it has a stronger wand attack." or "Your current wand attacks harder." end
+ local labels=NS.gearStatLabels
+ if result.kind=="need" then
+  if gain then return "Better because it has more "..labels[gain]..(top and ", your top priority." or ".") end
+  if mine.wand>theirs.wand then return "Better because it has a stronger wand attack." end
+ elseif result.verdict=="sidegrade" then
+  if gain and loss then return "More "..labels[gain]..", but less "..labels[loss].."." end
+  return "About the same as your current item."
+ else
+  if loss then return "Your current item has more "..labels[loss].."." end
+  if theirs.wand>mine.wand then return "Your current wand attacks harder." end
+ end
  return nil
 end
-function G.Compare(item, equipped, context, carried, candidate)
+local function compare(item, equipped, context, carried, candidate, profile)
  if not context or context.level<1 or context.level>NS.maxLevel then return unknown("Gear guide supports levels 1-"..NS.maxLevel) end
- local p=NS.GearProfile(context.class,context.spec,context.role,context.level)
+ local p=profile or NS.GearProfile(context.class,context.spec,context.role,context.level)
  if not p then return unknown("Select a talent tree to compare gear") end
  if not item then return waiting("Waiting for item data") end
- local eligible,reason=G.Eligible(item,context,p)
- if not eligible then return greed(reason) end
+ local eligible,reason,specLimited=G.Eligible(item,context,p)
+ if not eligible then return unusable(reason,specLimited) end
+ if p.shield and (item.loc=="INVTYPE_HOLDABLE" or item.loc=="INVTYPE_WEAPONOFFHAND") then
+  return unusable((p.specName or "Your spec").." keeps a shield in the off-hand",true)
+ end
  local score,relevant,armorExtra=G.Score(item,context,p)
  if not score then return unknown("Weapon or item stats are unavailable") end
  if (slots[item.loc][1]==16 or slots[item.loc][1]==17) and equipped[16]==nil then
@@ -372,11 +430,13 @@ function G.Compare(item, equipped, context, carried, candidate)
   return comparePair(item,equipped,context,p,carried,candidate)
  end
  local noUsefulStats="No useful stats for your current specialisation"
+ -- An item whose only worth is an effect Everfrost cannot read is left for you to judge.
+ if not relevant and item.unscored then return unknown("Its special effect can't be scored; compare it yourself") end
  -- Armor pieces continue without useful stats: more armor can still decide a tie below.
  if not relevant and not (item.classID==4 and item.stats.armor>0) then return greed(noUsefulStats) end
  local choices=slots[item.loc]
  if item.loc=="INVTYPE_WEAPON" and context.dual then choices={16,17} end
- if item.loc=="INVTYPE_WEAPONOFFHAND" and not context.dual then return greed("Dual wield is not learned") end
+ if item.loc=="INVTYPE_WEAPONOFFHAND" and not context.dual then return unusable("Dual wield is not learned") end
  local best
  for _,slot in ipairs(choices) do
   local old=equipped[slot]
@@ -411,40 +471,116 @@ function G.Compare(item, equipped, context, carried, candidate)
   end
   if old and old.link==item.link then allowed=false end
   if allowed and (not best or score-oldScore>best.delta) then
+   local displaces=item.loc=="INVTYPE_2HWEAPON" and equipped[17]
    best={kind="greed",score=score,previous=oldScore,delta=score-oldScore,slot=slot,source=p.source,
     oldRelevant=oldRelevant,armorGain=armorGain(item,old),old=old,
     -- The part of the difference that comes from armour credit rather than from stats.
     armorCredit=armorExtra-oldArmor,
     -- A two-hander also displaces the off-hand, so one stat cannot explain the result.
-    plain=not (item.loc=="INVTYPE_2HWEAPON" and equipped[17])}
+    plain=not displaces,displacesShield=displaces and displaces.loc=="INVTYPE_SHIELD" or nil,
+    empty=old==false and not displaces or nil,
+    -- Rings and trinkets: the best result replaces the weaker of the two worn.
+    slotNote=(item.loc=="INVTYPE_FINGER" or item.loc=="INVTYPE_TRINKET") and equipped[choices[1]] and equipped[choices[2]]
+     and (item.loc=="INVTYPE_FINGER" and "Compared with the weaker of your two rings." or "Compared with the weaker of your two trinkets.") or nil,
+    oldUnscored=old and old.unscored or nil}
   end
  end
- if not best then return greed("Not a valid replacement for your current equipment") end
+ if not best then return unusable("Not a valid replacement for your current equipment") end
  local statDelta=best.delta-best.armorCredit
  if relevant and best.delta>0.01 then
   best.kind="need"
   if statDelta>0.01 then
-   best.reason="Estimated stat upgrade"
-   if best.plain then best.why=explain(best,item,best.old,p) end
+   best.reason="Estimated stat upgrade"; best.generic=true
   elseif statDelta>=-0.01 and best.armorGain>0 then
    best.armorOnly=true
    best.reason=string.format("More armour, no useful stats lost (+%.0f Armour)",best.armorGain)
   else
    best.reason=string.format("More armour (+%.0f) outweighs the stats it gives up",best.armorGain)
   end
-  return best
- end
  -- An item with no useful stats can only replace another one, and only when nothing is lost
  -- on stats: Stamina cannot stand in for lost Strength, however much armour comes with it.
- if best.armorGain>0 and statDelta>=-0.01 and (relevant or not best.oldRelevant) then
+ elseif best.armorGain>0 and statDelta>=-0.01 and (relevant or not best.oldRelevant) then
   best.kind="need"; best.armorOnly=true
   best.reason=string.format("More armour, no useful stats lost (+%.0f Armour)",best.armorGain)
-  return best
+ elseif not relevant then return greed(noUsefulStats)
+ else
+  best.reason="No estimated stat upgrade"; best.generic=true
  end
- if not relevant then return greed(noUsefulStats) end
- best.reason="No estimated stat upgrade"
- if best.plain then best.why=explain(best,item,best.old,p) end
+ settle(best)
+ -- A shield spec never trades its shield for a two-hander, however the numbers fall.
+ if p.shield and item.loc=="INVTYPE_2HWEAPON" and best.kind=="need" then
+  best.kind="greed"; best.verdict="downgrade"; best.shieldBlocked=true; best.generic=nil; best.armorOnly=nil
+  best.reason=(p.specName or "Your spec").." needs a shield, so a two-hander is never an upgrade"
+ end
+ if best.plain then best.why=explain(best,item,best.old,p)
+ elseif best.displacesShield then best.why="Compared with your main hand and shield together, including the shield's armour and block."
+ else best.why="Compared with your main hand and off-hand together." end
  return best
+end
+-- Other ways this class could use the item: the spec's other focuses, then its other talent
+-- trees at their default focus. Cached until the context or focus changes.
+function G.Alternatives(context)
+ if not context then return {} end
+ local cache=G.alternatives
+ if cache and cache.context==context and cache.focus==G.focus then return cache.list end
+ local list={}
+ local current=NS.GearProfile(context.class,context.spec,context.role,context.level)
+ if current and not current.starter then
+  local seen={[current]=true}
+  local focus=NS.gearFocus[context.class] and NS.gearFocus[context.class][context.spec]
+  for _,choice in ipairs(focus and focus.list or {}) do
+   if not seen[choice.profile] then
+    seen[choice.profile]=true
+    list[#list+1]={profile=choice.profile,label=choice.label,bestFor=choice.profile.bestFor,context=context,sameSpec=true}
+   end
+  end
+  for spec=1,3 do
+   local p=NS.gearProfiles[context.class] and NS.GearFocusProfile(context.class,spec,nil)
+   if p and spec~=context.spec and not seen[p] then
+    seen[p]=true
+    local other={}
+    for key,value in pairs(context) do other[key]=value end
+    other.spec=spec; other.role=nil; other.daggers=false
+    list[#list+1]={profile=p,label=p.specName,bestFor=p.bestFor,context=other}
+   end
+  end
+ end
+ G.alternatives={context=context,focus=G.focus,list=list}
+ return list
+end
+-- The one evaluation engine: bags, tooltips, loot rolls, quest rewards and merchants all call
+-- this. profile is optional and scores for that profile instead of the active one; without it,
+-- a result that is no upgrade for you is checked against the class's other focuses and trees.
+function G.Compare(item, equipped, context, carried, candidate, profile)
+ local result=settle(compare(item,equipped,context,carried,candidate,profile))
+ local v=result.verdict
+ -- Procs and on-use effects are reported, never given an invented score.
+ if item and item.unscored and result.kind~="unknown" then result.unscored=item.unscored end
+ if profile==nil and not result.combined and (v=="sidegrade" or v=="downgrade" or (v=="unusable" and result.specLimited)) then
+  -- Another focus of your own spec is named before another talent tree.
+  local best
+  for _,alt in ipairs(G.Alternatives(context)) do
+   if best and best.alt.sameSpec and not alt.sameSpec then break end
+   local r=settle(compare(item,equipped,alt.context,carried,candidate,alt.profile))
+   if r.kind=="need" and (not best or (r.pct or 0)>(best.result.pct or 0)) then best={alt=alt,result=r} end
+  end
+  if best then
+   result.verdict="spec"; result.altLabel=best.alt.label; result.altBestFor=best.alt.bestFor
+  end
+ end
+ return result
+end
+-- Records the scoring focus (a key from NS.GearFocusChoices, or nil for the default) and rescans.
+function G.SetFocus(key)
+ if type(key)~="string" then key=nil end
+ if G.focus==key then return end
+ G.focus=key; G.alternatives=nil
+ G.Rescan()
+end
+-- Recompute every comparison on the next frame (deferred until combat ends).
+function G.Rescan()
+ G.pending=true
+ if G.Schedule then G.Schedule() end
 end
 function G.SetContext(class, spec, level, role, known)
  if InCombatLockdown() then G.pending=true; return end

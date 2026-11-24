@@ -5,7 +5,7 @@ const parser = require('luaparse');
 const {lua, lauxlib, lualib, to_luastring, to_jsstring} = require('fengari');
 const root = path.resolve(__dirname, '../addon/Everfrost');
 const sources = {};
-for (const name of ['Profiles.lua','Core.lua','GearProfiles.lua','Gear.lua','GearUI.lua','TalentData.lua','Talents.lua','Settings.lua','Main.lua']) {
+for (const name of ['Profiles.lua','Core.lua','GearProfiles.lua','Gear.lua','GearUI.lua','TalentData.lua','Talents.lua','Settings.lua','Combat.lua','HUD.lua','Main.lua']) {
  sources[name]=fs.readFileSync(path.join(root,name),'utf8');
  parser.parse(sources[name],{luaVersion:'5.1'});
  console.log(name+': Lua 5.1 syntax passed');
@@ -109,9 +109,9 @@ for class,profiles in pairs(NS.profiles) do
    for _,mode in ipairs({'single','aoe'}) do
     for _,role in ipairs({'damage','heal','bear','melee','ranged'}) do
      local rows=NS.BuildRows(class,spec,level,known,mode,role)
-     -- Three rows of six at most, so the panel stays compact with every spell learned.
+     -- The HUD shows NOW plus six at most, but the full priority list stays a readable length.
      if #rows>(MAXROWS or 0) then MAXROWS=#rows; MAXWHERE=class..spec..' '..level..' '..mode..' '..role end
-     assert(#rows<=15,class..spec..' '..level..' '..mode..' '..role..' '..#rows)
+     assert(#rows<=20,class..spec..' '..level..' '..mode..' '..role..' '..#rows)
      for _,row in ipairs(rows) do assert(known[row.key] and row.hint) end
      if level==61 then assert(#rows==0) end
      assert(#NS.BuildRows(class,spec,level,{},mode,role)==0)
@@ -124,8 +124,9 @@ assert(count==9)
 function keys(rows) local t={}; for _,r in ipairs(rows) do t[#t+1]=r.key end; return table.concat(t,',') end
 local p={['Holy Strike']={level=6},['Seal of Command']={level=20},['Consecration']={level=20},['Judgement']={level=4}}
 assert(keys(NS.BuildRows('PALADIN',3,5,p,'single'))=='Judgement')
-assert(keys(NS.BuildRows('PALADIN',3,6,p,'single'))=='Holy Strike,Judgement')
-assert(not keys(NS.BuildRows('PALADIN',3,20,p,'single')):find('Consecration'))
+-- Retribution (guide of 14 Nov 2026): Judgement before Holy Strike; Consecration on cooldown on one target too.
+assert(keys(NS.BuildRows('PALADIN',3,6,p,'single'))=='Judgement,Holy Strike')
+assert(keys(NS.BuildRows('PALADIN',3,20,p,'single'))=='Seal of Command,Consecration,Judgement,Holy Strike')
 assert(keys(NS.BuildRows('PALADIN',3,20,p,'aoe')):find('Consecration'))
 local d={['Wrath']={},['Bear Form']={},['Maul']={},['Cat Form']={},['Claw']={}}
 assert(keys(NS.BuildRows('DRUID',2,20,d,'single','damage'))=='Cat Form,Claw')
@@ -210,7 +211,7 @@ local function object() return setmetatable({scripts={},events={}},{__index=func
 function methods:CreateFontString() return object() end
 function methods:CreateTexture() return object() end
 function CreateFrame(kind,name,parent,template)
- local f=object(); f.template=template; frames[#frames+1]=f
+ local f=object(); f.template=template; f.parent=parent; frames[#frames+1]=f
  if template=='DefaultPanelTemplate' then f.TitleContainer=object(); f.TitleContainer.TitleText=object() end
  if template=='UISliderTemplateWithLabels' then f.Text=object(); f.Low=object(); f.High=object() end
  if name then _G[name]=f end; return f
@@ -231,8 +232,16 @@ function dispatch(e,value)
  if e=='PLAYER_LOGIN' and not keepAccount then EverfrostAccountDB=nil end
  for _,f in ipairs(frames) do if f.events[e] then f.scripts.OnEvent(f,e,value) end end
 end
-function fire(e,value) dispatch(e,value); flush() end
-function visibleSpells() local n=0; for _,f in ipairs(frames) do if rawget(f,'spellID') and f:IsShown() then n=n+1 end end; return n end
+-- The HUD is combat-only by default. Drawing checks after the first login turn on preview for
+-- every new pretend character (previewAll), as a player would from settings.
+function fire(e,value)
+ dispatch(e,value)
+ if e=='PLAYER_LOGIN' and previewAll and EverfrostDB.hud then EverfrostDB.hud.preview=true end
+ flush()
+ if e=='PLAYER_LOGIN' and previewAll and NS.UpdateHUD then NS.UpdateHUD() end
+end
+-- Spell icons shown on the current HUD (earlier logins' HUDs stay in frames, so filter by parent).
+function visibleSpells() local n=0; for _,f in ipairs(frames) do if rawget(f,'spellID') and f:IsShown() and rawget(f,'parent')==EverfrostFrame then n=n+1 end end; return n end
 duration={}; C_Spell.GetSpellCooldownDuration=function() return duration end
 EverfrostDB={scale=1.2,locked=true,point='CENTER',relativePoint='CENTER',x=100,y=40}
 GetTalentTabInfo=function(i) return 'Tree',nil,({0,0,2})[i] end
@@ -244,15 +253,18 @@ run(`
 NS.Gear={SetContext=function(...) lastGearContext={...} end,Schedule=function() gearScheduled=true end,Paint=function() end}
 `);
 load('Settings.lua');
+load('Combat.lua');
+load('HUD.lua');
 load('Main.lua');
 run(`
 fire('PLAYER_LOGIN'); local f=EverfrostFrame
 assert(f.title.text=='Retribution PALADIN' and f.meta.text:find('5'))
 assert(EverfrostDB.scale==1.2 and EverfrostDB.x==100)
-assert(visibleSpells()==1 and f.width==320)
-assert(EverfrostDB.opacity==1 and f.alpha==1)
-assert(f.backdrop.edgeFile=='Interface'..string.char(92)..'DialogFrame'..string.char(92)..'UI-DialogBox-Border')
-assert(f.mode.template=='UIPanelButtonTemplate' and f.role.template=='UIPanelButtonTemplate')
+-- The HUD is combat-only by default: hidden at rest, the NOW icon in combat.
+assert(not f:IsShown() and visibleSpells()==0)
+fire('PLAYER_REGEN_DISABLED'); assert(f:IsShown() and visibleSpells()==1 and f.width==180 and f.mode.text:find('AUTO',1,true)==1)
+fire('PLAYER_REGEN_ENABLED'); assert(not f:IsShown())
+assert(EverfrostDB.opacity==1 and f.alpha==1 and EverfrostDB.hud.mode=='auto' and EverfrostDB.version==2)
 assert(lastGearContext[1]=='PALADIN' and lastGearContext[2]==0)
 local cmd=SlashCmdList.EVERFROST
 local settings=NS.Settings; local window=settings.window
@@ -299,13 +311,14 @@ window.pages.Guide.rows[2].scripts.OnClick(window.pages.Guide.rows[2])
 assert(EverfrostDB.spec==0 and window.pages.Gear.priority.text:find('Weapon DPS',1,true)==1)
 assert(window.pages.Gear.priorityTitle.text=='Starter priority: PALADIN')
 assert(window.pages.Gear.levelNote.text==NS.gearLevelNote)
--- Empty slots reach both the settings page and, for a missing weapon, the panel caption.
+-- Empty slots reach both the settings page and, for a missing weapon, the HUD caption, which
+-- also brings the combat-only HUD up out of combat.
 NS.Gear.EmptySlots=function() return true,2 end
 local mainRefresh=NS.Gear.OnRefreshed; assert(mainRefresh); mainRefresh()
-assert(f.caption.text=='No weapon equipped: check your bags or a vendor')
+assert(f.caption.text=='No weapon equipped: check your bags or a vendor' and f:IsShown())
 assert(window.pages.Gear.empty.text=='No weapon equipped. 2 empty armour slots.')
 NS.Gear.EmptySlots=function() return false,1 end; mainRefresh()
-assert(f.caption.text=='Hover a spell for its place in the rotation' and window.pages.Gear.empty.text=='1 empty armour slot.')
+assert(f.caption.text=='' and window.pages.Gear.empty.text=='1 empty armour slot.')
 NS.Gear.EmptySlots=function() return false,0 end; mainRefresh(); assert(window.pages.Gear.empty.text=='')
 NS.Gear.EmptySlots=nil
 window.pages.Guide.rows[1].scripts.OnClick(window.pages.Guide.rows[1]); assert(EverfrostDB.spec==nil)
@@ -338,17 +351,21 @@ cmd('spec auto')
 cmd('gear off'); assert(EverfrostDB.gear==false and gearScheduled)
 cmd('gear on'); assert(EverfrostDB.gear==true)
 cmd('gear')
+-- Preview keeps the combat-only HUD up out of combat, for the drawing checks below.
+cmd('preview'); assert(EverfrostDB.hud.preview and f:IsShown()); previewAll=true
 cmd('hide'); assert(not f:IsShown()); cmd('show'); assert(f:IsShown())
 cmd('scale 1.4'); cmd('scale 99'); assert(EverfrostDB.scale==1.4)
+-- A spell learned in combat waits for combat to end (the spellbook is read only out of combat).
+local before=visibleSpells()
 combat=true; book[3].future=false; fire('PLAYER_LEVEL_UP',6); fire('SPELLS_CHANGED'); fire('SPELL_UPDATE_COOLDOWN')
-assert(visibleSpells()==1 and f.meta.text:find('6'))
-combat=false; fire('PLAYER_REGEN_ENABLED'); assert(visibleSpells()==2)
+assert(visibleSpells()==before and f.meta.text:find('6'))
+combat=false; fire('PLAYER_REGEN_ENABLED'); assert(visibleSpells()==before+1)
 cmd('spec 1'); assert(f.title.text:find('Holy'))
 cmd('spec auto'); assert(f.title.text:find('Retribution'))
-cmd('aoe'); assert(EverfrostDB.aoe)
+cmd('aoe'); assert(EverfrostDB.hud.mode=='aoe' and f.mode.text=='AOE'); cmd('mode auto'); assert(EverfrostDB.hud.mode=='auto')
 C_Spell.GetSpellCooldownDuration=nil; fire('SPELL_UPDATE_COOLDOWN')
 cmd('reset'); assert(EverfrostDB.scale==1)
-fire('PLAYER_LEVEL_UP',60); assert(visibleSpells()>0); fire('PLAYER_LEVEL_UP',61); assert(f.empty.text=='Level 1-60 guide')
+fire('PLAYER_LEVEL_UP',60); assert(visibleSpells()>0); fire('PLAYER_LEVEL_UP',61); assert(not f:IsShown())
 -- Leveling keeps its spell profile, but gear follows the dominant talent tree at 10+.
 local talentCalls=0
 local talentPoints={0,2,0}
@@ -438,12 +455,13 @@ local said={}; local realPrint=print; print=function(line) said[#said+1]=line en
 fire('PLAYER_LEVEL_UP',61)
 assert(not EverfrostFrame:IsShown() and #said==1 and said[1]:find('/everfrost show',1,true) and EverfrostDB.pastGuideNoted)
 fire('SPELLS_CHANGED'); assert(#said==1 and not EverfrostFrame:IsShown())
-cmd('show'); assert(EverfrostFrame:IsShown() and EverfrostDB.showPastGuide and EverfrostFrame.empty.text=='Level 1-60 guide')
+cmd('show'); assert(EverfrostFrame:IsShown() and EverfrostDB.showPastGuide and EverfrostFrame.hud.placeholder.text=='Level 1-60 guide')
 cmd('hide'); assert(not EverfrostFrame:IsShown())
 fire('PLAYER_LEVEL_UP',10); cmd('show'); assert(EverfrostFrame:IsShown())
 -- /everfrost spellids lists what the spellbook has for guide spells with no ID on record.
-book={{spellID=777,name='Primal Bite'},{spellID=5487,name='Bear Form'}}; fire('SPELLS_CHANGED'); said={}
-cmd('spellids'); assert(said[1]:find('Primal Bite=777',1,true) and not said[1]:find('Bear Form',1,true))
+currentClass='HUNTER'; EverfrostDB={}; fire('PLAYER_LOGIN')
+book={{spellID=777,name='Sniper Shot'},{spellID=1130,name="Hunter's Mark"}}; fire('SPELLS_CHANGED'); said={}
+cmd('spellids'); assert(said[1]:find('Sniper Shot=777',1,true) and not said[1]:find("Hunter's Mark",1,true))
 print=realPrint
 -- The key binding shows and hides the panel.
 EverfrostTogglePanel(); assert(not EverfrostFrame:IsShown() and EverfrostDB.hidden==true)
@@ -462,82 +480,9 @@ EverfrostAccountDB={scale='big',opacity=99,gear='yes',locked='no'}; EverfrostDB=
 assert(EverfrostDB.scale==1 and EverfrostDB.opacity==1 and EverfrostDB.gear==nil and EverfrostDB.locked==nil)
 keepAccount=nil; EverfrostAccountDB=nil; EverfrostDB={}; fire('PLAYER_LOGIN')
 print('Event batching, past-level-30 panel, Feral view choice, spell ID report, key binding and account-wide look: passed')
--- Talent builds: every class has three builds of 51 points, level 10 to 60, within each talent's ranks.
-local T=NS.Talents
-for class,data in pairs(NS.talentData) do
- assert(NS.trees[class] and #data.builds==3)
- for spec=1,3 do
-  local plan=T.Plan(class,spec)
-  assert(#plan.picks==51 and plan.picks[1].level==10 and plan.picks[51].level==60)
-  for k,talent in pairs(plan.talents) do
-   local letter; for l,name in pairs(data.names) do if T.Key(name)==k then letter=l end end
-   assert(letter and #talent.levels<=data.ranks[letter],class..spec..' '..k)
-  end
- end
-end
-assert(T.Plan('WARRIOR',0)==nil and T.Plan('DEATHKNIGHT',1)==nil and T.Key("Nature's Grasp")=='naturesgrasp')
--- Arms takes Improved Rend at 10, 11 and 12, then Deflection at 13 and 14.
-local arms=T.Plan('WARRIOR',1)
-assert(arms.picks[1].name=='Improved Rend' and arms.picks[3].rank==3 and arms.picks[4].name=='Deflection' and arms.picks[4].level==13)
--- Talents taken are read from the trait tree, by name, never in combat.
-local taken={['Improved Rend']=2,['Deflection']=0,['Improved Overpower']=0,['Improved Charge']=0,['Mortal Strike']=0}
-local nodeNames={}; for name in pairs(taken) do nodeNames[#nodeNames+1]=name end; table.sort(nodeNames)
-local savedTraits,savedClassTalents=C_Traits,C_ClassTalents
-C_ClassTalents={GetActiveConfigID=function() assert(not combat); return 7 end}
-C_Traits={GetConfigInfo=function(id) assert(id==7); return {treeIDs={1}} end,
- GetTreeNodes=function() local ids={}; for index in ipairs(nodeNames) do ids[index]=index end; return ids end,
- GetNodeInfo=function(_,node) return {ranksPurchased=taken[nodeNames[node]],activeEntry={entryID=node+100}} end,
- GetEntryInfo=function(_,entry) return {definitionID=entry+100} end,
- GetDefinitionInfo=function(definition) return {overrideName=nodeNames[definition-200]} end}
-T.enabled=true; T.Refresh('WARRIOR',1,12,'Arms')
-assert(T.state.next.name=='Improved Rend' and T.state.next.rank==3 and T.state.index==3)
-assert(T.Summary()=='Next talent, Icy Veins Arms build: Improved Rend 3/3')
--- A point the guide takes later says when.
-taken['Improved Rend']=3; T.Refresh('WARRIOR',1,12,'Arms')
-assert(T.Summary()=='Next talent, Icy Veins Arms build: Deflection 1/2 (the guide takes it at level 13)')
-local upcoming=T.Upcoming(3); assert(upcoming[1]=='13: Deflection' and upcoming[2]=='14: Deflection' and #upcoming==3)
--- A talent the client names differently is passed over rather than recommended for ever.
-local kept=taken['Deflection']; taken['Deflection']=nil; nodeNames={}; for name in pairs(taken) do nodeNames[#nodeNames+1]=name end; table.sort(nodeNames)
-T.Refresh('WARRIOR',1,12,'Arms'); assert(T.state.next.name=='Improved Overpower')
-taken['Deflection']=kept; nodeNames={}; for name in pairs(taken) do nodeNames[#nodeNames+1]=name end; table.sort(nodeNames)
--- Restricted values and combat leave nothing to say, and nothing is read.
-local realNode=C_Traits.GetNodeInfo
-C_Traits.GetNodeInfo=function() return {ranksPurchased='SECRET',activeEntry={entryID=101}} end
-T.Refresh('WARRIOR',1,12,'Arms'); assert(T.state.ranks==nil and T.Summary()==nil)
-C_Traits.GetNodeInfo=realNode
-combat=true; assert(T.Read()==nil); combat=false
--- The talent window: the next talent's button is highlighted, and every button explains itself.
-local glowing={}
-NS.Glow=function(button,shown) glowing[button]=shown or nil end
-local function talentButton(node)
- local b=CreateFrame('Button'); b.hooks={}
- function b:GetNodeID() return node end
- function b:HookScript(name,fn) self.hooks[name]=fn end
- return b
-end
-local talentButtons={}; for index in ipairs(nodeNames) do talentButtons[index]=talentButton(index) end
-local shownHooks={}
-PlayerSpellsFrame={TalentsFrame={EnumerateAllTalentButtons=function() return pairs(talentButtons) end,
- HookScript=function(_,name,fn) shownHooks[name]=fn end}}
-T.Refresh('WARRIOR',1,13,'Arms'); T.Show()
-local function buttonFor(name) for index,n in ipairs(nodeNames) do if n==name then return talentButtons[index] end end end
-assert(glowing[buttonFor('Deflection')]==true and not glowing[buttonFor('Improved Rend')] and shownHooks.OnShow)
-local lines={}; GameTooltip.AddLine=function(_,text) lines[#lines+1]=text end
-buttonFor('Deflection').hooks.OnEnter(buttonFor('Deflection'))
-assert(lines[2]:find('puts 2 points here, at level 13, 14',1,true) and lines[3]=='Your next point goes here.')
-lines={}; buttonFor('Mortal Strike').hooks.OnEnter(buttonFor('Mortal Strike'))
-assert(lines[2]:find('puts 1 point here, at level 40',1,true) and #lines==2)
--- Turning recommendations off clears the highlight and the tooltip lines.
-T.enabled=false; T.Refresh('WARRIOR',1,13,'Arms'); assert(not glowing[buttonFor('Deflection')] and T.Summary()==nil)
-lines={}; buttonFor('Deflection').hooks.OnEnter(buttonFor('Deflection')); assert(#lines==0)
-T.enabled=true
--- The older numbered-talent API works too.
-C_Traits=nil; C_ClassTalents=nil; PlayerSpellsFrame=nil
-GetNumTalentTabs=function() return 1 end; GetNumTalents=function() return 2 end
-GetTalentInfo=function(tab,index) return ({'Improved Rend','Deflection'})[index],nil,1,index,({3,1})[index],({3,5})[index] end
-T.Refresh('WARRIOR',1,14,'Arms'); assert(T.state.next.name=='Deflection' and T.state.next.rank==2)
-GetNumTalentTabs=nil; GetNumTalents=nil; GetTalentInfo=nil
+-- Talent rules and the talent window are tested in tests/talents.cjs.
 -- In the addon: the panel's hover text, the settings page and /everfrost talents all carry the next talent.
+local savedTraits,savedClassTalents=C_Traits,C_ClassTalents
 C_ClassTalents={GetActiveConfigID=function() return 7 end}
 C_Traits={GetConfigInfo=function() return {treeIDs={1}} end,GetTreeNodes=function() return {1} end,
  GetNodeInfo=function() return {ranksPurchased=1,activeEntry={entryID=1}} end,GetEntryInfo=function() return {definitionID=1} end,
@@ -551,7 +496,7 @@ said={}; cmd('talents'); assert(said[1]:find('OFF',1,true))
 cmd('talents on'); assert(NS.Settings.window.pages.Guide.note.text:find('Next talent',1,true))
 print=realPrint
 C_Traits=savedTraits; C_ClassTalents=savedClassTalents
-print('Talent builds: data, next pick from trait and numbered APIs, name mismatches, secrets, talent-window highlight and tooltips, on/off: passed')
+print('Talent summary in the panel, settings page and /everfrost talents on/off: passed')
 -- Dragging the corner resizes the panel about its top-left corner, within 60% to 200%.
 EverfrostDB={}; fire('PLAYER_LOGIN'); local panel=EverfrostFrame; local grip=panel.grip
 assert(grip:IsShown() and panel.scale==1)
@@ -585,7 +530,8 @@ assert(NS.maxLevel==60)
 local spells=learned('Slam','Spearing Strike','Holy Shock','Stormstrike','Swiftmend','Insect Swarm','Summon Hawk','Hellfire','Conflagrate','Immolate','Hemorrhage','Backstab','Sinister Strike','Rupture','Strider Kick','Raptor Strike','Auto Shot')
 assert(not has('WARRIOR',1,19,spells,'Slam')); assert(has('WARRIOR',1,20,spells,'Slam'))
 assert(has('PALADIN',1,30,spells,'Holy Shock','single','heal'))
-assert(has('PALADIN',1,30,spells,'Holy Shock','single','damage'))
+-- Holy's damage list (guide of 4 Nov 2026) has no Holy Shock; it is a heal there.
+assert(not has('PALADIN',1,30,spells,'Holy Shock','single','damage'))
 assert(has('SHAMAN',2,30,spells,'Stormstrike'))
 assert(has('DRUID',3,30,spells,'Swiftmend','single','heal'))
 spells['Insect Swarm'].level=25
@@ -631,7 +577,7 @@ local function order(class,spec,level,first,second,mode,role)
  for index,row in ipairs(NS.BuildRows(class,spec,level,late,mode or 'single',role or 'damage')) do at[row.key]=index end
  return at[first] and at[second] and at[first]<at[second]
 end
-assert(has('WARRIOR',1,40,late,'Mortal Strike') and not has('WARRIOR',2,40,late,'Mortal Strike') and order('WARRIOR',1,40,'Slam','Mortal Strike'))
+assert(has('WARRIOR',1,40,late,'Mortal Strike') and not has('WARRIOR',2,40,late,'Mortal Strike') and order('WARRIOR',1,40,'Mortal Strike','Slam'))
 assert(has('WARRIOR',1,40,late,'Sweeping Strikes','aoe') and not has('WARRIOR',1,40,late,'Sweeping Strikes','single'))
 assert(order('WARRIOR',2,40,'Whirlwind','Bloodthirst') and not has('WARRIOR',1,40,late,'Bloodthirst'))
 assert(has('WARRIOR',3,40,late,'Shield Slam') and not has('WARRIOR',3,40,late,'Execute') and has('WARRIOR',0,40,late,'Execute'))
@@ -639,19 +585,20 @@ assert(not has('PALADIN',3,43,late,'Hammer of Wrath') and has('PALADIN',3,44,lat
 assert(has('PALADIN',1,52,late,"Light's Vigil",'single','heal') and not has('PALADIN',1,52,late,"Light's Vigil",'single','damage'))
 assert(has('HUNTER',2,40,late,'Sniper Shot') and not has('HUNTER',1,40,late,'Sniper Shot'))
 assert(has('HUNTER',1,40,late,'Volley','aoe') and not has('HUNTER',1,40,late,'Volley','single'))
-assert(order('HUNTER',3,40,'Arcane Shot','Raptor Strike','single','melee') and has('HUNTER',3,40,late,'Explosive Trap','aoe','melee'))
-assert(order('MAGE',2,40,'Frostfire Bolt','Scorch') and not has('MAGE',3,40,late,'Scorch') and has('MAGE',1,40,late,'Arcane Wrath'))
+assert(order('HUNTER',3,40,'Raptor Strike','Mongoose Bite','single','melee') and not has('HUNTER',3,40,late,'Arcane Shot','single','melee') and has('HUNTER',3,40,late,'Explosive Trap','aoe','melee'))
+assert(order('MAGE',2,40,'Scorch','Frostfire Bolt') and not has('MAGE',3,40,late,'Scorch') and has('MAGE',1,40,late,'Arcane Wrath'))
 assert(has('MAGE',3,40,late,'Ice Barrier','aoe'))
 for spec=0,3 do assert(order('ROGUE',spec,30,'Stealth','Cheap Shot')) end
-assert(order('ROGUE',3,40,'Hemorrhage','Ghostly Strike') and not has('ROGUE',2,40,late,'Shank'))
+-- Subtlety (guide of 4 Nov 2026): Ghostly Strike and Shank come before the Hemorrhage builder.
+assert(order('ROGUE',3,40,'Ghostly Strike','Hemorrhage') and has('ROGUE',2,40,late,'Shank'))
 assert(has('PRIEST',1,30,late,'Penance') and has('PRIEST',1,30,late,'Penance','single','heal') and not has('PRIEST',2,30,late,'Penance'))
 assert(has('WARLOCK',1,51,late,'Wrack') and not has('WARLOCK',3,51,late,'Wrack'))
 assert(has('WARLOCK',2,25,late,'Searing Pain') and order('WARLOCK',3,40,'Immolate','Incinerate'))
 assert(has('DRUID',1,40,late,'Starfire') and not has('DRUID',3,40,late,'Starfire'))
-assert(not has('DRUID',1,39,late,'Hurricane','aoe') and has('DRUID',1,40,late,'Hurricane','aoe') and has('DRUID',3,40,late,'Hurricane','aoe'))
+assert(not has('DRUID',1,39,late,'Hurricane','aoe') and has('DRUID',1,40,late,'Hurricane','aoe') and not has('DRUID',3,40,late,'Hurricane','aoe'))
 assert(order('DRUID',2,40,'Cat Form','Ravage') and order('DRUID',2,40,'Rip','Rake') and order('DRUID',2,40,'Primal Bite','Lacerate','single','bear'))
 assert(has('DRUID',3,40,late,'Innervate','single','heal') and not has('DRUID',3,39,late,'Innervate','single','heal'))
-assert(has('SHAMAN',1,40,late,'Lightning Mastery','aoe') and has('SHAMAN',1,40,late,'Chain Lightning','aoe') and not has('SHAMAN',1,40,late,'Chain Lightning','single'))
+assert(has('SHAMAN',1,40,late,'Lightning Mastery','aoe') and has('SHAMAN',1,40,late,'Chain Lightning','aoe') and has('SHAMAN',1,40,late,'Chain Lightning','single'))
 assert(has('SHAMAN',2,40,late,'Rage of the Farseer') and order('SHAMAN',3,40,'Riptide','Chain Heal','single','heal'))
 -- The shared lists stay separate: one tree's addition never leaks into another or into the base guide.
 assert(not has('HUNTER',0,60,late,'Sniper Shot') and not has('WARRIOR',0,60,late,'Mortal Strike') and not has('DRUID',0,60,late,'Starfire'))
@@ -666,39 +613,56 @@ local function rows(class,spec,known,mode,role,level)
  return keys(NS.BuildRows(class,spec,level or 30,known,mode or 'single',role or 'damage'))
 end
 local mage=learned('Frostbolt','Arcane Blast','Arcane Missiles','Fire Blast','Blizzard','Cone of Cold','Arcane Explosion','Flamestrike','Blast Wave','Ice Lance','Frost Nova')
-assert(rows('MAGE',1,mage)=='Frostbolt,Arcane Blast,Arcane Missiles,Fire Blast')
+-- Orders from Icy Veins' rotation pages as read on 24 November 2026. Fillers sit below the spells
+-- they wait for; * in the HUD's terms marks a proc step, which is never NOW on the guide's word alone.
+local function procs(class,spec,known,mode,role)
+ local t={} for _,r in ipairs(NS.BuildRows(class,spec,30,known,mode or 'single',role or 'damage')) do if r.proc then t[#t+1]=r.key end end
+ return table.concat(t,',')
+end
+assert(rows('MAGE',1,mage)=='Fire Blast,Arcane Missiles,Arcane Blast' and procs('MAGE',1,mage)=='Arcane Missiles')
 mage['Arcane Blast']=nil
-assert(rows('MAGE',1,mage)=='Frostbolt,Arcane Missiles')
-assert(rows('MAGE',3,mage,'aoe')=='Cone of Cold,Ice Lance,Frost Nova,Blizzard,Arcane Explosion')
+assert(rows('MAGE',1,mage)=='Fire Blast,Arcane Missiles,Frostbolt')
+assert(rows('MAGE',3,mage,'aoe')=='Cone of Cold,Blizzard,Frost Nova,Arcane Explosion')
 assert(rows('MAGE',3,learned('Arcane Explosion'),'aoe')=='Arcane Explosion')
-assert(rows('MAGE',2,learned('Pyroblast','Fireball','Fire Blast'))=='Pyroblast,Fireball,Fire Blast')
+assert(rows('MAGE',2,learned('Pyroblast','Fireball','Fire Blast'))=='Pyroblast,Fire Blast,Fireball')
 local rogue=learned('Backstab','Sinister Strike','Mutilate','Blade Flurry','Riposte')
 assert(rows('ROGUE',1,rogue)=='Mutilate')
 rogue.Mutilate=nil
 assert(rows('ROGUE',1,rogue)=='Backstab,Sinister Strike')
-assert(rows('ROGUE',2,rogue)=='Blade Flurry,Riposte,Backstab,Sinister Strike')
+assert(rows('ROGUE',2,rogue)=='Blade Flurry,Riposte,Sinister Strike,Backstab')
 local priest=learned('Smite','Mind Blast','Devouring Plague','Shadow Word: Pain','Mind Flay','Holy Nova')
-assert(rows('PRIEST',3,priest)=='Mind Blast,Devouring Plague,Shadow Word: Pain,Mind Flay')
+assert(rows('PRIEST',3,priest)=='Shadow Word: Pain,Devouring Plague,Mind Blast,Mind Flay')
+assert(procs('PRIEST',3,priest)=='Shadow Word: Pain,Devouring Plague')
 priest['Mind Flay']=nil
-assert(rows('PRIEST',3,priest)=='Smite,Mind Blast,Devouring Plague,Shadow Word: Pain')
+assert(rows('PRIEST',3,priest)=='Smite,Shadow Word: Pain,Devouring Plague,Mind Blast')
 assert(rows('PRIEST',2,priest,'single','heal')=='Holy Nova')
-assert(rows('PRIEST',1,priest,'single','heal')=='')
-assert(rows('WARRIOR',2,learned('Victory Rush','Rend','Overpower'))=='Victory Rush,Rend,Overpower')
-assert(rows('WARRIOR',3,learned('Revenge','Rend','Shield Block'))=='Revenge,Rend,Shield Block')
-assert(rows('WARLOCK',1,learned('Bane of Agony','Siphon Life','Corruption'))=='Bane of Agony,Siphon Life,Corruption')
+assert(rows('PRIEST',1,priest,'single','heal')=='Holy Nova')
+assert(rows('WARRIOR',2,learned('Victory Rush','Rend','Overpower'))=='Victory Rush,Overpower,Rend')
+assert(rows('WARRIOR',3,learned('Revenge','Rend','Shield Block'))=='Shield Block,Revenge,Rend')
+assert(rows('WARLOCK',1,learned('Bane of Agony','Siphon Life','Corruption'))=='Corruption,Bane of Agony,Siphon Life')
 assert(rows('WARLOCK',2,learned('Siphon Life'))=='')
 local shaman=learned('Searing Totem','Flametongue Totem','Magma Totem')
-assert(rows('SHAMAN',2,shaman)=='Flametongue Totem')
-assert(rows('SHAMAN',2,shaman,'aoe')=='Flametongue Totem,Magma Totem')
-shaman['Flametongue Totem']=nil
+-- Enhancement (13 Nov): Flametongue Totem is no longer worth using; Magma Totem, else Searing.
+assert(rows('SHAMAN',2,shaman)=='Magma Totem' and rows('SHAMAN',2,shaman,'aoe')=='Magma Totem')
+shaman['Magma Totem']=nil
 assert(rows('SHAMAN',2,shaman)=='Searing Totem')
+-- Disengage is in the defensive row now, not the track.
 local hunter=learned('Summon Hawk','Disengage','Arcane Shot')
-for spec=1,3 do assert(rows('HUNTER',spec,hunter):find('Disengage,Arcane Shot')) end
+assert(rows('HUNTER',1,hunter)=='Summon Hawk,Arcane Shot' and rows('HUNTER',2,hunter)=='Arcane Shot')
 for _,row in ipairs(NS.BuildRows('HUNTER',1,30,hunter,'single','ranged')) do
- if row.key=='Arcane Shot' then assert(row.hint:find('six seconds')) end
- if row.key=='Disengage' then assert(row.hint:find('threat')) end
+ if row.key=='Arcane Shot' then assert(row.hint:find('six more seconds') and row.proc) end
 end
-print('October 15 guide audit: talent fallbacks, priorities, AoE/healing branches and hunter conditions: passed')
+-- Protection Paladin (4 Nov): Holy Shield in; Exorcism only for packs, so not in cleave.
+local pp=learned('Righteous Fury','Seal of Fury','Consecration','Judgement','Holy Shield','Exorcism','Holy Strike')
+assert(rows('PALADIN',2,pp,'single',nil,60)=='Righteous Fury,Seal of Fury,Consecration,Judgement,Holy Shield,Holy Strike')
+assert(rows('PALADIN',2,pp,'aoe',nil,60)=='Righteous Fury,Seal of Fury,Consecration,Judgement,Holy Shield,Exorcism,Holy Strike')
+assert(rows('PALADIN',2,pp,'cleave',nil,60)=='Righteous Fury,Seal of Fury,Consecration,Judgement,Holy Shield,Holy Strike')
+-- A spell listed for both single target and AoE shows once in cleave mode.
+local elemental=learned('Flame Shock','Fire Nova','Searing Totem','Lightning Bolt')
+local n=0; for _,r in ipairs(NS.BuildRows('SHAMAN',1,40,elemental,'cleave','damage')) do if r.key=='Flame Shock' then n=n+1 end end
+assert(n==1)
+print('November 24 guide review: orders, proc steps, totems, defensive row moves, Protection Paladin and cleave duplicates: passed')
+
 `);
 
 run(`
@@ -784,9 +748,8 @@ print('Legacy native settings registration and missing minimap fallback: passed'
   const ids = new Set([...sources['Core.lua'].matchAll(/\["([^"]+)"\]=\d+/g)].map(m => m[1]));
   const names = new Set([...sources['Profiles.lua'].matchAll(/S\("([^"]+)"/g)].map(m => m[1]));
   const missing = [...names].filter(name => !ids.has(name)).sort();
-  assert.deepEqual(missing, ['Arcane Wrath', 'Bane of Agony', 'Bane of Havoc', 'Fire Nova', 'Holy Strike', "Light's Vigil",
-    'Lightning Mastery', 'Primal Bite', 'Rage of the Farseer', 'Seal of Fury', 'Shank', 'Shifting Power', 'Sniper Shot',
-    'Spearing Strike', 'Strider Kick', 'Summon Hawk', 'Wrack'], 'Guide spells without an ID in Core.lua baseIDs');
+  // Sniper Shot's page link (7032) looks like an old Classic ID, so it waits for /everfrost spellids in game.
+  assert.deepEqual(missing, ['Sniper Shot'], 'Guide spells without an ID in Core.lua baseIDs');
   console.log('Guide spell IDs: no new English-only spells: passed');
 }
 

@@ -155,10 +155,33 @@ NS.baseIDs={
  -- Level 31-60 additions.
  ["Hammer of Wrath"]=24275,["Explosive Trap"]=13813,["Volley"]=1510,["Scorch"]=2948,["Frostfire Bolt"]=44614,
  ["Ice Barrier"]=11426,["Mortal Strike"]=12294,["Sweeping Strikes"]=12328,["Whirlwind"]=1680,["Bloodthirst"]=23881,
- ["Shield Slam"]=23922,["Execute"]=5308,["Cheap Shot"]=1833,["Ghostly Strike"]=14278,["Penance"]=47540,
+ ["Shield Slam"]=23922,["Execute"]=5308,["Cheap Shot"]=1833,["Ghostly Strike"]=14278,["Penance"]=402174,
  ["Incinerate"]=29722,["Starfire"]=2912,["Hurricane"]=16914,["Ravage"]=6785,["Rake"]=1822,["Faerie Fire"]=770,
  ["Lacerate"]=33745,["Tranquility"]=740,["Innervate"]=29166,["Chain Lightning"]=421,["Water Shield"]=52127,
  ["Riptide"]=61295,["Chain Heal"]=1064,["Mana Tide Totem"]=16190,
+ -- Defensive and utility track (Profiles.lua NS.utility).
+ ["Hammer of Justice"]=853,["Divine Protection"]=498,["Blessing of Protection"]=1022,["Divine Shield"]=642,
+ ["Shield Bash"]=72,["Pummel"]=6552,["Taunt"]=355,["Mocking Blow"]=694,["Challenging Shout"]=1161,
+ ["Last Stand"]=12975,["Shield Wall"]=871,["Bash"]=5211,["Growl"]=6795,["Challenging Roar"]=5209,
+ ["Barkskin"]=22812,["Frenzied Regeneration"]=22842,["Kick"]=1766,["Gouge"]=1776,["Evasion"]=5277,
+ ["Vanish"]=1856,["Counterspell"]=2139,["Ice Block"]=11958,["Fade"]=586,["Psychic Scream"]=8122,
+ ["Feign Death"]=5384,["Death Coil"]=6789,["Grounding Totem"]=8177,
+ -- 24 November 2026 guide review (IDs from Icy Veins' Forever spell links; rank 1 where known).
+ ["Presence of Mind"]=12043,["Arcane Wrath"]=1326079,["Cold Snap"]=12472,["Blink"]=1953,
+ ["Shadow Word: Death"]=1309636,["Vampiric Embrace"]=15286,["Shadowform"]=15473,["Inner Focus"]=14751,
+ ["Life Tap"]=1454,["Wrack"]=1316697,["Bane of Agony"]=11713,["Bane of Doom"]=603,["Bane of Havoc"]=1225228,
+ ["Shadow Ward"]=6229,["Howl of Terror"]=5484,
+ ["Holy Shield"]=20925,["Holy Wrath"]=2812,["Seal of Wisdom"]=20166,["Oath of Light"]=1328548,
+ ["Seal of Fury"]=1311649,["Holy Strike"]=10333,["Light's Vigil"]=1310911,
+ ["Hamstring"]=1715,["Berserker Rage"]=18499,["Concussion Blow"]=12809,["Intimidating Shout"]=5246,["Disarm"]=676,
+ ["Reckless Swings"]=1329555,["Spearing Strike"]=1310222,
+ ["Ferocious Bite"]=22568,["Demoralizing Roar"]=99,["Rebirth"]=20484,["Nature's Grasp"]=16689,["Wild Growth"]=408120,
+ ["Primal Bite"]=407995,["Shifting Power"]=1322605,
+ ["Immolation Trap"]=13795,["Rapid Fire"]=3045,["Bestial Wrath"]=19574,["Aspect of the Beast"]=13161,["Aspect of the Hawk"]=13165,
+ ["Summon Hawk"]=1293241,["Strider Kick"]=1317257,
+ ["Expose Armor"]=8647,["Cold Blood"]=14177,["Adrenaline Rush"]=13750,["Premeditation"]=14183,["Death Mark"]=1316709,
+ ["Shank"]=1329549,["Blind"]=2094,
+ ["Earthbind Totem"]=2484,["Nature's Swiftness"]=16188,["Lightning Mastery"]=16582,["Rage of the Farseer"]=425336,["Fire Nova"]=8349,
 }
 -- Localized names never change during a session. Cache a class's map only once
 -- every known ID has resolved, so late-loading spell data is still picked up.
@@ -166,8 +189,12 @@ local spellNameCache={}
 function NS.SpellNames(class)
  if spellNameCache[class] then return spellNameCache[class] end
  local names,complete={},true
+ local lists={NS.utility and NS.utility[class] or {}}
  for _,p in pairs(NS.profiles[class] or {}) do
-  for _,list in ipairs({p.steps,p.healing or {},p.bear or {},p.caster or {},p.melee or {}}) do
+  for _,list in ipairs({p.steps,p.healing or {},p.bear or {},p.caster or {},p.melee or {}}) do lists[#lists+1]=list end
+ end
+ for _,list in ipairs(lists) do
+  do
    for _,entry in ipairs(list) do
     names[entry.name]=entry.name
     local id=NS.baseIDs[entry.name]

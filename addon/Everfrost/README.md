@@ -1,97 +1,64 @@
-# Everfrost — v0.8.0
+# Everfrost — v0.9.0
 
-A compact class-aware rotation reference for WoW Forever, covering levels 1–60. Detects your class, level, dominant talent tree, and learned spell ranks. Includes all nine classes and 27 talent trees, with a general levelling profile before you spend talents.
+A rotation HUD and gear and talent hints for WoW Forever, covering levels 1–60, all nine classes and 27 talent trees. Everfrost detects your class, level, talent tree and learned spell ranks. It never casts, rolls, equips or clicks anything for you.
 
 ## Install or upgrade
 
 1. Exit WoW.
-2. Remove the old `ForeverRetHelper` and `ForeverGuide` folders from your Forever client's `Interface/AddOns` directory, then extract the new `Everfrost` folder there. Keep only the new addon enabled to avoid duplicate panels.
+2. Extract the `Everfrost` folder into your Forever client's `Interface/AddOns` directory, replacing any older copy. Remove old `ForeverRetHelper` or `ForeverGuide` folders.
 3. Confirm the path is `Interface/AddOns/Everfrost/Everfrost.toc`, without an extra nested folder.
-4. Enable **Everfrost** in the AddOns list. type `/everfrost` for settings or `/everfrost show` for the reference panel.
+4. Enable **Everfrost** and log in. Type `/everfrost` for settings, or `/everfrost preview` to see the HUD out of combat.
 
-The folder, TOC, frame and saved-variable identifiers now use Everfrost. Because this is a new addon identity, previous panel settings start fresh. `/everfrost` is the primary command; `/fguide` and `/frh` also work. This package is not automatically installed. It targets interface 16001; exact compatibility with your Forever build needs an in-game check.
+Settings from earlier Everfrost versions carry over: a saved AoE choice becomes manual AoE mode, and the old panel's position and size become the keyboard layout's. The addon targets interface 16001; compatibility with your Forever build still needs an in-game check.
 
-## Using the panel
+## The rotation HUD
 
-Click the panel title or down arrow to open **Choose a Spec**, a compact menu with single-line Automatic, Levelling and specialisation choices. Automatic shows the detected tree inline. The menu shows the automatically detected tree and marks your saved selection. Levelling retains the general spell guide but uses the dominant talent tree for gear from level 10 onward. Close it with Escape, the close button, or an outside click. Changes during combat apply when combat ends.
+- **NOW**: the large icon between two thin blue bars is the spell to press. Where the game offers it, this comes from Blizzard's own rotation assistant, which sees cooldowns, resources and procs that addons can't. Otherwise it's the highest guide spell the game says is ready.
+- **Upcoming**: up to six smaller icons (three by default) in the guide's priority order, sliding towards NOW. A priority, not a promise about your next casts. Steps that wait for a proc stay here and never take NOW on the guide's word alone.
+- **Defensive row** (on by default for tanks): interrupts, taunts and defensive cooldowns you've learned. Everfrost can't see how much danger you're in, so these show as available; big ones are dimmed and marked situational.
+- **Missing buffs** such as Righteous Fury or a seal show as a small reminder out of combat.
+- **Layouts**: Guitar Hero (default), Classic, Minimal and Tank. The HUD shows in combat only by default; in combat clicks pass through it.
 
-The header shows your spec, class, level and detection status. Read icons left to right, continuing on the next row. Hover an icon for its spell tooltip and the condition for using it. Hover the header for general rotation notes. Drag the header to move the panel.
+### Single target, cleave and AoE
 
-Click **SINGLE / AOE** to change encounter mode. Healing specs have a **HEAL / DAMAGE** switch, defaulting to healing. Feral has a **CAT / BEAR** switch; before Cat Form is learned it defaults to Bear, or caster spells before either form is learned. It does not automatically follow your current shapeshift form.
+The mode text on the HUD reads `AUTO · ST ~1`. In AUTO, Everfrost estimates engaged enemies from **enemy nameplates** (turn them on) and switches to cleave at 2 and AoE at 3 by default, adjustable per spec on the Detection page. It steps up at once and steps down after 1.5 seconds. When the game won't share enough to count, it shows `?` and stays on single target. Click the mode to step through AUTO, ST, CLV and AOE; right-click returns to AUTO. A manual mode stays until you change it. Key Bindings > AddOns > Everfrost has keys for each.
 
-This is a conditional priority reference, not a live next-cast queue. The list contains openers, maintenance effects, fillers and situational abilities. It does not mean cast every icon once in order: choose one seal, use finishers with combo points, and apply the conditions shown on hover. Native cooldown sweeps appear when supported by the client. It does not evaluate combat resources, proc buffs, enemy counts, positioning or target health to choose your next button.
+### Controller and keyboard
 
-## Detection and coverage
+The HUD follows the game's input style (gamepad mode, Steam Deck, ConsolePort). With a controller it moves above the gamepad bars with bigger icons; each layout keeps its own position and size. Unlock the HUD and move or resize it while using each layout.
 
-- Automatic specialisation uses the talent tree with the most points. A tie shows **HYBRID** and uses the general levelling profile. Zero points shows **UNSPENT**. When talent-point APIs are absent, the client specialisation API is used if available.
-- Everfrost reads Forever's native trait-group currency totals. Specialisation settings displays the cached point split; `/everfrost status` also reports the detection source. Unavailable or uncommitted talent data is not treated as zero spent points.
-- `/everfrost spec 1`, `2`, or `3` selects a tree manually in talent-window order. `/everfrost spec auto` restores detection. Overrides are saved per character.
-- Only learned spells are shown. The spellbook supplies the trained rank and required level; reaching a level alone does not unlock a spell.
-- Metadata updates after training, levelling and talent changes. Changes made during combat refresh when combat ends.
-- Past level 60 the panel hides itself. Several specs share early-level priorities until their distinct abilities become available. Survival uses the ranged approach until level 30 with Strider Kick learned, then defaults to the melee guide. The RANGED / MELEE switch lets you keep the ranged view; melee also assumes the supporting Survival talents described in the source guide.
-- English guidance; existing spell names use localized names where available. New Forever-specific names currently require an English spellbook.
+## Gear, loot and quests
 
-## Settings window
+One scoring engine marks bag upgrades (a thin green border and arrow; fainter for minor upgrades), loot rolls (a faint ring on Need or Greed) and quest rewards (**Recommended** on the best one). Tanks and Feral can choose a scoring focus such as Balanced Tank, Survivability, Threat or Solo Levelling on the Gear & Loot page. A two-hander is compared with your weapon and shield together. Procs and Use effects are named, never given a made-up score. Below level 10, gear uses a simple starter priority for your class. Full method: https://github.com/mckenna654/Everfrost/blob/main/docs/GEAR.md
 
-Open with `/everfrost`, `/everfrost settings`, the minimap button, or Escape → Options → AddOns → Everfrost → Open Everfrost settings. An Interface → AddOns fallback is available on older clients.
+## Talents
 
-The Specialisation page chooses Automatic, Levelling, a specialisation, encounter mode and supported role views. Rotation Panel controls visibility, locking, size, reset and minimap visibility. Gear Upgrades controls highlights and shows stat priorities with a Rescan bags button. Preferences save per character. Guide changes still defer during combat; open the settings window outside combat. Escape closes it, and dragging the header moves it.
-
-The compact window uses native WoW framing, inset content and top tabs. Panel size uses a 60%–200% slider. Stat text is aligned below its heading, and the level-10 notice stays visible.
-
-Rotation Panel also offers an opacity slider from 10% to 100%, saved per character. It fades the entire reference panel while settings, guide menus and tooltips stay fully readable. `/everfrost opacity 60` sets 60%. Reset position & size keeps your opacity choice. The reference panel now uses WoW dialog textures, native fonts/buttons and quickslot icon borders.
-
-Left-click the minimap button for settings, right-click to show/hide the panel, and drag to reposition it. `/everfrost minimap on` restores a hidden button. Actual native settings integration and rendering still need in-game testing.
+From level 10, the next talent in the Icy Veins levelling build that you can actually take has a thin gold outline in the talent window. Its tooltip shows its place in the build, and a locked build pick says why (a prerequisite, points needed in the tree, or your level).
 
 ## Commands
 
 | Command | Action |
 |---|---|
-| `/everfrost` / `/everfrost settings` / `/everfrost config` | Open settings |
-| `/everfrost show` | Show reference panel |
-| `/everfrost minimap on` / `/everfrost minimap off` | Show or hide minimap button |
-| `/everfrost hide` | Hide panel |
-| `/everfrost single` / `/everfrost aoe` | Encounter mode |
-| `/everfrost heal` / `/everfrost damage` | Healing-spec view |
-| `/everfrost cat` / `/everfrost bear` | Feral view |
-| `/everfrost ranged` / `/everfrost melee` | Survival view (melee requires level 30 and Strider Kick) |
-| `/everfrost spec levelling` / `/everfrost spec 0` | General levelling guide |
-| `/everfrost spec auto` / `/everfrost spec 1` / `2` / `3` | Automatic or manual spec |
-| `/everfrost lock` / `/everfrost unlock` | Lock or unlock dragging |
-| `/everfrost scale 1.2` | Scale between 0.6 and 2 |
-| `/everfrost opacity 60` | Panel opacity from 10% to 100% |
-| `/everfrost reset` | Reset position and scale; show panel |
-| `/everfrost refresh` | Rescan outside combat |
-| `/everfrost source` | Print the selected guide URL |
-| `/everfrost status` | Print detected class, tree, level and API status |
+| `/everfrost` | Open settings |
+| `/everfrost show` / `hide` | Show or hide the HUD |
+| `/everfrost preview` | Show the HUD out of combat to place it |
+| `/everfrost mode auto` / `st` / `cleave` / `aoe` | Rotation mode |
+| `/everfrost layout track` / `classic` / `minimal` / `tank` | HUD layout |
+| `/everfrost input auto` / `pad` / `kbm` / `custom` | Controller or keyboard layout, or one position for both |
+| `/everfrost upcoming 3` | Upcoming icons, 0–6 |
+| `/everfrost utility auto` / `on` / `off` | Defensive row: tanks only, always or never |
+| `/everfrost enemies` | In combat, the enemy estimate |
+| `/everfrost spec auto` / `levelling` / `1` / `2` / `3` | Automatic, Levelling or manual spec |
+| `/everfrost heal` / `damage` / `cat` / `bear` / `ranged` / `melee` | Role views |
+| `/everfrost lock` / `unlock` | Lock or unlock dragging |
+| `/everfrost scale 1.2` / `opacity 60` | Size of the current layout; opacity |
+| `/everfrost reset` | Reset the current layout's position and size |
+| `/everfrost gear` / `gear on` / `gear off` | Stat order; gear marks on or off |
+| `/everfrost talents` / `talents on` / `talents off` | Next talents; highlights on or off |
+| `/everfrost refresh` / `status` / `source` / `spellids` | Rescan; diagnostics; guide link; spell IDs to report |
 
-## Sources and verification
+## Sources
 
-Adapted from the Icy Veins WoW Forever PvE guides, reviewed October 15 (levels 1–30) and November 11, 2026 (levels 31–60). See SOURCES.md for all links. These are concise levelling adaptations of guide priorities, with general ability hints where needed, rather than complete reproductions or an automatically updated guide feed. Unofficial; not affiliated with Icy Veins or Blizzard.
+Rotations follow the Icy Veins WoW Forever rotation pages as read on 24 November 2026, with levelling-guide steps for levels 31–60 kept where the max-level pages don't cover them. See SOURCES.md for every link and change. Unofficial; not affiliated with Icy Veins or Blizzard. No third-party addon libraries are required.
 
-No third-party addon libraries are required. Each release is tested against a simulated client and checked in the game; the changelog says what was seen.
-
-For the first game check, verify the header and learned icons, train a spell and change talent points, switch encounter/role modes, then reload to check the saved position. Test on a second class. If an ability is missing, use `/everfrost refresh` outside combat. Include `/everfrost status`, your client build and any Lua error when reporting a problem.
-
-
-## Level-30 update
-
-Version 0.4.0 extends the existing panel through level 30. New learned-spell entries cover Holy Shock, Summon Hawk, Survival melee, Blast Wave, Slam, Death Wish, Hemorrhage, Prayer of Healing, Conflagrate, Soul Link, Hellfire, Insect Swarm, Shifting Power, Swiftmend and Stormstrike, among others. Abilities supplied by talents are matched from the spellbook rather than assuming you chose the guide's build. This also permits earlier access through extra talent points where available.
-
-Some source pages still contain older level-20 sections alongside newer guidance. The addon uses the available rotation guidance and your trained spell metadata; it does not claim every guide section has been updated for 30. Exact talents, gear, weapon setup and proc conditions remain yours to check against the hover notes and linked guide.
-
-
-
-
-
-## Gear upgrades and Need/Greed highlights
-
-Enabled by default for levels 1–60, using a simple starter priority for your class below level 10. Standard bag items get a pulsing border in the item's rarity colour and a green up arrow when their estimated score beats an equipped replacement. Armour pieces with more armour and no loss of useful stats also count. Standard loot-roll windows highlight Need for estimated upgrades and Greed for known non-upgrades or irrelevant items. Disabled choices are respected, and you click the roll yourself. Hover for the score difference and stat order.
-
-Use `/everfrost gear` to show the selected priorities, or `/everfrost gear on` / `off` to toggle the feature. **Below level 10, gear hints use a simple starter priority for your class**, because there is usually no talent tree to read yet. These lists are Everfrost estimates, not guide rankings. Talent-based priorities start at level 10. This applies even to manual spec choices. Quest choices and merchant upgrades are marked the same way, and tooltips explain upgrades in plain words. If no quest reward is an upgrade, the one that sells for the most gets a gold mark. This note is also displayed in settings, gear tooltips and panel hover text. Levelling uses the tree with the most talent points in the active talent group from level 10 onward. All three tree counts must be available. The settings Gear Upgrades page identifies the inferred spec; ties, unspent talents or unavailable data stay unscored. From level 10, manual spec choices override detection. A healer's DAMAGE view still uses healing gear priorities. Survival uses ranged priorities before its melee requirements are met or when RANGED is selected.
-
-Complete weapon comparisons: one-hand weapons and off-hands can compare together against an equipped two-hander. Everfrost searches your carried bags for each item's best usable partner and highlights estimated pair upgrades. The tooltip names the partner: equip both items for the comparison to apply. Loot candidates use carried partners too. Shields, held off-hands and learned Dual Wield are supported. Missing partners or unresolved pair data remain unscored.
-
-Stat orders were checked against all 27 linked Icy Veins Forever guides on November 11, 2026. Everfrost converts those orders into approximate weights; it is not a simulator. Procs, set bonuses, weapon speed, dual-wield damage penalties, sockets, enchants, hit caps and other special effects are not modeled. Check the tooltip and your group's loot rules. Missing/restricted item data is also unscored. During combat, comparisons wait for combat to end. Custom bag and loot-window replacements are not integrated.
-
-Full scoring method: https://github.com/mckenna654/Everfrost/blob/main/docs/GEAR.md
+Tested against a simulated client only. Please report problems with `/everfrost status`, your client build and any Lua error.

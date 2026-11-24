@@ -5,7 +5,8 @@ Everfrost is a standalone WoW Forever Lua addon. Its source of truth is addon/Ev
 - Preserve the simple, compact UI and class/spec/level detection.
 - Current coverage is levels 1–60, nine classes and 27 talent trees.
 - Keep recommendations learned-spell-aware. Review current Icy Veins Forever guides before changing rotation rules; preserve source links.
-- This addon displays reference priorities, not a combat-driven next-cast queue. Do not silently change this contract.
+- The rotation HUD's NOW icon is Blizzard's rotation assistant (C_AssistedCombat) where the game offers it, otherwise the highest guide priority the game says is ready. Upcoming icons are guide priorities, labelled as such, never a predicted cast sequence. Enemy counts are estimates from nameplates and say so. Never automate casts, rolls or clicks. (The user asked for this HUD in November 2026; before that Everfrost was a static reference panel.)
+- Forever 1.60.1's API definitions are in Gethe/wow-ui-source, branch `forever` (Interface/AddOns/Blizzard_APIDocumentationGenerated). Check an API there before using it: the combat log is restricted, and cooldowns, threat, auras and unit identity can be secret in combat.
 - Cache spellbook/talent metadata outside combat. Do not compare or branch on secret combat values. Cooldown duration objects go directly to native widgets.
 - Preserve Lua 5.1-compatible syntax and current addon identifiers (Everfrost, EverfrostDB, /everfrost).
 - Run npm test after Lua behavior changes; npm run build packages only the addon folder into dist.

@@ -302,7 +302,7 @@ local methods={}
 function methods:SetScript(name,fn) self.scripts[name]=fn end
 function methods:HookScript(name,fn) self.hooks[name]=fn; self.hookCounts=self.hookCounts or {}; self.hookCounts[name]=(self.hookCounts[name] or 0)+1 end
 function methods:RegisterEvent(name) self.events[name]=true end
-function methods:CreateTexture() local t=widget(); t.owner=self; return t end
+function methods:CreateTexture() local t=widget(); t.owner=self; created=(created or 0)+1; return t end
 function methods:CreateAnimationGroup() local g=widget(); g.owner=self; return g end
 function methods:CreateAnimation() local a=widget(); self.animation=a; return a end
 function methods:SetFromAlpha(value) self.from=value end
@@ -316,6 +316,12 @@ function methods:GetWidth() return self.width end
 function methods:SetPoint(...) self.points=self.points or {}; self.points[#self.points+1]={...} end
 function methods:SetVertexColor(r,g,b,a) self.vertex={r,g,b,a} end
 function methods:SetAtlas(name,useSize) self.atlas=name; self.atlasSize=useSize end
+function methods:ClearAllPoints() self.points={} end
+function methods:SetColorTexture(r,g,b,a) self.colorTexture={r,g,b,a} end
+function methods:SetTexture(path) self.texture=path end
+function methods:CreateFontString(_,layer,template) local t=widget(); t.owner=self; t.template=template; created=(created or 0)+1; return t end
+function methods:SetText(text) self.text=text end
+function methods:SetTextColor(r,g,b) self.textColor={r,g,b} end
 function methods:IsPlaying() return self.playing==true end
 function methods:Play() self.playing=true; self.plays=(self.plays or 0)+1 end
 function methods:Stop() self.playing=false end
@@ -389,127 +395,152 @@ ContainerFrameItemButtonMixin={Initialize=function() end}
 load('GearUI.lua');
 run(`
 local G=NS.Gear
+local STYLE=NS.gearMarkStyles
+-- A mark is shown when its button carries a style; hiding clears it.
+local function styleOf(button) return button.EverfrostMark and button.EverfrostMark.style end
+local function shown(button) return styleOf(button)~=nil end
+local function edgesShown(button)
+ local m=button.EverfrostMark; if not m then return false end
+ for _,edge in ipairs(m.edges) do if not edge:IsShown() then return false end end
+ return true
+end
+local function edgesHidden(button)
+ local m=button.EverfrostMark; if not m then return true end
+ for _,edge in ipairs(m.edges) do if edge:IsShown() then return false end end
+ return true
+end
+local function lines() return table.concat(GameTooltip.lines,'|') end
 G.SetContext('WARRIOR',1,30,'damage',{})
 fire('PLAYER_LOGIN'); tick()
 assert(G.equipment[1]==false and G.equipment[5].link=='item:100')
 -- Passive equipment can be equippable while its item-use action is unavailable.
 assert(G.ReadItem('item:101').usable==true and itemUseCalls==0)
-assert(G.bags[0][1].result.kind=='need')
+assert(G.bags[0][1].result.kind=='need' and G.bags[0][1].result.verdict=='clear')
 local bag=widget(); G.TrackBag(bag,0,1)
-assert(bag.EverfrostGearGlow and bag.EverfrostGearGlow:IsShown())
-assert(#bag.EverfrostGearEdges==4)
--- A thin outline flush with the slot: two-pixel lines, none poking out past the button.
-for index,edge in ipairs(bag.EverfrostGearEdges) do
+-- A clear upgrade: a thin green border flush inside the slot, plus the native arrow. No glow,
+-- no ring, no pulse and nothing drawn past the button's edge.
+assert(styleOf(bag)==STYLE.clear and edgesShown(bag) and #bag.EverfrostMark.edges==4)
+assert(not bag.EverfrostMark.ring and not bag.EverfrostMark.pulse)
+for index,edge in ipairs(bag.EverfrostMark.edges) do
  assert((index<=2 and edge.height or edge.width)==2)
  for _,point in ipairs(edge.points) do assert(point[4]==0 and math.abs(point[5])<=2) end
+ assert(edge.vertex[1]==0.30 and edge.vertex[2]==0.90 and edge.vertex[4]==0.95)
 end
--- The soft glow's overhang follows the button's size (12 where the size is unknown).
-assert(bag.EverfrostGearGlow.points[1][4]==-12 and bag.EverfrostGearGlow.points[1][5]==12)
-for _,edge in ipairs(bag.EverfrostGearEdges) do assert(edge:IsShown()) end
-local function assertColor(button,r,g,b)
- for _,layer in ipairs({button.EverfrostGearGlow,table.unpack(button.EverfrostGearEdges)}) do
-  assert(layer.vertex[1]==r and layer.vertex[2]==g and layer.vertex[3]==b)
- end
-end
-assertColor(bag,0.12,1,0)
--- Upgrades get the native green arrow, which follows the glow on and off.
-local arrow=bag.EverfrostGearArrow
+local arrow=bag.EverfrostMark.arrow
 assert(arrow and arrow:IsShown() and arrow.atlas=='bags-greenarrow' and arrow.atlasSize==true)
-assert(#bag.EverfrostGearPulses==5)
-for _,pulse in ipairs(bag.EverfrostGearPulses) do
- assert(pulse:IsPlaying() and pulse.looping=='BOUNCE')
- -- A gentle breathe, never a blink: it stays at least 40% lit and eases in and out.
- assert(pulse.animation.from==0.4 and pulse.animation.to==1 and pulse.animation.duration==0.9 and pulse.animation.smoothing=='IN_OUT')
-end
-local plays=bag.EverfrostGearPulses[1].plays; local calls=qualityCalls
-G.PaintBag(bag); assert(bag.EverfrostGearPulses[1].plays==plays and qualityCalls==calls)
--- Reused buttons pick up new rarity colors, with safe neutral missing-data fallbacks.
-itemInfo['item:101'][3]=3; G.items={}; G.Refresh(); assertColor(bag,0,0.44,0.87)
-itemInfo['item:101'][3]=4; G.items={}; G.Refresh(); assertColor(bag,0.64,0.21,0.93)
-itemInfo['item:101'][3]=secret; G.items={}; G.Refresh(); assertColor(bag,1,1,1)
-assert(G.bags[0][1].result.kind=='need')
-itemInfo['item:101'][3]=2; C_Item.GetItemQualityColor=function() return secret,1,1 end
-G.items={}; G.Refresh(); assertColor(bag,1,1,1)
-C_Item.GetItemQualityColor=nil; G.items={}; G.Refresh(); assertColor(bag,1,1,1)
-C_Item.GetItemQualityColor=qualityColor; G.items={}; G.Refresh(); assertColor(bag,0.12,1,0)
--- Native tooltip rebuilds keep the label, without duplicate OnEnter additions.
+-- Repainting reuses every widget: no duplicates on reuse, and rarity no longer recolours it.
+local made=created; G.PaintBag(bag); G.PaintBag(bag); assert(created==made)
+itemInfo['item:101'][3]=4; G.items={}; G.Refresh(); assert(styleOf(bag)==STYLE.clear and created==made)
+itemInfo['item:101'][3]=secret; G.items={}; G.Refresh(); assert(styleOf(bag)==STYLE.clear)
+itemInfo['item:101'][3]=2; G.items={}; G.Refresh()
+-- Native tooltip rebuilds keep the verdict, without duplicate OnEnter additions.
 GameTooltip.owner=bag; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
-assert(table.concat(GameTooltip.lines,'|'):find('Everfrost: UPGRADE',1,true))
-assert(not table.concat(GameTooltip.lines,'|'):find(NS.gearLevelNote,1,true))
+assert(lines():find('Everfrost: Clear upgrade (+200%)',1,true) and lines():find('Better because it has more Strength',1,true))
+-- The generic reason gives way to the specific one: two short lines of why, not three.
+assert(not lines():find('Estimated stat upgrade',1,true) and not lines():find('Estimated score',1,true))
+assert(lines():find('Priority: Weapon DPS',1,true))
+assert(not lines():find(NS.gearLevelNote,1,true))
 local lineCount=#GameTooltip.lines; bag.hooks.OnEnter(bag); assert(#GameTooltip.lines==lineCount)
 GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
 assert(#GameTooltip.lines==lineCount and tooltipRegistrations==1)
-G.TrackBag(bag,0,2); assert(not bag.EverfrostGearGlow:IsShown() and not arrow:IsShown())
-for _,edge in ipairs(bag.EverfrostGearEdges) do assert(not edge:IsShown()) end
-for _,pulse in ipairs(bag.EverfrostGearPulses) do assert(not pulse:IsPlaying()) end
+-- A downgrade gets no mark in bags.
+G.TrackBag(bag,0,2); assert(not shown(bag) and edgesHidden(bag) and not arrow:IsShown())
 GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
-assert(table.concat(GameTooltip.lines,'|'):find('Everfrost: No upgrade',1,true))
-G.TrackBag(bag,0,1); assert(bag.EverfrostGearGlow:IsShown() and arrow:IsShown() and bag.EverfrostGearArrow==arrow)
-G.TrackBag(bag,-1,1); assert(not bag.EverfrostGearGlow:IsShown() and not arrow:IsShown())
+assert(lines():find('Everfrost: Downgrade',1,true) and lines():find('No useful stats',1,true))
+G.TrackBag(bag,0,1); assert(styleOf(bag)==STYLE.clear and arrow:IsShown() and bag.EverfrostMark.arrow==arrow)
+G.TrackBag(bag,-1,1); assert(not shown(bag) and not arrow:IsShown())
 G.TrackBag(bag,0,1); bag.hooks.OnEnter(bag); assert(#GameTooltip.lines>0)
+-- A minor upgrade (5% here) is a thinner, softer border with no arrow.
+local function legs(link,stats) fixture(link,stats); itemInfo[link][9]='INVTYPE_LEGS' end
+legs('item:106',{ITEM_MOD_STRENGTH_SHORT=20}); inventory[7]='item:106'
+legs('item:103',{ITEM_MOD_STRENGTH_SHORT=20,ITEM_MOD_STAMINA_SHORT=2}); bagLinks[2]='item:103'; fire('BAG_UPDATE',0); tick()
+local minorBag=widget(); G.TrackBag(minorBag,0,2)
+assert(G.bags[0][2].result.verdict=='minor' and styleOf(minorBag)==STYLE.minor and not minorBag.EverfrostMark.arrow)
+for index,edge in ipairs(minorBag.EverfrostMark.edges) do assert((index<=2 and edge.height or edge.width)==1) end
+-- A sidegrade (2.5% here) has no mark, and its tooltip names the trade-off.
+legs('item:104',{ITEM_MOD_STRENGTH_SHORT=20,ITEM_MOD_STAMINA_SHORT=1}); bagLinks[2]='item:104'; fire('BAG_UPDATE',0); tick()
+assert(G.bags[0][2].result.verdict=='sidegrade' and G.bags[0][2].result.kind=='greed' and not shown(minorBag) and edgesHidden(minorBag))
+GameTooltip.owner=minorBag; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
+assert(lines():find('Everfrost: Sidegrade',1,true))
+bagLinks[2]='item:102'; fire('BAG_UPDATE',0); tick()
+-- Loot rolls: a faint ring on Need that breathes slowly for a clear upgrade.
 fire('START_LOOT_ROLL',1); tick()
 local frame=GroupLootFrame1
-assert(frame.NeedButton.EverfrostGearGlow:IsShown())
--- Roll buttons keep the glow only: the arrow marks items, not the Need button.
-assert(not frame.NeedButton.EverfrostGearArrow)
--- Roll buttons are round, so they pulse without the square outline.
-assert(#frame.NeedButton.EverfrostGearEdges==0 and #frame.NeedButton.EverfrostGearPulses==1)
-assertColor(frame.NeedButton,0.12,1,0)
-local rollPlays=frame.NeedButton.EverfrostGearPulses[1].plays
-G.PaintRoll(frame); assert(frame.NeedButton.EverfrostGearPulses[1].plays==rollPlays)
-itemInfo['item:101'][3]=3; G.items={}; fire('START_LOOT_ROLL',1); tick()
-assertColor(frame.NeedButton,0,0.44,0.87)
+local need=frame.NeedButton
+assert(styleOf(need)==STYLE.needClear and need.EverfrostMark.ring:IsShown() and edgesHidden(need))
+assert(not need.EverfrostMark.arrow and not shown(frame.GreedButton))
+local pulse=need.EverfrostMark.pulse
+assert(pulse:IsPlaying() and pulse.looping=='BOUNCE' and pulse.animation.from==0.55 and pulse.animation.to==1 and pulse.animation.duration==1.6 and pulse.animation.smoothing=='IN_OUT')
+assert(need.EverfrostMark.ring.vertex[4]==0.70 and need.EverfrostMark.ring.texture=='Interface\\\\Buttons\\\\UI-ActionButton-Border')
+local rollPlays=pulse.plays; G.PaintRoll(frame); assert(pulse.plays==rollPlays)
+-- A downgrade leaves Need alone and gives Greed only a faint, steady grey hint.
 rollLinks[1]='item:102'; fire('START_LOOT_ROLL',1); tick()
-assert(not frame.NeedButton.EverfrostGearGlow:IsShown() and frame.GreedButton.EverfrostGearGlow:IsShown())
+assert(not shown(need) and not pulse:IsPlaying() and styleOf(frame.GreedButton)==STYLE.greedHint)
+assert(not frame.GreedButton.EverfrostMark.pulse and frame.GreedButton.EverfrostMark.ring.vertex[4]==0.30)
+-- A minor upgrade gets a steady ring.
+rollLinks[1]='item:103'; fire('START_LOOT_ROLL',1); tick()
+assert(styleOf(need)==STYLE.needMinor and not pulse:IsPlaying() and not shown(frame.GreedButton))
+-- A sidegrade marks neither button.
+rollLinks[1]='item:104'; fire('START_LOOT_ROLL',1); tick()
+assert(not shown(need) and not shown(frame.GreedButton))
+inventory[7]=nil; fire('BAG_UPDATE',0); tick()
 rollLinks[1]='item:101'; rollEligibility[1]={false,true}; fire('START_LOOT_ROLL',1); tick()
-assert(not frame.NeedButton.EverfrostGearGlow:IsShown() and not frame.GreedButton.EverfrostGearGlow:IsShown())
+assert(not shown(need) and not shown(frame.GreedButton))
 rollEligibility[1]={true,true}; rollLinks[1]='item:999'; fire('START_LOOT_ROLL',1); tick()
-assert(G.rolls[1].result.kind=='unknown' and not frame.GreedButton.EverfrostGearGlow:IsShown())
+assert(G.rolls[1].result.kind=='unknown' and not shown(frame.GreedButton) and not shown(need))
 fixture('item:999',{ITEM_MOD_STRENGTH_SHORT=12}); fire('GET_ITEM_INFO_RECEIVED',999); tick()
-assert(frame.NeedButton.EverfrostGearGlow:IsShown())
+assert(styleOf(need)==STYLE.needClear and pulse:IsPlaying())
 -- Combat events do not read item APIs or modify protected roll actions.
 local before=metadataCalls; combat=true; fire('PLAYER_REGEN_DISABLED'); fire('BAG_UPDATE',0); tick()
-assert(G.pending and metadataCalls==before and not bag.EverfrostGearGlow:IsShown() and not arrow:IsShown())
-for _,edge in ipairs(bag.EverfrostGearEdges) do assert(not edge:IsShown()) end
+assert(G.pending and metadataCalls==before and not shown(bag) and edgesHidden(bag) and not arrow:IsShown())
 GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip); assert(#GameTooltip.lines==0)
-assert(not frame.NeedButton.EverfrostGearGlow:IsShown())
-combat=false; fire('PLAYER_REGEN_ENABLED'); tick(); assert(frame.NeedButton.EverfrostGearGlow:IsShown())
+assert(not shown(need) and not pulse:IsPlaying())
+combat=false; fire('PLAYER_REGEN_ENABLED'); tick(); assert(styleOf(need)==STYLE.needClear)
 fire('CANCEL_LOOT_ROLL',1); tick()
-assert(G.rolls[1]==nil and not frame.NeedButton.EverfrostGearGlow:IsShown())
--- Hiding the whole UI is not the end of a roll: its highlight returns with the frame.
+assert(G.rolls[1]==nil and not shown(need))
+-- Hiding the whole UI is not the end of a roll: its mark returns with the frame.
 rollLinks[2]='item:101'; frame.rollID=2; fire('START_LOOT_ROLL',2); tick()
-assert(G.rolls[2] and frame.NeedButton.EverfrostGearGlow:IsShown())
-frame.shown=false; frame.hooks.OnHide(frame); assert(not frame.NeedButton.EverfrostGearGlow:IsShown())
+assert(G.rolls[2] and shown(need))
+frame.shown=false; frame.hooks.OnHide(frame); assert(not shown(need))
 frame.shown=true; frame.hooks.OnShow(frame); tick()
-assert(G.rolls[2] and frame.NeedButton.EverfrostGearGlow:IsShown())
-GameTooltip:ClearLines(); frame.NeedButton.hooks.OnEnter(frame.NeedButton)
-assert(table.concat(GameTooltip.lines,'|'):find('UPGRADE / Need',1,true))
-fire('CANCEL_LOOT_ROLL',2); tick(); assert(G.rolls[2]==nil and not frame.NeedButton.EverfrostGearGlow:IsShown())
+assert(G.rolls[2] and shown(need))
+GameTooltip:ClearLines(); need.hooks.OnEnter(need)
+assert(lines():find('Clear upgrade (+200%) / Need',1,true))
+GameTooltip:ClearLines(); frame.GreedButton.hooks.OnEnter(frame.GreedButton)
+assert(lines():find('/ Need',1,true))
+fire('CANCEL_LOOT_ROLL',2); tick(); assert(G.rolls[2]==nil and not shown(need))
 -- Forever nests its roll buttons inside LootButtonContainer.
 local nested=widget(); local widgetIndex=getmetatable(nested).__index
 setmetatable(nested,{__index=function(t,k) if k=='NeedButton' or k=='GreedButton' then return nil end; return widgetIndex(t,k) end})
 nested.LootButtonContainer=widget(); nested.LootButtonContainer.NeedButton=widget(); nested.LootButtonContainer.GreedButton=widget()
 nested.rollID=3; rollLinks[3]='item:101'; G.TrackRoll(nested); fire('START_LOOT_ROLL',3); tick()
-assert(nested.LootButtonContainer.NeedButton.EverfrostGearGlow:IsShown() and nested.LootButtonContainer.NeedButton.hooks.OnEnter)
-nested.shown=false; nested.hooks.OnHide(nested); assert(not nested.LootButtonContainer.NeedButton.EverfrostGearGlow:IsShown())
+assert(shown(nested.LootButtonContainer.NeedButton) and nested.LootButtonContainer.NeedButton.hooks.OnEnter)
+nested.shown=false; nested.hooks.OnHide(nested); assert(not shown(nested.LootButtonContainer.NeedButton))
 fire('CANCEL_LOOT_ROLL',3); tick()
 -- Forever calls Initialize(containerFrame, bag, slot); the older form has no container.
 local pooled=widget(); hooks.Initialize(pooled,widget(),0,1)
-assert(pooled.EverfrostGearGlow and pooled.EverfrostGearGlow:IsShown())
-local legacyButton=widget(); hooks.Initialize(legacyButton,0,1); assert(legacyButton.EverfrostGearGlow:IsShown())
--- A reused button keeps one set of hooks, even after showing a bank bag.
-hooks.Initialize(pooled,widget(),6,1); assert(not pooled.EverfrostGearGlow:IsShown())
-hooks.Initialize(pooled,widget(),0,1); assert(pooled.EverfrostGearGlow:IsShown() and pooled.hookCounts.OnEnter==1 and pooled.hookCounts.OnShow==1)
--- Bag changes outside combat keep the pulse running and reuse cached items.
+assert(styleOf(pooled)==STYLE.clear)
+local legacyButton=widget(); hooks.Initialize(legacyButton,0,1); assert(styleOf(legacyButton)==STYLE.clear)
+-- A reused button keeps one set of hooks and one set of mark widgets, even after a bank bag.
+local pooledMade=created
+hooks.Initialize(pooled,widget(),6,1); assert(not shown(pooled))
+hooks.Initialize(pooled,widget(),0,1); assert(styleOf(pooled)==STYLE.clear and pooled.hookCounts.OnEnter==1 and pooled.hookCounts.OnShow==1)
+-- (Two throwaway container widgets above are the only new widgets.)
+assert(created==pooledMade)
+-- Bag changes outside combat keep the mark and reuse cached items.
 fire('BAG_UPDATE',0); tick()
-local pulsePlays=pooled.EverfrostGearPulses[1].plays; local reads=metadataCalls
-fire('BAG_UPDATE',0); assert(pooled.EverfrostGearPulses[1]:IsPlaying()); tick()
-assert(pooled.EverfrostGearGlow:IsShown() and pooled.EverfrostGearPulses[1].plays==pulsePlays and metadataCalls==reads)
+local reads=metadataCalls
+fire('BAG_UPDATE',0); assert(shown(pooled)); tick()
+assert(shown(pooled) and metadataCalls==reads)
 -- A walk of every bag button happens when needed, not on every bag change.
 local walks=0; ContainerFrame1={EnumerateValidItems=function() walks=walks+1; return function() end end}
 fire('ADDON_LOADED','x'); tick(); assert(walks==1)
 fire('BAG_UPDATE',0); tick(); assert(walks==1)
 ContainerFrame1=nil
+-- The talent window's NS.Glow keeps working: a gentle ring in the colour it asks for.
+local talent=widget(); NS.Glow(talent,true,{color={1,0.82,0}},false,true)
+assert(talent.EverfrostMark.ring:IsShown() and talent.EverfrostMark.ring.vertex[1]==1 and talent.EverfrostMark.pulse:IsPlaying())
+NS.Glow(talent,false); assert(not shown(talent) and not talent.EverfrostMark.ring:IsShown())
 -- Plain Unique-Equipped items report category -1 and limit copies of themselves.
 fixture('item:300',{ITEM_MOD_STRENGTH_SHORT=9}); itemInfo['item:300'][9]='INVTYPE_TRINKET'
 fixture('item:301',{ITEM_MOD_STRENGTH_SHORT=2}); itemInfo['item:301'][9]='INVTYPE_TRINKET'
@@ -519,14 +550,14 @@ local duplicate=G.ReadItem('item:300'); assert(duplicate.unique==-300 and duplic
 local twoTrinkets={}; for i=1,19 do twoTrinkets[i]=false end
 twoTrinkets[13]=duplicate; twoTrinkets[14]=G.ReadItem('item:301')
 local dupeResult=G.Compare(duplicate,twoTrinkets,G.context)
-assert(dupeResult.kind=='greed' and dupeResult.reason:find('Not a valid',1,true))
+assert(dupeResult.kind=='greed' and dupeResult.verdict=='unusable' and dupeResult.reason:find('Not a valid',1,true))
 twoTrinkets[13]=false; assert(G.Compare(duplicate,twoTrinkets,G.context).kind=='need')
 C_Item.GetItemUniqueness=plainUnique
--- A plain armor upgrade explains itself without a meaningless 0.0 vs 0.0 score.
+-- A plain armour upgrade explains itself without a score.
 GameTooltip:ClearLines()
-G.Tooltip(GameTooltip,{kind='need',reason='More armour, no useful stats lost (+32 Armour)',armorOnly=true,score=0,previous=0,delta=0})
-local armorLines=table.concat(GameTooltip.lines,'|')
-assert(armorLines:find('Everfrost: UPGRADE',1,true) and armorLines:find('+32 Armour',1,true) and not armorLines:find('Estimated score',1,true))
+G.Tooltip(GameTooltip,{kind='need',verdict='clear',reason='More armour, no useful stats lost (+32 Armour)',armorOnly=true,score=0,previous=0,delta=0})
+local armorLines=lines()
+assert(armorLines:find('Everfrost: Clear upgrade',1,true) and armorLines:find('+32 Armour',1,true) and not armorLines:find('Estimated score',1,true))
 -- Missing and secret metadata defer rather than treating an occupied slot as empty.
 itemInfo['item:100']=nil; G.items={}; G.Refresh(); assert(G.bags[0][1].result.kind=='unknown')
 -- Passive "Equip:" effects written on the tooltip count, for clients whose item stats leave them out.
@@ -540,15 +571,41 @@ fixture('item:301',{ITEM_MOD_INTELLECT_SHORT=2}); G.items={}
 local effects=G.ReadItem('item:301')
 assert(effects.stats.spell==12 and effects.stats.fire==7 and effects.stats.mp5==4 and effects.stats.healing==20 and effects.stats.attack==14)
 assert(effects.fromTooltip and effects.stats.intellect==2)
+-- Use and chance-on-hit effects are recorded as unscored, never given a number.
+assert(effects.unscored.use and effects.unscored.proc and not effects.unscored.equip)
 -- An effect the client already reports is not counted twice.
 fixture('item:302',{ITEM_MOD_SPELL_POWER_SHORT=12})
 tooltipLines['item:302']={{leftText='Equip: Increases damage and healing done by magical spells and effects by up to 12.'}}
-assert(G.ReadItem('item:302').stats.spell==12 and not G.ReadItem('item:302').fromTooltip)
+assert(G.ReadItem('item:302').stats.spell==12 and not G.ReadItem('item:302').fromTooltip and not G.ReadItem('item:302').unscored)
+-- Tank lines: defence, block value, dodge and parry; an unreadable Equip line is flagged.
+fixture('item:304',{})
+tooltipLines['item:304']={{leftText='Equip: Increased Defense +7.'},{leftText='Equip: Increases the block value of your shield by 15.'},
+ {leftText='Equip: Increases your chance to dodge an attack by 1%.'},{leftText='Equip: Increases your chance to parry an attack by 1%.'},
+ {leftText='Equip: Improves your chance to hit by 2%.'},{leftText='Equip: Your attacks ignore 50 armour.'}}
+local tankBits=G.ReadItem('item:304')
+assert(tankBits.stats.defense==7 and tankBits.stats.block==15 and tankBits.stats.dodge==1 and tankBits.stats.parry==1 and tankBits.stats.hit==2)
+assert(tankBits.unscored.equip and not tankBits.unscored.use)
 -- Secret or missing tooltip text changes nothing.
 fixture('item:303',{ITEM_MOD_INTELLECT_SHORT=1}); tooltipLines['item:303']={{leftText=secret},{}}
 assert(G.ReadItem('item:303').stats.spell==0 and G.ReadItem('item:303').stats.intellect==1)
+-- A trinket whose only worth is its Use effect is left unscored, and says why.
+fixture('item:305',{}); itemInfo['item:305'][9]='INVTYPE_TRINKET'; itemInfo['item:305'][12]=4; itemInfo['item:305'][13]=0
+tooltipLines['item:305']={{leftText='Use: Increases armour by 2000 for 20 sec.'}}
+local onUse=G.Compare(G.ReadItem('item:305'),twoTrinkets,G.context)
+assert(onUse.kind=='unknown' and onUse.reason:find("can't be scored",1,true) and not onUse.waiting)
+-- With stats as well, it is judged on those stats and the tooltip names the unscored effect.
+fixture('item:306',{ITEM_MOD_STRENGTH_SHORT=20}); itemInfo['item:306'][9]='INVTYPE_TRINKET'
+tooltipLines['item:306']={{leftText='Use: Increases attack power by 200 for 20 sec.'}}
+local withStats=G.Compare(G.ReadItem('item:306'),twoTrinkets,G.context)
+assert(withStats.kind=='need' and withStats.unscored.use)
+GameTooltip:ClearLines(); G.Tooltip(GameTooltip,withStats)
+assert(lines():find("Its Use effect can't be scored",1,true))
+-- Rings and trinkets name the weaker of the two they replace.
+twoTrinkets[13]=G.ReadItem('item:300')
+local trinketResult=G.Compare(G.ReadItem('item:306'),twoTrinkets,G.context)
+assert(trinketResult.slot==14 and trinketResult.slotNote:find('weaker of your two trinkets',1,true))
 C_TooltipInfo=nil; tooltipLines=nil; G.items={}
-print('Equip effects from tooltips: spell, healing, school, attack power and mana regeneration; no double counting; secrets ignored: passed')
+print('Equip effects from tooltips: spell, healing, school, attack power, mana, tank lines; unscored Use/proc/Equip effects reported, never scored: passed')
 fixture('item:100',{ITEM_MOD_STRENGTH_SHORT=3}); rawStats['item:100'].ITEM_MOD_STRENGTH_SHORT=secret
 G.Refresh(); assert(G.bags[0][1].result.kind=='unknown')
 fixture('item:100',{ITEM_MOD_STRENGTH_SHORT=3})
@@ -563,46 +620,46 @@ fixture('item:201',{ITEM_MOD_SPELL_POWER_SHORT=12}); itemInfo['item:201'][9]='IN
 fixture('item:202',{ITEM_MOD_SPELL_POWER_SHORT=10}); itemInfo['item:202'][9]='INVTYPE_HOLDABLE'; itemInfo['item:202'][13]=0
 G.SetContext('MAGE',2,30,'damage',{}); tick()
 local offBag=widget(); G.TrackBag(offBag,1,1)
-assert(bag.EverfrostGearGlow:IsShown() and offBag.EverfrostGearGlow:IsShown())
+assert(shown(bag) and shown(offBag))
 assert(G.bags[0][1].result.companion=='item:202' and G.bags[1][1].result.companion=='item:201')
 GameTooltip:ClearLines(); bag.hooks.OnEnter(bag)
-assert(table.concat(GameTooltip.lines,'|'):find('Pair with: Item',1,true))
-assert(table.concat(GameTooltip.lines,'|'):find('UPGRADE (equip both)',1,true))
+assert(lines():find('Pair with: Item',1,true))
+assert(lines():find('Clear upgrade (+10%) (equip both)',1,true))
 -- Loot hints use the same carried partners and react to partner removal/loading.
 frame.rollID=2; rollLinks[2]='item:201'; fire('START_LOOT_ROLL',2); tick()
-assert(frame.NeedButton.EverfrostGearGlow:IsShown() and G.rolls[2].result.companion=='item:202')
-GameTooltip:ClearLines(); frame.NeedButton.hooks.OnEnter(frame.NeedButton)
-assert(table.concat(GameTooltip.lines,'|'):find('UPGRADE (equip both) / Need',1,true))
+assert(shown(need) and G.rolls[2].result.companion=='item:202')
+GameTooltip:ClearLines(); need.hooks.OnEnter(need)
+assert(lines():find('(equip both) / Need',1,true))
 extraBagLink=nil; fire('BAG_UPDATE',1); tick()
-assert(G.bags[0][1].result.kind=='unknown' and not bag.EverfrostGearGlow:IsShown())
-assert(not offBag.EverfrostGearGlow:IsShown() and not frame.NeedButton.EverfrostGearGlow:IsShown())
+assert(G.bags[0][1].result.kind=='unknown' and not shown(bag))
+assert(not shown(offBag) and not shown(need))
 extraBagLink='item:202'; rawStats['item:202']=nil; G.items={}; fire('BAG_UPDATE',1); tick()
 assert(G.bags[0][1].result.kind=='unknown')
 rawStats['item:202']={ITEM_MOD_SPELL_POWER_SHORT=10}; fire('ITEM_DATA_LOAD_RESULT',202); tick()
-assert(bag.EverfrostGearGlow:IsShown() and offBag.EverfrostGearGlow:IsShown() and frame.NeedButton.EverfrostGearGlow:IsShown())
+assert(shown(bag) and shown(offBag) and shown(need))
 local pairCalls=metadataCalls; combat=true; fire('PLAYER_REGEN_DISABLED'); tick()
-assert(metadataCalls==pairCalls and not bag.EverfrostGearGlow:IsShown() and not offBag.EverfrostGearGlow:IsShown())
-combat=false; fire('PLAYER_REGEN_ENABLED'); tick(); assert(bag.EverfrostGearGlow:IsShown())
--- Starter tooltips explain themselves in plain words, without a score.
+assert(metadataCalls==pairCalls and not shown(bag) and not shown(offBag))
+combat=false; fire('PLAYER_REGEN_ENABLED'); tick(); assert(shown(bag))
+-- Starter tooltips explain themselves in plain words.
 G.SetContext('MAGE',2,9,'damage',{}); tick()
-assert(G.bags[0][1].result.delta and bag.EverfrostGearGlow:IsShown())
+assert(G.bags[0][1].result.delta and shown(bag))
 GameTooltip:ClearLines(); bag.hooks.OnEnter(bag)
-local starterLines=table.concat(GameTooltip.lines,'|')
+local starterLines=lines()
 assert(starterLines:find('Starter priority: Intellect',1,true) and not starterLines:find('Estimated score',1,true))
 assert(starterLines:find('Simple estimate',1,true) and not starterLines:find('|Priority:',1,true))
 G.SetContext('MAGE',0,30,'damage',{}); tick()
-assert(G.bags[0][1].result.kind=='unknown' and not bag.EverfrostGearGlow:IsShown())
+assert(G.bags[0][1].result.kind=='unknown' and not shown(bag))
 -- Permanent "not scored" results must not trigger a full rescan on item-data events.
 local quiet=metadataCalls
 fire('GET_ITEM_INFO_RECEIVED',1); fire('ITEM_DATA_LOAD_RESULT',1); tick()
 assert(metadataCalls==quiet and not G.pending)
-EverfrostDB.gear=false; G.Refresh(); assert(not bag.EverfrostGearGlow:IsShown())
+EverfrostDB.gear=false; G.Refresh(); assert(not shown(bag))
 -- Disabled highlights skip item reads entirely, then resume when re-enabled.
 local off=metadataCalls; G.Refresh(); assert(metadataCalls==off and next(G.bags)==nil)
 assert(G.Evaluate('item:201').reason=='Gear highlights are disabled')
 EverfrostDB.gear=true; G.SetContext('MAGE',2,30,'damage',{}); tick()
-assert(next(G.bags)~=nil and bag.EverfrostGearGlow:IsShown())
--- Quest rewards: mark the best upgrade among the choices.
+assert(next(G.bags)~=nil and shown(bag))
+-- Quest rewards: recommend the best upgrade among the choices.
 bagLinks={}; extraBagLink=nil; inventory={[5]='item:100'}; G.SetContext('WARRIOR',1,5,'damage',{})
 local function questFixture(link,stat,price) fixture(link,stat); itemInfo[link][11]=price end
 questFixture('item:400',{ITEM_MOD_STRENGTH_SHORT=5},10)
@@ -619,39 +676,78 @@ function QuestInfo_Display() end
 function MerchantFrame_Update() end
 fire('BAG_UPDATE',0); tick(); assert(hooks.QuestInfo_Display and hooks.MerchantFrame_Update)
 hooks.QuestInfo_Display(); tick()
-assert(r2.EverfrostGearGlow:IsShown() and r2.EverfrostGearArrow:IsShown() and not r1.EverfrostGearGlow and not r3.EverfrostGearGlow)
+-- One small "Recommended" word on the best upgrade; the other upgrade stays unmarked.
+assert(styleOf(r2)==STYLE.clear and r2.EverfrostMark.label:IsShown() and r2.EverfrostMark.label.text=='Recommended')
+assert(r2.EverfrostMark.label.template=='GameFontNormalSmall' and r2.EverfrostMark.label.points[1][1]=='BOTTOMRIGHT')
+assert(not shown(r1) and not r3.EverfrostMark)
 GameTooltip.owner=r2; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
-local questLines=table.concat(GameTooltip.lines,'|')
-assert(questLines:find('UPGRADE',1,true) and questLines:find('Best reward choice for you.',1,true) and questLines:find('Better because it has more Strength',1,true))
+local questLines=lines()
+assert(questLines:find('Clear upgrade',1,true) and questLines:find('Recommended: the best upgrade',1,true) and questLines:find('Better because it has more Strength',1,true))
 GameTooltip.owner=r1; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
-assert(table.concat(GameTooltip.lines,'|'):find('UPGRADE',1,true) and not table.concat(GameTooltip.lines,'|'):find('Best reward',1,true))
--- With no upgrade on offer, the best sell value gets a gold mark and no arrow.
-inventory[5]='item:401'; questLinks={'item:402','item:403'}; fire('BAG_UPDATE',0); tick()
-assert(r2.EverfrostGearGlow:IsShown() and not r2.EverfrostGearArrow:IsShown())
-assert(r2.EverfrostGearGlow.vertex[1]==1 and r2.EverfrostGearGlow.vertex[2]==0.82)
-assert(G.Paint and not (r1.EverfrostGearGlow and r1.EverfrostGearGlow:IsShown()))
+assert(lines():find('upgrade',1,true) and not lines():find('Recommended',1,true))
+-- Two close upgrades: the best is still recommended, and both tooltips call it a close call.
+questFixture('item:405',{ITEM_MOD_STRENGTH_SHORT=8,ITEM_MOD_STAMINA_SHORT=1},1); questLinks={'item:405','item:401'}; fire('BAG_UPDATE',0); tick()
+assert(r2.EverfrostMark.label.text=='Recommended' and not shown(r1))
 GameTooltip.owner=r2; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
-assert(table.concat(GameTooltip.lines,'|'):find('sells for the most',1,true))
+assert(lines():find("close call with 1 other reward",1,true))
+GameTooltip.owner=r1; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
+assert(lines():find('Close to the recommended reward',1,true))
+-- With no upgrade on offer, the best sell value gets a gold border labelled as gold, no arrow.
+inventory[5]='item:401'; questLinks={'item:402','item:403'}; fire('BAG_UPDATE',0); tick()
+assert(styleOf(r2)==STYLE.sell and r2.EverfrostMark.label.text=='Best sell value' and not r2.EverfrostMark.arrow:IsShown())
+assert(r2.EverfrostMark.edges[1].vertex[1]==1 and r2.EverfrostMark.edges[1].vertex[2]==0.82)
+assert(not shown(r1))
+GameTooltip.owner=r2; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
+assert(lines():find('sells for the most',1,true) and lines():find('Downgrade',1,true))
 -- Nothing is marked until every choice has loaded, or for a single forced reward.
 questLinks={'item:402','item:404'}; fire('BAG_UPDATE',0); tick()
-assert(not r2.EverfrostGearGlow:IsShown())
+assert(not shown(r2) and not r2.EverfrostMark.label:IsShown())
 questFixture('item:404',{ITEM_MOD_STRENGTH_SHORT=1},300); fire('GET_ITEM_INFO_RECEIVED',404); tick()
-assert(r2.EverfrostGearGlow:IsShown())
-r2.shown=false; fire('BAG_UPDATE',0); tick(); assert(not r2.EverfrostGearGlow:IsShown() and not (r1.EverfrostGearGlow and r1.EverfrostGearGlow:IsShown())); r2.shown=true
+assert(shown(r2))
+r2.shown=false; fire('BAG_UPDATE',0); tick(); assert(not shown(r2) and not shown(r1)); r2.shown=true
 -- The quest log reads its own links, and currency choices are skipped.
 QuestInfoFrame={questLog=true,rewardsFrame=rewardFrame}
 inventory[5]='item:100'
 function GetQuestLogItemLink(kind,id) return kind=='choice' and ({'item:400','item:401'})[id] or nil end
-questLinks={}; fire('BAG_UPDATE',0); tick(); assert(r2.EverfrostGearArrow:IsShown())
-r2.objectType='currency'; fire('BAG_UPDATE',0); tick(); assert(not r2.EverfrostGearGlow:IsShown()); r2.objectType='item'
+questLinks={}; fire('BAG_UPDATE',0); tick(); assert(r2.EverfrostMark.label.text=='Recommended')
+r2.objectType='currency'; fire('BAG_UPDATE',0); tick(); assert(not shown(r2)); r2.objectType='item'
 -- Combat and turning gear hints off both clear the marks.
-fire('BAG_UPDATE',0); tick(); assert(r2.EverfrostGearGlow:IsShown())
-combat=true; fire('PLAYER_REGEN_DISABLED'); assert(not r2.EverfrostGearGlow:IsShown()); tick(); combat=false; fire('PLAYER_REGEN_ENABLED'); tick()
-assert(r2.EverfrostGearGlow:IsShown())
-EverfrostDB.gear=false; fire('BAG_UPDATE',0); tick(); assert(not r2.EverfrostGearGlow:IsShown()); EverfrostDB.gear=true; fire('BAG_UPDATE',0); tick()
-rewardFrame.shown=false; fire('BAG_UPDATE',0); tick(); assert(not r2.EverfrostGearGlow:IsShown()); rewardFrame.shown=true
+fire('BAG_UPDATE',0); tick(); assert(shown(r2))
+combat=true; fire('PLAYER_REGEN_DISABLED'); assert(not shown(r2) and not r2.EverfrostMark.label:IsShown()); tick(); combat=false; fire('PLAYER_REGEN_ENABLED'); tick()
+assert(shown(r2))
+EverfrostDB.gear=false; fire('BAG_UPDATE',0); tick(); assert(not shown(r2)); EverfrostDB.gear=true; fire('BAG_UPDATE',0); tick()
+rewardFrame.shown=false; fire('BAG_UPDATE',0); tick(); assert(not shown(r2)); rewardFrame.shown=true
+-- Quest icons: the border outlines the icon only, never the reward's name.
+local iconReward=reward(1); iconReward.Icon=widget(); rewardFrame.RewardButtons={iconReward,r2}
+fire('BAG_UPDATE',0); tick()
+assert(not shown(iconReward) and shown(r2))
+QuestInfoFrame.rewardsFrame.RewardButtons={r2,iconReward}
+function GetQuestLogItemLink(kind,id) return kind=='choice' and ({'item:401','item:400'})[id] or nil end
+fire('BAG_UPDATE',0); tick()
+assert(shown(iconReward) and iconReward.EverfrostMark.target==iconReward.Icon and iconReward.EverfrostMark.edges[1].points[1][2]==iconReward.Icon)
+-- When another focus or tree would pick a different reward, each pick says who it is best for.
+QuestInfoFrame=nil; QuestInfoRewardsFrame=rewardFrame; rewardFrame.RewardButtons={r1,r2}
+inventory={[5]='item:100'}; G.SetContext('PALADIN',2,30,'tank',{})
+questFixture('item:410',{ITEM_MOD_STAMINA_SHORT=10},5)
+questFixture('item:411',{ITEM_MOD_SPELL_HEALING_DONE=20,ITEM_MOD_INTELLECT_SHORT=10},50)
+questLinks={'item:410','item:411'}; fire('BAG_UPDATE',0); tick()
+assert(r1.EverfrostMark.label.text=='Recommended' and not shown(r2))
+GameTooltip.owner=r1; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
+assert(lines():find('Best for tanking.',1,true) and lines():find('Balanced Tank priority: Stamina',1,true))
+GameTooltip.owner=r2; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
+assert(lines():find('Best for healing.',1,true) and lines():find('Retribution damage',1,true) and lines():find('Better for Solo Levelling',1,true))
+G.SetFocus('solo'); tick()
+GameTooltip.owner=r1; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
+assert(r1.EverfrostMark.label.text=='Recommended' and lines():find('Best for solo damage.',1,true) and lines():find('Solo Levelling priority:',1,true))
+G.SetFocus(nil); tick()
+-- Same pick for every role: no "Best for" lines at all.
+questFixture('item:412',{ITEM_MOD_STAMINA_SHORT=1},1); questLinks={'item:410','item:412'}; fire('BAG_UPDATE',0); tick()
+GameTooltip.owner=r1; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
+assert(not lines():find('Best for',1,true))
+G.SetContext('WARRIOR',1,5,'damage',{}); tick()
+rewardFrame.RewardButtons={r1,r2,r3}
 QuestInfoFrame=nil; QuestInfoRewardsFrame=nil
--- Merchants: upgrades you can afford glow; the rest explain themselves in the tooltip.
+-- Merchants: upgrades you can afford get the border; the rest explain themselves in the tooltip.
 MerchantFrame=widget(); MerchantFrame.selectedTab=1; MERCHANT_ITEMS_PER_PAGE=3
 MerchantItem1ItemButton=widget(); MerchantItem1ItemButton.hasItem=true; MerchantItem1ItemButton.id=11
 MerchantItem2ItemButton=widget(); MerchantItem2ItemButton.hasItem=true; MerchantItem2ItemButton.id=12
@@ -660,13 +756,14 @@ local shopLinks={[11]='item:400',[12]='item:401',[13]='item:402'}; local afforda
 function GetMerchantItemLink(index) return shopLinks[index] end
 function CanAffordMerchantItem(index) return affordable[index] end
 hooks.MerchantFrame_Update(); tick()
-assert(MerchantItem1ItemButton.EverfrostGearGlow:IsShown() and MerchantItem1ItemButton.EverfrostGearArrow:IsShown())
-assert(not MerchantItem2ItemButton.EverfrostGearGlow and not MerchantItem3ItemButton.EverfrostGearGlow)
+assert(styleOf(MerchantItem1ItemButton)==STYLE.clear and MerchantItem1ItemButton.EverfrostMark.arrow:IsShown())
+assert(not MerchantItem1ItemButton.EverfrostMark.label)
+assert(not MerchantItem2ItemButton.EverfrostMark and not MerchantItem3ItemButton.EverfrostMark)
 GameTooltip.owner=MerchantItem2ItemButton; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
-assert(table.concat(GameTooltip.lines,'|'):find("You can't afford this yet.",1,true))
-affordable[12]=true; hooks.MerchantFrame_Update(); tick(); assert(MerchantItem2ItemButton.EverfrostGearGlow:IsShown())
-MerchantFrame.selectedTab=2; hooks.MerchantFrame_Update(); tick(); assert(not MerchantItem1ItemButton.EverfrostGearGlow:IsShown())
-MerchantFrame.selectedTab=1; MerchantFrame.shown=false; hooks.MerchantFrame_Update(); tick(); assert(not MerchantItem1ItemButton.EverfrostGearGlow:IsShown())
+assert(lines():find("You can't afford this yet.",1,true))
+affordable[12]=true; hooks.MerchantFrame_Update(); tick(); assert(shown(MerchantItem2ItemButton))
+MerchantFrame.selectedTab=2; hooks.MerchantFrame_Update(); tick(); assert(not shown(MerchantItem1ItemButton))
+MerchantFrame.selectedTab=1; MerchantFrame.shown=false; hooks.MerchantFrame_Update(); tick(); assert(not shown(MerchantItem1ItemButton))
 MerchantFrame=nil
 -- Empty slots count only what the game confirms, and clear while results are pending.
 inventory={[5]='item:100',[7]='item:100'}; fire('BAG_UPDATE',0); tick()
@@ -675,7 +772,7 @@ inventory[16]='item:401'; fire('BAG_UPDATE',0); tick()
 noWeapon,emptyArmor=G.EmptySlots(); assert(noWeapon==false and emptyArmor==7)
 G.pending=true; noWeapon,emptyArmor=G.EmptySlots(); assert(noWeapon==false and emptyArmor==0); G.pending=false
 local refreshed=0; G.OnRefreshed=function() refreshed=refreshed+1 end; fire('BAG_UPDATE',0); tick(); assert(refreshed==1); G.OnRefreshed=nil
-print('Quest reward marks, sell-value fallback, merchant upgrades, affordability and empty slots: passed')
-print('Gear UI: bag reuse, loot eligibility, async item data, secret rejection, combat deferral, cancellation and legacy APIs passed')
+print('Quest reward marks, close calls, sell-value fallback, merchant upgrades, affordability and empty slots: passed')
+print('Gear UI: thin borders by tier, no sidegrade marks, quiet roll rings, widget reuse, async item data, secret rejection, combat deferral and legacy APIs passed')
 `);
 console.log('Gear checks passed. Forever client visuals and API behavior still require in-game testing.');
