@@ -490,16 +490,33 @@ assert(styleOf(need)==STYLE.needClear and need.EverfrostMark.ring:IsShown() and 
 -- Round roll buttons carry no percentage; the tooltip has it.
 assert(not need.EverfrostMark.gain and not shown(frame.GreedButton))
 local pulse=need.EverfrostMark.pulse
-assert(pulse:IsPlaying() and pulse.looping=='BOUNCE' and pulse.animation.from==0.55 and pulse.animation.to==1 and pulse.animation.duration==1.6 and pulse.animation.smoothing=='IN_OUT')
-assert(need.EverfrostMark.ring.vertex[4]==0.70 and need.EverfrostMark.ring.texture=='Interface\\\\Buttons\\\\UI-ActionButton-Border')
+assert(pulse:IsPlaying() and pulse.looping=='BOUNCE' and pulse.animation.from==0.5 and pulse.animation.to==1 and pulse.animation.duration==0.7 and pulse.animation.smoothing=='IN_OUT')
+assert(need.EverfrostMark.ring.vertex[4]==1 and need.EverfrostMark.ring.texture=='Interface\\\\Buttons\\\\UI-ActionButton-Border')
+-- Bold, not faint: full-strength bright green, drawn twice (the halo a little larger) so it
+-- reads as a thick glow, and both layers pulse together.
+local halo,haloPulse=need.EverfrostMark.halo,need.EverfrostMark.haloPulse
+assert(halo:IsShown() and halo.texture==need.EverfrostMark.ring.texture and halo.vertex[1]==0.20 and halo.vertex[2]==1.00 and halo.vertex[4]==0.8)
+assert(halo.points[1][4]<need.EverfrostMark.ring.points[1][4] and haloPulse:IsPlaying() and haloPulse.animation.duration==0.7)
 local rollPlays=pulse.plays; G.PaintRoll(frame); assert(pulse.plays==rollPlays)
--- A downgrade leaves Need alone and gives Greed only a faint, steady grey hint.
+-- A downgrade leaves Need alone and gives Greed a clear, steady gold ring (no pulse: pulsing is
+-- kept for a clear upgrade).
 rollLinks[1]='item:102'; fire('START_LOOT_ROLL',1); tick()
-assert(not shown(need) and not pulse:IsPlaying() and styleOf(frame.GreedButton)==STYLE.greedHint)
-assert(not frame.GreedButton.EverfrostMark.pulse and frame.GreedButton.EverfrostMark.ring.vertex[4]==0.30)
--- A minor upgrade gets a steady ring.
+assert(not shown(need) and not pulse:IsPlaying() and not haloPulse:IsPlaying() and not halo:IsShown() and styleOf(frame.GreedButton)==STYLE.greedHint)
+local greedMark=frame.GreedButton.EverfrostMark
+assert(not greedMark.pulse and greedMark.ring.vertex[1]==1.00 and greedMark.ring.vertex[2]==0.82 and greedMark.ring.vertex[4]==0.85)
+assert(greedMark.halo:IsShown() and math.abs(greedMark.halo.vertex[4]-0.85*0.5)<1e-9)
+-- A minor upgrade gets a steady ring, still bright green.
 rollLinks[1]='item:103'; fire('START_LOOT_ROLL',1); tick()
-assert(styleOf(need)==STYLE.needMinor and not pulse:IsPlaying() and not shown(frame.GreedButton))
+assert(styleOf(need)==STYLE.needMinor and not pulse:IsPlaying() and not haloPulse:IsPlaying() and not shown(frame.GreedButton))
+assert(need.EverfrostMark.ring.vertex[4]==0.85 and halo:IsShown() and math.abs(halo.vertex[4]-0.85*0.5)<1e-9)
+-- Where the roll frame has an item icon, it carries the same border and percentage as a bag upgrade.
+frame.IconFrame=widget(); G.PaintRoll(frame)
+assert(styleOf(frame.IconFrame)==STYLE.minor and frame.IconFrame.EverfrostMark.gain.text=='+4%' and not frame.IconFrame.EverfrostMark.ring)
+rollLinks[1]='item:101'; fire('START_LOOT_ROLL',1); tick()
+assert(styleOf(frame.IconFrame)==STYLE.clear and frame.IconFrame.EverfrostMark.gain.text:find('%%$') and frame.IconFrame.EverfrostMark.gain:IsShown())
+rollLinks[1]='item:102'; fire('START_LOOT_ROLL',1); tick()
+assert(not shown(frame.IconFrame) and not frame.IconFrame.EverfrostMark.gain:IsShown())
+rollLinks[1]='item:103'; fire('START_LOOT_ROLL',1); tick()
 -- A sidegrade marks neither button.
 rollLinks[1]='item:104'; fire('START_LOOT_ROLL',1); tick()
 assert(not shown(need) and not shown(frame.GreedButton))
@@ -793,6 +810,6 @@ noWeapon,emptyArmor=G.EmptySlots(); assert(noWeapon==false and emptyArmor==7)
 G.pending=true; noWeapon,emptyArmor=G.EmptySlots(); assert(noWeapon==false and emptyArmor==0); G.pending=false
 local refreshed=0; G.OnRefreshed=function() refreshed=refreshed+1 end; fire('BAG_UPDATE',0); tick(); assert(refreshed==1); G.OnRefreshed=nil
 print('Quest reward marks, close calls, sell-value fallback, merchant upgrades, affordability and empty slots: passed')
-print('Gear UI: thin borders by tier, no sidegrade marks, quiet roll rings, widget reuse, async item data, secret rejection, combat deferral and legacy APIs passed')
+print('Gear UI: thin borders by tier, no sidegrade marks, bold roll rings and the roll icon percentage, widget reuse, async item data, secret rejection, combat deferral and legacy APIs passed')
 `);
 console.log('Gear checks passed. Forever client visuals and API behavior still require in-game testing.');
