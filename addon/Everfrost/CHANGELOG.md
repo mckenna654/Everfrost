@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.10.0 — Measured stat weights and upgrade percentages
+
+- **Measured stat weights.** Gear is now scored with numeric stat weights for your spec instead of a simple "this stat beats that one" order. Seventeen talent trees use the weights published by the [wowsims Forever simulator](https://wowsims.com/forever): Arms, Fury and Protection Warrior, all Rogue and Hunter trees, Retribution, all Priest trees, Balance, Feral (Cat and Bear), Elemental and Enhancement. They are level 60 raid values, so Everfrost adds a small allowance for Stamina and armour while levelling. No simulator publishes weights yet for Mage, Warlock, Holy and Protection Paladin, Restoration Druid or Restoration Shaman; those keep an estimate from the Icy Veins stat order, and say so.
+- **A green percentage replaces the upgrade arrow.** Bag, vendor and quest-reward upgrades show how much better they are, such as `+48%`, in the icon's corner. An item for an empty slot says `NEW`.
+- **Your own stat weights.** Settings → Gear & Loot → Stat weights (or `/everfrost weights`) lists the value of every stat for your spec, says where the numbers come from, and lets you change them. Changes save per character and per spec; Reset to defaults undoes them.
+- Off-hand weapons are scored at the off-hand's own value where the simulator gives one (about a fifth of a main hand's for Fury). Hit, Crit, Haste, Dodge and Parry are valued per 1%, as items show them. Block value and block chance are separate stats. Feral's Bear focuses now count weapon DPS, which the simulator finds valuable in both forms.
+- Tooltips name the source of the weights in use.
+
+Simulated-client tests and the Lua lint pass. None of this has been seen in game.
+
 ## 0.9.0 — Rotation HUD and November guides
 
 - **A rotation HUD replaces the reference panel.** A fixed NOW icon shows the spell to press. Where Forever offers it, this is Blizzard's own rotation assistant, which sees cooldowns, resources and procs that addons can't. Otherwise it is the highest guide spell the game says is ready. Up to six upcoming spells slide towards it in guide priority order, labelled as a priority rather than a promise. There are four layouts: Guitar Hero, Classic, Minimal and Tank. It shows in combat only by default, with a preview for placing it, and it lets clicks through in combat.

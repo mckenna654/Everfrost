@@ -19,12 +19,13 @@ end
 
 -- Marks are deliberately quiet. Square item buttons get a thin border drawn just inside their
 -- edge, never past it and never over the whole icon; a clear upgrade's border is a little
--- thicker and brighter than a minor one's, and only a clear upgrade gets the native green arrow.
+-- thicker and brighter than a minor one's. Both show how much better the item is as a small
+-- green percentage in the icon's bottom-right corner, where a stack count would sit.
 -- Round loot-roll buttons get a faint ring instead, since a square around a round button reads
 -- as a stray box; only a clear upgrade's Need ring breathes, slowly. Sidegrades get no mark.
 NS.gearMarkStyles={
- clear={color={0.30,0.90,0.35},alpha=0.95,line=2,arrow=true},
- minor={color={0.45,0.80,0.50},alpha=0.70,line=1},
+ clear={color={0.30,0.90,0.35},alpha=0.95,line=2,gain={0.10,1.00,0.10}},
+ minor={color={0.45,0.80,0.50},alpha=0.70,line=1,gain={0.55,0.90,0.55}},
  sell={color={1,0.82,0},alpha=0.75,line=1},
  -- Roll buttons.
  needClear={color={0.30,0.90,0.35},alpha=0.70,ring=true,pulse={from=0.55,to=1,seconds=1.6}},
@@ -40,7 +41,7 @@ local function hide(button)
  for _,edge in ipairs(m.edges) do edge:Hide() end
  if m.ring then m.ring:Hide() end
  if m.pulse then m.pulse:Stop() end
- if m.arrow then m.arrow:Hide() end
+ if m.gain then m.gain:Hide() end
  if m.label then m.label:Hide() end
  m.style=nil
 end
@@ -96,8 +97,9 @@ local function ring(button,m,style)
  return m.ring
 end
 -- Shows one style on a button (nil hides). target is the region the border outlines (default
--- the button). Repainting the same style keeps a running pulse going.
-local function mark(button,style,target,label,labelColor)
+-- the button). gain is the percentage text for styles that show one. Repainting the same style
+-- keeps a running pulse going.
+local function mark(button,style,target,label,labelColor,gain)
  if not button then return end
  if not style then hide(button); return end
  local m=parts(button,target)
@@ -118,14 +120,20 @@ local function mark(button,style,target,label,labelColor)
   layoutEdges(m,style.line or 1)
   for _,edge in ipairs(m.edges) do edge:SetVertexColor(c[1],c[2],c[3],style.alpha); edge:Show() end
  end
- -- The native bag upgrade arrow, in the corner opposite the stack count.
- if style.arrow and not m.arrow and not InCombatLockdown() then
-  local icon=button:CreateTexture(nil,"OVERLAY",nil,7)
-  if icon.SetAtlas then icon:SetAtlas("bags-greenarrow",true) end
-  icon:SetPoint("TOPLEFT",m.target,"TOPLEFT",2,-2)
-  m.arrow=icon
+ -- How much better, in green, where the stack count sits (equipment never stacks).
+ local gainText=style.gain and gain or nil
+ if gainText and not m.gain and button.CreateFontString and not InCombatLockdown() then
+  -- The outlined number font the game uses for stack counts, where the client has it.
+  local text=button:CreateFontString(nil,"OVERLAY",NumberFontNormalSmall and "NumberFontNormalSmall" or "GameFontNormalSmall")
+  text:SetPoint("BOTTOMRIGHT",m.target,"BOTTOMRIGHT",-1,2)
+  m.gain=text
  end
- if m.arrow then if style.arrow then m.arrow:Show() else m.arrow:Hide() end end
+ if m.gain then
+  if gainText then
+   local gc=style.gain
+   m.gain:SetText(gainText); m.gain:SetTextColor(gc[1],gc[2],gc[3]); m.gain:Show()
+  else m.gain:Hide() end
+ end
  -- A small word in the button's bottom-right corner (quest rewards only).
  if label and not m.label and button.CreateFontString and not InCombatLockdown() then
   local text=button:CreateFontString(nil,"OVERLAY","GameFontNormalSmall")
@@ -156,6 +164,16 @@ end
 local function itemStyle(result)
  if not result or result.kind~="need" then return nil end
  return result.verdict=="clear" and STYLE.clear or result.verdict=="minor" and STYLE.minor or nil
+end
+-- An upgrade's gain as the few characters an item icon has room for: "+48%", ">200%" past
+-- that, and "NEW" when there is nothing worth comparing with (an empty slot, or a worn item
+-- that scores next to nothing).
+function G.GainText(result)
+ if not result or result.kind~="need" or not result.pct then return nil end
+ if result.empty or (result.previous or 0)<1 then return "NEW" end
+ local n=math.floor(result.pct*100+0.5)
+ if n>200 then return ">200%" end
+ return "+"..n.."%"
 end
 
 -- Tooltip wording ----------------------------------------------------------------------------
@@ -210,8 +228,9 @@ function G.Tooltip(tooltip,result,roll)
  local p=c and NS.GearProfile(c.class,c.spec,c.role,c.level)
  if p then
   local title=p.starter and "Starter priority: " or p.focusLabel and (p.focusLabel.." priority: ") or "Priority: "
-  line(title..NS.GearOrderText(p),dim)
-  if p.starter then line("Simple estimate from your class's usual stats.",dim) end
+  line(title..NS.GearOrderText(p,7),dim)
+  if p.starter and not p.custom then line("Simple estimate from your class's usual stats.",dim)
+  else line(NS.GearSourceText(p)..".",dim) end
  end
  tooltip:Show()
 end
@@ -221,7 +240,7 @@ function G.PaintBag(button)
  local entry=bags[button]
  if not entry then return end
  local cached=G.enabled and not G.pending and G.bags[entry.bag] and G.bags[entry.bag][entry.slot]
- mark(button,cached and itemStyle(cached.result) or nil)
+ mark(button,cached and itemStyle(cached.result) or nil,nil,nil,nil,cached and G.GainText(cached.result))
 end
 function G.TrackBag(button,bag,slot)
  if not button then return end
@@ -340,9 +359,10 @@ local function paintOverlay(button)
  -- Quest rewards outline the icon only, leaving the reward's name clear.
  local icon=entry.kind=="quest" and button.Icon
  local target=type(icon)=="table" and icon or nil
+ local gain=G.GainText(entry.result)
  if entry.mark=="sell" then mark(button,STYLE.sell,target,"Best sell value")
- elseif entry.mark=="recommended" then mark(button,itemStyle(entry.result) or STYLE.minor,target,"Recommended",STYLE.clear.color)
- else mark(button,itemStyle(entry.result),target) end
+ elseif entry.mark=="recommended" then mark(button,itemStyle(entry.result) or STYLE.minor,target,"Recommended",STYLE.clear.color,gain)
+ else mark(button,itemStyle(entry.result),target,nil,nil,gain) end
 end
 function G.Paint()
  for button in pairs(bags) do G.PaintBag(button) end

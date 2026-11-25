@@ -13,8 +13,8 @@ labels as beta, or is named in the changelog as not seen.
    hint. Unlock, drag the HUD, `/reload`, and it is where it was left.
 3. **Detection.** `/everfrost status` shows the right class, tree and talent split.
 4. **Combat.** Fight something: no errors; cooldown sweeps show; changes made in combat apply after.
-5. **Bags.** An upgrade in the bags has the outline, glow and green arrow, and its tooltip says
-   UPGRADE with a reason. A non-upgrade has none. Equip the upgrade: the highlight goes.
+5. **Bags.** An upgrade in the bags has a thin green border and a green percentage (see item 26),
+   and its tooltip says Clear or Minor upgrade with a reason. A non-upgrade has none. Equip the upgrade: the highlight goes.
 6. **Settings.** All three pages open and fit; sliders and tick boxes work; the minimap button
    drags and opens settings.
 
@@ -86,3 +86,16 @@ nameplates on** (Interface > Names, or V).
     position and size. Move the HUD in each layout; both positions survive `/reload`.
 25. **Clicks.** In combat, clicking or right-click-dragging through the HUD still turns the camera
     and selects enemies behind it. The mode text stays clickable.
+26. **Upgrade percentage.** A bag upgrade shows a green number such as `+48%` in the icon's
+    bottom-right corner, readable against a busy icon and not clipped; a minor upgrade's is softer.
+    An item for an empty slot says `NEW`. No arrow. The same on vendor buttons and quest reward
+    icons. The tooltip's percentage matches the icon's.
+27. **Hit and Crit units.** Find an item with "Improves your chance to hit by 1%" (or crit). Its
+    tooltip verdict should treat that 1% as roughly 10 to 50 points of your main stat, not as one
+    point and not as hundreds. If it looks wildly off, note the item: the client may report these
+    stats differently from the tooltip.
+28. **Stat weights page.** Settings > Gear & Loot > Stat weights (or `/everfrost weights`): 21
+    stats in three columns, none overlapping or cut off; the source line names wowsims or says
+    estimate. Type a new Stamina value and press Enter: the label turns gold, bag marks change,
+    and the Gear & Loot page says "your own weights". Escape abandons an edit. Reset to defaults
+    restores it. `/reload`: a saved change is still there.

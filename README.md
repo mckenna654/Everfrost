@@ -12,7 +12,7 @@ Everfrost is a lightweight, standalone Lua addon for **WoW Forever**. It display
 
 **Built with AI assistance.** Everfrost was first written with OpenAI Codex and is now developed with Claude Code. Automated tests run against a simulated client; each release is also checked in the game against the [in-game checklist](docs/INGAME_CHECKLIST.md), and the release notes say what was and wasn't seen.
 
-[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.9.0](https://github.com/mckenna654/Everfrost/releases/tag/v0.9.0) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
+[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.10.0](https://github.com/mckenna654/Everfrost/releases/tag/v0.10.0) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
 
 CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distribution is enabled. New version tags trigger automatic packaging; file processing and moderation can delay availability.
 
@@ -20,19 +20,19 @@ CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distributio
 
 | Item | Current status |
 | --- | --- |
-| Addon version | **0.9.0** |
+| Addon version | **0.10.0** |
 | Supported levels | **1–60** |
 | Class coverage | Nine classes, 27 talent trees, and nine general levelling profiles |
 | Target interface | `16001` — compatibility with the actual Forever client remains unverified |
 | Runtime | Lua 5.1-compatible syntax; no third-party addon libraries required |
 | Validation | Lua syntax checks, a luacheck globals check and mocked-client regression tests, run automatically on GitHub Actions |
-| In-game verification | Selected gear/glow/settings behavior confirmed by user in earlier versions. On 24 November 2026 the 0.9.0 settings, HUD (out of combat), gear tooltips and talent tooltips were seen rendering in game; HUD behaviour in combat, the enemy estimate and controller layouts are still untested |
+| In-game verification | Selected gear/glow/settings behavior confirmed by user in earlier versions. On 24 November 2026 the 0.9.0 settings, HUD (out of combat), gear tooltips and talent tooltips were seen rendering in game; HUD behaviour in combat, the enemy estimate and controller layouts are still untested. Nothing new in 0.10.0 (simulator stat weights, the upgrade percentage, the stat weights page) has been seen in game |
 
 Everfrost is an independent project. It is not an official Icy Veins, Blizzard, or OpenAI addon and is not affiliated with or endorsed by those organizations.
 
 ## Screenshots
 
-Captured in WoW Forever on 24 November 2026 with version 0.9.0, on a level-35 Protection Paladin.
+Captured in WoW Forever on 24 November 2026 with version 0.9.0, on a level-35 Protection Paladin. They predate 0.10.0's upgrade percentage and stat weights page.
 
 **Rotation HUD:** the NOW icon, upcoming guide priorities and the tank defensive row. Hovering an icon shows the spell and Everfrost's note on why it's there.
 
@@ -71,7 +71,7 @@ Open any screenshot for its full-size view. Player names have been cropped out.
 - Switches between single target, cleave and AoE automatically from an enemy estimate, with a manual override; offers healing and damage views and Feral and Survival role controls.
 - Moves and resizes the HUD automatically for controller or keyboard and mouse, with separate saved positions.
 - Shows native cooldown sweeps when the client supports cooldown duration objects.
-- Marks estimated bag upgrades with a thin green border and arrow (fainter for minor upgrades), using the detected class/spec stat priorities and, for tanks and Feral, a chosen scoring focus such as Balanced Tank, Tank Survivability, Tank Threat or Solo Levelling.
+- Marks estimated bag upgrades with a thin green border and how much better they are as a green percentage (fainter for minor upgrades). Scores use numeric stat weights for your spec: measured by the [wowsims Forever simulator](https://wowsims.com/forever) for 17 of the 27 talent trees, and an estimate from the guide's stat order for the rest. Tanks and Feral can choose a scoring focus such as Balanced Tank, Tank Survivability, Tank Threat or Solo Levelling, and you can change any weight yourself.
 - Highlights Need for estimated loot upgrades and Greed for known non-upgrades or class-irrelevant loot; you make the roll.
 - Adds a clear UPGRADE label, score comparisons and stat priorities to item-button hover tooltips.
 - Labels the best quest reward **Recommended**, says when rewards are close or when another role would pick differently ("Best for tanking"), and otherwise marks the best sell value. You still pick the reward yourself.
@@ -111,13 +111,13 @@ Everfrost never casts, rolls, equips or clicks anything for you.
 
 ## Gear upgrades and loot rolls
 
-Gear hints are enabled by default. Every mark comes from one scoring engine, which sorts each item into a clear upgrade (10% or more), a minor upgrade (3–10%), a sidegrade, better for another focus or tree of your class, not usable, or a downgrade. Open the standard bags: a thin green border and the green arrow mark a clear upgrade, a fainter one a minor upgrade, and sidegrades and downgrades get no mark. Armour pieces with more armour and no loss of useful stats also count, even if they have no other stats. Hover the item for a clear **UPGRADE** label and the score change and the detected specialisation's priorities. Rings and trinkets replace the weaker of the two you wear, and the tooltip says which. A two-hander is always compared with your main hand and off-hand together, so a shield's armour, block and stats count: a tank never sees a two-hander as an upgrade just for its weapon damage. Procs, Use effects and unread Equip lines are named in the tooltip but never given a made-up score.
+Gear hints are enabled by default. Every mark comes from one scoring engine, which sorts each item into a clear upgrade (10% or more), a minor upgrade (3–10%), a sidegrade, better for another focus or tree of your class, not usable, or a downgrade. Open the standard bags: a thin green border and a green percentage (such as **+48%**) mark a clear upgrade, a fainter border and percentage a minor upgrade, and sidegrades and downgrades get no mark. An item for an empty slot says **NEW**. Armour pieces with more armour and no loss of useful stats also count, even if they have no other stats. Hover the item for a clear **UPGRADE** label and the score change and the detected specialisation's priorities. Rings and trinkets replace the weaker of the two you wear, and the tooltip says which. A two-hander is always compared with your main hand and off-hand together, so a shield's armour, block and stats count: a tank never sees a two-hander as an upgrade just for its weapon damage. Procs, Use effects and unread Equip lines are named in the tooltip but never given a made-up score.
 
 **Complete weapon comparisons:** when replacing an equipped two-hander, Everfrost searches your carried bags for a usable one-hand/off-hand pair. Each candidate is compared together with its best valid partner; an estimated pair upgrade can highlight both bag items. The tooltip names the partner and makes clear that you must equip both. Loot candidates use partners you already carry. Shields, held off-hands and learned Dual Wield are supported; an incomplete or unresolved pair stays unscored.
 
 On standard dungeon or raid group-loot windows, a faint ring marks **Need** for an upgrade (pulsing slowly only for a clear one) and a faint grey ring marks **Greed** for a downgrade or an item you can't use. Sidegrades get no mark. Disabled roll options are respected. You still choose and click the roll, following your group's loot rules. Missing or restricted data produces no highlight.
 
-Stat orders were checked against all 27 Icy Veins Forever guides on **November 11, 2026**. Numeric scores are Everfrost's transparent estimates, not Icy Veins simulation weights or guaranteed best-in-slot results. Weapon speed, dual-wield damage penalties, procs, set bonuses, on-use effects, sockets, enchants, professions and hit caps can change the real result. See [gear scoring and all 27 priorities](docs/GEAR.md) for the formula and limits.
+**Where the weights come from.** Seventeen talent trees use the stat weights the open-source [wowsims Forever simulator](https://wowsims.com/forever) publishes with its presets (read on November 25, 2026): Arms, Fury and Protection Warrior, all three Rogue and Hunter trees, Retribution, all three Priest trees, Balance and Feral (Cat and Bear), Elemental and Enhancement. They are level 60 values measured against a raid boss, so treat them as a guide while levelling; Everfrost adds a small allowance for Stamina and armour, which a damage simulator values at nothing. No simulator publishes weights yet for Mage, Warlock, Holy and Protection Paladin, Restoration Druid or Restoration Shaman, so those keep an Everfrost estimate built from the stat order of their Icy Veins Forever guide (checked **November 11, 2026**). **Settings → Gear & Loot → Stat weights** (or `/everfrost weights`) shows every number, says where it came from, and lets you type your own; the changes save per character and per spec, and **Reset to defaults** undoes them. Scores are estimates, not guaranteed best-in-slot results. Weapon speed, dual-wield damage penalties, procs, set bonuses, on-use effects, sockets, enchants, professions and hit caps can change the real result. See [gear scoring and all 27 priorities](docs/GEAR.md) for the formula and limits.
 
 Metadata refreshes outside combat; changes and new loot during combat wait until combat ends. The feature supports the standard bag and group-loot frames, including modern combined bags and classic bags where those hooks exist. Custom inventory/loot replacements are not integrated. **Below level 10, gear hints use a simple starter priority for your class**, because there is usually no talent tree to read yet. These lists are Everfrost estimates, not guide rankings. Talent-based priorities start at level 10. This applies even when a spec is selected manually. Levelling uses the active talent group's dominant tree for gear, while retaining the general spell guide. All three point counts must be available; ties, unspent talents and unavailable data remain unscored. From level 10, explicit spec selections override detection. Gear comparisons cover levels 10–30; a healer's DAMAGE view keeps the healer gear profile, and Survival uses ranged priorities until its melee requirements are met or RANGED is selected.
 
@@ -125,7 +125,7 @@ Use `/everfrost gear` to print your current stat order, `/everfrost gear off` to
 
 ## Installation
 
-1. Download **`Everfrost-0.9.0.zip`** from the [v0.9.0 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.9.0).
+1. Download **`Everfrost-0.10.0.zip`** from the [v0.10.0 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.10.0).
 2. Exit WoW Forever.
 3. Extract the archive's `Everfrost` folder into your Forever client's `Interface/AddOns` directory.
 4. Confirm the resulting path is `Interface/AddOns/Everfrost/Everfrost.toc`.
@@ -162,7 +162,7 @@ Type **`/everfrost`**, `/everfrost settings`, or `/everfrost config` to open the
 - **HUD:** layout, show/hide, combat only, preview, lock, animation, minimap button, size and opacity, reset position and size, and reset all HUD settings.
 - **Controller:** automatic, controller, keyboard or one shared position; automatic switching on or off; reset this layout's position.
 - **Detection:** automatic detection and the enemy estimate on or off; the cleave and AoE thresholds for the current spec; how long before stepping down and how long an unseen enemy is remembered.
-- **Gear & Loot:** upgrade highlights, the current stat order and scoring focus, and a fresh bag scan outside combat.
+- **Gear & Loot:** upgrade highlights, the current stat order, where its weights come from, the scoring focus, and a fresh bag scan outside combat. **Stat weights** opens a page listing the value of each stat for your spec, which you can change or reset.
 - **Talents:** talent highlights on or off, the next talent and the next few by level.
 
 Settings apply immediately and save per character. While the window is open, the HUD shows so you can see changes (unless you've hidden it). Existing guide changes during combat still apply after combat ends; open the settings window outside combat. Escape or the close button dismisses the window. Drag its header to move it.
@@ -220,6 +220,7 @@ Several specialisations share early-level priorities until their distinct abilit
 | `/everfrost reset` | Reset the current layout's position and size, and show the HUD |
 | `/everfrost gear` | Show active gear stat priorities |
 | `/everfrost gear on` / `/everfrost gear off` | Enable or disable gear and loot highlights |
+| `/everfrost weights` / `/everfrost weights reset` | Open the stat weights page, or put this spec's weights back to their defaults |
 | `/everfrost minimap on` / `/everfrost minimap off` | Show or hide the minimap settings button |
 | `/everfrost refresh` | Refresh cached metadata outside combat |
 | `/everfrost source` | Print the current profile's guide URL |
@@ -255,7 +256,7 @@ The packaging command uses Node.js and works on Windows, macOS and Linux:
 npm run build
 ```
 
-It creates `dist/Everfrost-0.9.0.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
+It creates `dist/Everfrost-0.10.0.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
 
 When releasing a new version, update `addon/Everfrost/Everfrost.toc` and `package.json` together, keep lockfile metadata synchronized, run the tests, and verify the archive contents before uploading.
 
@@ -322,6 +323,8 @@ Before treating a build as game-tested, verify login and trained icons, training
 Everfrost is licensed under the [MIT License](LICENSE). The same license is selected on CurseForge.
 
 ## Sources and acknowledgments
+
+Gear stat weights for 17 talent trees come from the **[wowsims WoW Forever simulator](https://wowsims.com/forever)** ([source](https://github.com/wowsims/forever), MIT licence); the presets used are listed in [docs/GEAR.md](docs/GEAR.md).
 
 Ability references are concise adaptations of the **Icy Veins WoW Forever PvE guides**. The [source index](addon/Everfrost/SOURCES.md) preserves all 27 guide links, API references, and review notes. Use `/everfrost source` to find the guide associated with the active profile.
 

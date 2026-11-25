@@ -538,7 +538,7 @@ function EverfrostSetMode(mode)
  if not db then return end
  if mode=="cycle" then cycleMode() else setMode(NS.Modes.Normal(mode) or "auto") end
 end
-local usage="/everfrost settings | show | hide | lock | unlock | mode auto/st/cleave/aoe | layout track/classic/minimal/tank | input auto/pad/kbm/custom | upcoming 0-6 | utility auto/on/off | preview | enemies | heal | damage | bear | cat | ranged | melee | spec auto/1/2/3 | gear on/off | minimap on/off | scale 1 | opacity 100 | talents on/off | reset | refresh | source | status | spellids"
+local usage="/everfrost settings | show | hide | lock | unlock | mode auto/st/cleave/aoe | layout track/classic/minimal/tank | input auto/pad/kbm/custom | upcoming 0-6 | utility auto/on/off | preview | enemies | heal | damage | bear | cat | ranged | melee | spec auto/1/2/3 | gear on/off | weights | weights reset | minimap on/off | scale 1 | opacity 100 | talents on/off | reset | refresh | source | status | spellids"
 SLASH_EVERFROST1="/everfrost"
 SLASH_EVERFROST2="/fguide"
 SLASH_EVERFROST3="/frh"
@@ -601,8 +601,13 @@ SlashCmdList.EVERFROST=function(message)
   elseif NS.Gear then
    local p=NS.GearProfile(class,gearSpec,effectiveRole(gearSpec),level)
    local name=gearSpec>0 and NS.trees[class][gearSpec] or nil
-   say((db.gear==false and "Gear highlights OFF. " or "Gear highlights ON. ")..(p and ((p.starter and "Starter priorities until level 10. " or spec==0 and (name.." talents. ") or "").."Stat order: "..NS.GearPriorityText(p)..". Estimated weights; inspect special effects.") or gearReason or "Select a talent tree to score gear."))
+   say((db.gear==false and "Gear highlights OFF. " or "Gear highlights ON. ")..(p and ((p.starter and "Starter priorities until level 10. " or spec==0 and (name.." talents. ") or "").."Stat order: "..NS.GearPriorityText(p)..". "..NS.GearSourceText(p)..". /everfrost weights to change them; inspect special effects.") or gearReason or "Select a talent tree to score gear."))
   end
+ elseif command=="weights" then
+  local p=NS.Gear and NS.GearProfile(class,gearSpec,effectiveRole(gearSpec),level)
+  if arg=="reset" then
+   if p then NS.GearResetWeights(p); say("Stat weights for this spec are back to their defaults.") else say(gearReason or "Select a talent tree first.") end
+  elseif NS.Settings then NS.Settings.page="Weights"; NS.Settings:Open() end
  elseif command=="reset" then setScale(1); resetPosition(); db.hidden=false
  elseif command=="talents" then
   if arg=="on" or arg=="off" then db.talents=arg=="on"; refresh()
@@ -677,6 +682,9 @@ events:SetScript("OnEvent",function(_,event,value)
    end
   end
   if db.gear~=nil and db.gear~=true and db.gear~=false then db.gear=nil end
+  -- Your own stat weights, kept per character: {[profile id]={[stat]=weight}}.
+  db.gearWeights=type(db.gearWeights)=="table" and db.gearWeights or {}
+  if NS.SetGearWeights then NS.SetGearWeights(db.gearWeights) end
   if db.minimap~=nil and db.minimap~=true and db.minimap~=false then db.minimap=nil end
   if db.locked~=true then db.locked=nil end
   db.scale=type(db.scale)=="number" and math.max(0.6,math.min(2,db.scale)) or 1
@@ -700,6 +708,7 @@ events:SetScript("OnEvent",function(_,event,value)
       detected=((NS.trees[class] or {})[detectedSpec] or detectedStatus)..(detectedPoints and (" ("..table.concat(detectedPoints," / ")..")") or ""),
       hasRole=hasRoleChoice(p),roleLabel=roleLabel(role,p),
       priority=gear and NS.GearPriorityText(gear) or nil,gearReason=gearReason,
+      gearProfile=gear,gearSource=gear and NS.GearSourceText(gear) or nil,
       gearTitle=gear and gear.starter and ("Starter priority: "..className) or gearName and ("Stat priority: "..gearName..(spec==0 and " (talents)" or "")) or nil,
       emptySlots=emptySlotText(),panelShown=panelShown(),
       levelingHint=NS.gearLevelNote.." Levelling uses your dominant talent tree for gear.",

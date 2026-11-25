@@ -42,7 +42,8 @@ local stats={
  haste={"ITEM_MOD_HASTE_RATING_SHORT","ITEM_MOD_HASTE_RATING"},
  expertise={"ITEM_MOD_EXPERTISE_RATING_SHORT","ITEM_MOD_EXPERTISE_RATING"},
  defense={"ITEM_MOD_DEFENSE_SKILL_RATING_SHORT","ITEM_MOD_DEFENSE_SKILL_RATING"},
- block={"ITEM_MOD_BLOCK_RATING_SHORT","ITEM_MOD_BLOCK_RATING","ITEM_MOD_BLOCK_VALUE_SHORT","ITEM_MOD_BLOCK_VALUE"},
+ -- Block value and block chance are separate stats with separate weights.
+ block={"ITEM_MOD_BLOCK_VALUE_SHORT","ITEM_MOD_BLOCK_VALUE"},blockpct={"ITEM_MOD_BLOCK_RATING_SHORT","ITEM_MOD_BLOCK_RATING"},
  dodge={"ITEM_MOD_DODGE_RATING_SHORT","ITEM_MOD_DODGE_RATING"},parry={"ITEM_MOD_PARRY_RATING_SHORT","ITEM_MOD_PARRY_RATING"},
 }
 local schoolKeys={holy="HOLY",fire="FIRE",nature="NATURE",frost="FROST",shadow="SHADOW",arcane="ARCANE"}
@@ -101,7 +102,7 @@ local equipEffects={
  {"critical strike by (%d+)%%","crit"},
  {"chance to dodge an attack by (%d+)%%","dodge"},
  {"chance to parry an attack by (%d+)%%","parry"},
- {"chance to block attacks with a shield by (%d+)%%","block"},
+ {"chance to block attacks with a shield by (%d+)%%","blockpct"},
  {"block value of your shield by (%d+)","block"},
  {"increased defense %+(%d+)","defense"},
  {"defense rating by (%d+)","defense"},
@@ -252,20 +253,24 @@ local function effective(item, p)
  -- Stat sticks do not get melee/ranged DPS credit for the wrong role.
  -- A wand is a caster's Shoot damage. No guide ranks it, so DPS earns a small fixed credit.
  values.wand=caster and item.classID==2 and item.subclassID==19 and s.dps or 0
+ -- Attack power: a ranged spec takes the larger of the two kinds rather than counting both.
+ values.attack=math.max(s.attack,p.kind=="ranged" and s.rangedAttack or 0)
  return values,damageWeapon
 end
--- Armour counts for every spec. A profile that ranks Armour scores it as one of its stats, at
--- this rate times its weight. For the rest it is extra credit at the plain rate, reported apart
--- from the stats so a result can say when armour, not a stat, decided it. Armour pieces and
--- shields only: a weapon's armour is never credited.
-NS.gearArmorRate=0.1
-local function armorCredit(item, w)
+-- Armour counts for every spec, at the profile's own rate per point. A profile that ranks
+-- Armour scores it as one of its stats. For the rest it is extra credit, reported apart from the
+-- stats so a result can say when armour, not a stat, decided it. Armour pieces and shields only:
+-- a weapon's armour is never credited.
+local function armorCredit(item, p)
  if item.classID~=4 then return 0,0 end
- local amount=item.stats.armor*NS.gearArmorRate
- if w.armor then return amount*w.armor,0 end
+ local amount=item.stats.armor*(p.weights.armor or 0)
+ if p.armorRanked then return amount,0 end
  return 0,amount
 end
-function G.Score(item, context, p)
+-- Every weight is the value of one point as the item shows it (see GearProfiles.lua). hand is
+-- the slot a weapon would sit in: an off-hand weapon's DPS uses the profile's off-hand weight
+-- when it has one.
+function G.Score(item, context, p, hand)
  if not item or not item.stats then return nil end
  local s=item.stats; local w=p.weights
  local caster=p.kind=="caster" or p.kind=="healer"
@@ -273,22 +278,17 @@ function G.Score(item, context, p)
  if damageWeapon and s.dps<=0 then return nil end
  local score=0
  for key,weight in pairs(w) do
-  if key~="armor" then score=score+(values[key] or 0)*weight*(key=="dps" and 12 or 1) end
+  if key~="armor" and key~="dps2" then
+   if key=="dps" and hand==17 and w.dps2 then weight=w.dps2 end
+   score=score+(values[key] or 0)*weight
+  end
  end
- local ranked,extra=armorCredit(item,w)
+ local ranked,extra=armorCredit(item,p)
  score=score+ranked+extra
- score=score+values.wand
- -- AP equivalents follow the relevant primary stat rather than being omitted.
- -- A profile that ranks Attack Power itself already scored it in the loop above.
- if not caster and not w.attack then
-  local ap=math.max(s.attack,p.kind=="ranged" and s.rangedAttack or 0)
-  local primary=math.max(w.strength or 0,w.agility or 0)
-  score=score+ap*(primary>0 and primary or 1)/2
- end
  local relevant
  if caster then relevant=values.spell+(p.kind=="healer" and values.healing or 0)+s.intellect+s.spirit+s.mp5+values.hit+values.crit+values.haste+values.wand
  else relevant=s.strength+s.agility+s.attack+s.rangedAttack+values.dps+values.hit+values.crit+(s.expertise or 0)
-  if p.kind=="tank" then relevant=relevant+s.stamina+s.armor+s.block+s.defense+s.dodge+s.parry end
+  if p.kind=="tank" then relevant=relevant+s.stamina+s.armor+s.block+s.blockpct+s.defense+s.dodge+s.parry end
   if context.class=="PALADIN" then relevant=relevant+values.spell end
   if context.class=="HUNTER" or context.class=="PALADIN" or context.class=="SHAMAN" then relevant=relevant+s.intellect+s.spirit end
  end
@@ -317,10 +317,10 @@ local function validPair(main, off, equipped)
  return true
 end
 local function comparePair(item, equipped, context, p, carried, candidate)
- local previous=G.Score(equipped[16],context,p)
+ local previous=G.Score(equipped[16],context,p,16)
  if previous==nil or equipped[17]==nil then return waiting("Waiting for equipped weapon data") end
  if equipped[17] then
-  local score=G.Score(equipped[17],context,p)
+  local score=G.Score(equipped[17],context,p,17)
   if score==nil then return waiting("Waiting for equipped off-hand data") end
   previous=previous+score
  end
@@ -338,8 +338,8 @@ local function comparePair(item, equipped, context, p, carried, candidate)
       local main=hand==16 and item or partner
       local off=hand==17 and item or partner
       if validPair(main,off,equipped) then
-       local score,relevant=G.Score(item,context,p)
-       local partnerScore,partnerRelevant=G.Score(partner,context,p)
+       local score,relevant=G.Score(item,context,p,hand)
+       local partnerScore,partnerRelevant=G.Score(partner,context,p,otherHand)
        if score==nil or partnerScore==nil then partnerPending=true
        elseif relevant or partnerRelevant then
         local delta=score+partnerScore-previous
@@ -376,11 +376,12 @@ local function settle(result)
  local pct=result.delta/math.max(result.previous or 0,1)
  result.pct=pct
  if result.kind=="need" then
-  if result.empty or pct>=tiers.clear then result.verdict="clear"
-  elseif pct>=tiers.minor then result.verdict="minor"
+  -- Weights are decimals now, so a gain of exactly 10% or 3% must not miss its tier by rounding.
+  if result.empty or pct>=tiers.clear-1e-9 then result.verdict="clear"
+  elseif pct>=tiers.minor-1e-9 then result.verdict="minor"
   else result.kind="greed"; result.verdict="sidegrade" end
  else
-  result.verdict=pct>-tiers.minor and "sidegrade" or "downgrade"
+  result.verdict=pct>-tiers.minor+1e-9 and "sidegrade" or "downgrade"
  end
  return result
 end
@@ -447,16 +448,19 @@ local function compare(item, equipped, context, carried, candidate, profile)
   end
   local oldScore,oldRelevant,oldArmor=0,false,0
   if old then
-   oldScore,oldRelevant,oldArmor=G.Score(old,context,p)
+   oldScore,oldRelevant,oldArmor=G.Score(old,context,p,slot)
    if oldScore==nil then return unknown("Equipped weapon stats are unavailable") end
   end
+  -- In the off-hand a weapon's damage can be worth less than in the main hand.
+  local slotScore=score
+  if slot==17 then slotScore=G.Score(item,context,p,17) or score end
   local allowed=true
   if item.loc=="INVTYPE_2HWEAPON" then
    local off=equipped[17]
    if off==nil then return waiting("Waiting for off-hand item data") end
    local extra,_,offArmor=0,nil,0
    if off then
-    extra,_,offArmor=G.Score(off,context,p)
+    extra,_,offArmor=G.Score(off,context,p,17)
     if extra==nil then return unknown("Off-hand stats are unavailable") end
    end
    oldScore=oldScore+extra; oldArmor=oldArmor+(offArmor or 0)
@@ -470,9 +474,9 @@ local function compare(item, equipped, context, carried, candidate, profile)
    if count>=item.limit then allowed=false end
   end
   if old and old.link==item.link then allowed=false end
-  if allowed and (not best or score-oldScore>best.delta) then
+  if allowed and (not best or slotScore-oldScore>best.delta) then
    local displaces=item.loc=="INVTYPE_2HWEAPON" and equipped[17]
-   best={kind="greed",score=score,previous=oldScore,delta=score-oldScore,slot=slot,source=p.source,
+   best={kind="greed",score=slotScore,previous=oldScore,delta=slotScore-oldScore,slot=slot,source=p.source,
     oldRelevant=oldRelevant,armorGain=armorGain(item,old),old=old,
     -- The part of the difference that comes from armour credit rather than from stats.
     armorCredit=armorExtra-oldArmor,
@@ -529,9 +533,10 @@ function G.Alternatives(context)
   local seen={[current]=true}
   local focus=NS.gearFocus[context.class] and NS.gearFocus[context.class][context.spec]
   for _,choice in ipairs(focus and focus.list or {}) do
-   if not seen[choice.profile] then
-    seen[choice.profile]=true
-    list[#list+1]={profile=choice.profile,label=choice.label,bestFor=choice.profile.bestFor,context=context,sameSpec=true}
+   local p=NS.GearCustomised(choice.profile)
+   if not seen[p] then
+    seen[p]=true
+    list[#list+1]={profile=p,label=choice.label,bestFor=p.bestFor,context=context,sameSpec=true}
    end
   end
   for spec=1,3 do

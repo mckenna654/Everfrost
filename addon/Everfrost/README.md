@@ -1,4 +1,4 @@
-# Everfrost — v0.9.0
+# Everfrost — v0.10.0
 
 A rotation HUD and gear and talent hints for WoW Forever, covering levels 1–60, all nine classes and 27 talent trees. Everfrost detects your class, level, talent tree and learned spell ranks. It never casts, rolls, equips or clicks anything for you.
 
@@ -29,7 +29,7 @@ The HUD follows the game's input style (gamepad mode, Steam Deck, ConsolePort). 
 
 ## Gear, loot and quests
 
-One scoring engine marks bag upgrades (a thin green border and arrow; fainter for minor upgrades), loot rolls (a faint ring on Need or Greed) and quest rewards (**Recommended** on the best one). Tanks and Feral can choose a scoring focus such as Balanced Tank, Survivability, Threat or Solo Levelling on the Gear & Loot page. A two-hander is compared with your weapon and shield together. Procs and Use effects are named, never given a made-up score. Below level 10, gear uses a simple starter priority for your class. Full method: https://github.com/mckenna654/Everfrost/blob/main/docs/GEAR.md
+One scoring engine marks bag upgrades (a thin green border and how much better the item is as a green percentage; fainter for minor upgrades), loot rolls (a faint ring on Need or Greed) and quest rewards (**Recommended** on the best one). Tanks and Feral can choose a scoring focus such as Balanced Tank, Survivability, Threat or Solo Levelling on the Gear & Loot page. A two-hander is compared with your weapon and shield together. Procs and Use effects are named, never given a made-up score. Below level 10, gear uses a simple starter priority for your class. Full method: https://github.com/mckenna654/Everfrost/blob/main/docs/GEAR.md
 
 ## Talents
 

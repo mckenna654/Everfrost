@@ -34,16 +34,19 @@ local DPS,ARM,SP,HEAL,BLOCK='ITEM_MOD_DAMAGE_PER_SECOND_SHORT','RESISTANCE0_NAME
 
 -- Thresholds ----------------------------------------------------------------------------------
 check(NS.gearTiers.clear==0.10 and NS.gearTiers.minor==0.03,'documented thresholds')
--- Arms ranks Strength at 2 points: 50 Strength scores 100.
+-- Arms' simulated weights: Strength 2.2, Agility 1.76, so 50 Strength scores 110.
 local arms=ctx('WARRIOR',1)
 local worn=empty(); worn[5]=item(1,nil,{[STR]=50})
 local function verdict(raw,equipment,context) return G.Compare(item(2,nil,raw),equipment or worn,context or arms) end
 local r=verdict({[STR]=60}); check(r.verdict=='clear' and r.kind=='need' and math.abs(r.pct-0.2)<1e-9,'20% is a clear upgrade')
 r=verdict({[STR]=55}); check(r.verdict=='clear','exactly 10% is clear')
-r=verdict({[STR]=52,[STA]=1}); check(r.verdict=='minor' and r.kind=='need','5% is a minor upgrade')
-r=verdict({[STR]=50,[STA]=2}); check(r.verdict=='sidegrade' and r.kind=='greed','2% up is a sidegrade, never a Need')
+r=verdict({[STR]=52,[AGI]=1}); check(r.verdict=='minor' and r.kind=='need' and math.abs(r.pct-0.056)<1e-9,'5.6% is a minor upgrade')
+r=verdict({[STR]=50,[AGI]=1}); check(r.verdict=='sidegrade' and r.kind=='greed','1.6% up is a sidegrade, never a Need')
 check(r.why=='About the same as your current item.','a one-sided sidegrade says so')
-r=verdict({[STR]=49,[STA]=2}); check(r.verdict=='sidegrade' and r.why=='More Stamina, but less Strength.','a sidegrade names its trade-off')
+r=verdict({[STR]=49,[AGI]=1}); check(r.verdict=='sidegrade' and r.why=='More Agility, but less Strength.','a sidegrade names its trade-off')
+-- Stamina is worth little to Arms, but it is Protection's top stat: the same small gain is
+-- named for the tree that wants it instead of being called a sidegrade.
+r=verdict({[STR]=50,[STA]=2}); check(r.verdict=='spec' and r.altLabel=='Protection','two Stamina suits Protection')
 r=verdict({[STR]=49}); check(r.verdict=='sidegrade','2% down is still a sidegrade')
 r=verdict({[STR]=48}); check(r.verdict=='downgrade' and r.kind=='greed' and r.why=='Your current item has more Strength.','4% down is a downgrade')
 r=verdict({[STR]=10},empty()); check(r.verdict=='clear' and r.empty,'an empty slot is always a clear upgrade')
@@ -146,8 +149,8 @@ G.focus='threat'; check(G.Compare(item(43,'INVTYPE_2HWEAPON',{[DPS]=80},2,5),loa
 G.focus=nil
 -- Without a shield in the guide, the shield's armour still counts against a two-hander.
 local ret=ctx('PALADIN',3)
-local slightly=item(44,'INVTYPE_2HWEAPON',{[DPS]=10.4},2,5)
-check(G.Compare(slightly,loadout,ret).verdict=='downgrade','shield armour outweighs 4% more weapon DPS')
+local slightly=item(44,'INVTYPE_2HWEAPON',{[DPS]=10.8},2,5)
+check(G.Compare(slightly,loadout,ret).verdict=='downgrade','the shield and the Strength on the mace outweigh 8% more weapon DPS')
 local bare=empty(); bare[16]=mace; bare[17]=false
 local function noShield() local e=empty(); e[16]=item(45,'INVTYPE_WEAPON',{[DPS]=10},2,4); return e end
 check(G.Compare(slightly,noShield(),ret).verdict=='minor','with nothing in the off-hand it is a minor upgrade')
@@ -164,18 +167,23 @@ check(G.Compare(tower,loadout,prot).verdict=='clear','more armour and block')
 local tank=ctx('WARRIOR',3,'tank')
 local sword=empty(); sword[16]=item(50,'INVTYPE_WEAPON',{[DPS]=10,[STA]=10},2,7); sword[17]=item(51,'INVTYPE_SHIELD',{[ARM]=400},4,6)
 local fast=item(52,'INVTYPE_WEAPON',{[DPS]=11},2,7)
-check(G.Compare(fast,sword,tank).verdict=='minor','balanced: weapon damage is a minor upgrade')
+r=G.Compare(fast,sword,tank)
+check(r.verdict=='spec' and r.altLabel=='Solo Levelling' and r.why=='Your current item has more Stamina.','balanced: the simulator ranks Stamina over weapon damage')
+G.focus='solo'; check(G.Compare(fast,sword,tank).verdict=='minor','solo: weapon damage is a minor upgrade')
 G.focus='survival'; r=G.Compare(fast,sword,tank)
 check(r.verdict=='spec' and r.why=='Your current item has more Stamina.','survival: lost Stamina')
 G.focus=nil
 
--- Feral: Bear ignores weapon damage that Cat wants.
+-- Feral: the simulator finds weapon damage valuable in both forms; Bear wants armour and
+-- Stamina far more than Cat does.
 local druid=ctx('DRUID',2)
 local paw=empty(); paw[16]=item(60,'INVTYPE_WEAPON',{[DPS]=10},2,4)
 check(G.Compare(item(61,'INVTYPE_WEAPON',{[DPS]=20},2,4),paw,druid).verdict=='clear','cat: weapon DPS')
+local pelt=empty(); pelt[5]=item(65,nil,{[ARM]=100,[AGI]=20},4,2)
+r=G.Compare(item(66,nil,{[ARM]=180,[AGI]=18,[STA]=4},4,2),pelt,druid)
+check(r.kind=='greed' and r.verdict=='spec' and r.altLabel=='Bear Balanced','cat: better for Bear')
 G.focus='balanced'
-r=G.Compare(item(61,'INVTYPE_WEAPON',{[DPS]=20},2,4),paw,druid)
-check(r.kind=='greed' and r.verdict=='spec' and r.altLabel=='Cat Damage','bear: better for Cat')
+check(G.Compare(item(61,'INVTYPE_WEAPON',{[DPS]=20},2,4),paw,druid).verdict=='clear','bear: weapon DPS counts too')
 local hide=empty(); hide[5]=item(62,nil,{[ARM]=100,[AGI]=5},4,2)
 check(G.Compare(item(63,nil,{[ARM]=180,[AGI]=5,[STA]=4},4,2),hide,druid).verdict=='clear','bear: armour and stamina')
 check(G.Compare(item(64,'INVTYPE_SHIELD',{[ARM]=900},4,6),empty(),druid).verdict=='unusable','druids hold no shield')
@@ -198,5 +206,123 @@ G.Schedule=nil
 -- One engine: an explicit profile scores as that profile and never looks for alternatives.
 r=G.Compare(item(31,nil,{[SP]=20},4,3),chest,prot,nil,nil,NS.GearFocusProfile('PALADIN',2,'survival'))
 check(r.kind=='greed' and r.verdict~='spec','explicit profile')
-print('Gear verdicts: '..checks..' checks on tiers, unusable, spell power, weapon DPS, rings/trinkets, focus profiles, shields, two-handers, Feral and rescans passed')
+-- Where the weights come from ---------------------------------------------------------------
+-- Seventeen trees use the wowsims Forever simulator's presets; ten have no published weights
+-- and keep an estimate from their guide's stat order.
+local simulated,estimated,ids=0,0,{}
+local function sane(p,name)
+ check(type(p.id)=='string' and not ids[p.id],'unique profile id '..name); ids[p.id]=true
+ check(type(p.weightSource)=='string' and NS.GearSourceText(p)=='Weights: '..p.weightSource,'source text '..name)
+ for key,value in pairs(p.weights) do check(type(value)=='number' and value==value and value>=0 and value<1000,'weight '..name..' '..key) end
+ check(p.weights.armor and p.weights.armor>0,'armour always counts '..name)
+ for _,group in ipairs(p.order) do for key in group:gmatch('%S+') do check(NS.gearStatLabels[key],'label '..key) end end
+end
+for class,specs in pairs(NS.gearProfiles) do
+ for spec=1,3 do
+  local p=specs[spec]; sane(p,class..spec)
+  if p.sim then simulated=simulated+1; check(p.weightSource=='wowsims Forever simulator ('..p.sim..')','sim source') else estimated=estimated+1 end
+ end
+ sane(NS.gearStarter[class],class..' starter')
+end
+for class,specs in pairs(NS.gearFocus) do
+ for spec,entry in pairs(specs) do for index,choice in ipairs(entry.list) do if index>1 then sane(choice.profile,class..spec..choice.key) end end end
+end
+check(simulated==17 and estimated==10,'17 simulated trees, 10 estimates')
+for _,pair in ipairs({{'MAGE',1},{'MAGE',2},{'MAGE',3},{'WARLOCK',1},{'WARLOCK',2},{'WARLOCK',3},{'PALADIN',1},{'PALADIN',2},{'DRUID',3},{'SHAMAN',3}}) do
+ check(not NS.gearProfiles[pair[1]][pair[2]].sim,'no simulator weights for '..pair[1]..pair[2])
+end
+check(NS.gearWeightSource.url=='wowsims.com/forever' and NS.gearWeightSource.commit=='d45287b','the source is on record')
+-- Items show Hit, Crit and the like as whole percentages; the simulator weighs rating points.
+local U=NS.gearStatUnits
+check(U.hit==10 and U.crit==14 and U.haste==10 and U.expertise==10 and U.dodge==12 and U.parry==15 and U.blockpct==5,'rating per 1%')
+local A=NS.gearProfiles.WARRIOR[1].weights
+check(math.abs(A.hit-50.3)<1e-9 and math.abs(A.crit-32.48)<1e-9 and A.dps==16.71 and A.dps2==0 and A.strength==2.2,'Arms preset')
+local F=NS.gearProfiles.WARRIOR[2].weights
+check(F.dps==12.59 and F.dps2==2.66 and math.abs(F.expertise-23.5)<1e-9,'Fury preset')
+local B=NS.GearFocusProfile('DRUID',2,'balanced')
+check(B.sim=='Bear' and B.kind=='tank' and B.armorRanked and B.weights.armor==0.174 and B.weights.stamina==1.003,'Bear preset')
+check(NS.GearFocusProfile('WARRIOR',3,'threat').sim=='Pre-BiS Offensive' and not NS.GearFocusProfile('WARRIOR',3,'survival').sim,'warrior tank focuses')
+-- School damage counts at the share the simulator gives it.
+local moon=NS.gearProfiles.DRUID[1]
+check(G.Score(item(100,nil,{ITEM_MOD_ARCANE_DAMAGE_SHORT=100}),ctx('DRUID',1),moon)==68 and G.Score(item(101,nil,{ITEM_MOD_NATURE_DAMAGE_SHORT=100}),ctx('DRUID',1),moon)==32,'Balance school shares')
+-- The simulator measures damage, so Stamina and armour are a small levelling allowance there.
+local R=NS.gearProfiles.ROGUE[2]
+check(R.weights.stamina==0.25 and R.weights.armor==0.02 and not R.armorRanked and R.allowance,'levelling allowance')
+check(NS.gearProfiles.WARRIOR[3].weights.stamina==1.15 and NS.gearProfiles.WARRIOR[3].armorRanked,'a tank preset ranks them itself')
+-- The priority line follows the weights, per rating point as the simulator lists them.
+check(NS.GearOrderText(NS.gearProfiles.WARRIOR[1])=='Weapon DPS > Hit > Crit > Strength > Agility > Expertise > Haste > Attack power > Stamina','Arms order')
+check(NS.GearOrderText(NS.gearProfiles.WARRIOR[1],3)=='Weapon DPS > Hit > Crit','a tooltip keeps the first few')
+check(NS.GearOrderText(NS.gearProfiles.PRIEST[1])=='Healing power > Crit > MP5 > Intellect > Haste / Spirit > Stamina','equal weights share a group')
+-- An estimate scales its percentage stats the same way, and block covers value and chance.
+local fireP=NS.gearProfiles.MAGE[2].weights
+check(fireP.spell==7 and fireP.crit==6*14 and fireP.hit==3*10 and fireP.wand==1,'Fire estimate')
+local pp=NS.gearProfiles.PALADIN[2].weights
+check(pp.block==6 and pp.blockpct==30 and pp.armor==3*0.1 and pp.attack==pp.strength/2,'Protection Paladin estimate')
+local norm=G.Normalize({ITEM_MOD_BLOCK_VALUE=12,ITEM_MOD_BLOCK_RATING=2})
+check(norm.block==12 and norm.blockpct==2,'block value and block chance are read apart')
+
+-- Off-hand weapons ----------------------------------------------------------------------------
+-- Combat's preset values off-hand DPS at 2.93 against 10.57 in the main hand.
+local combat=ctx('ROGUE',2); combat.dual=true
+local blades=empty(); blades[16]=item(110,'INVTYPE_WEAPON',{[DPS]=20},2,7); blades[17]=item(111,'INVTYPE_WEAPONOFFHAND',{[DPS]=10},2,15)
+local offhand=item(112,'INVTYPE_WEAPONOFFHAND',{[DPS]=12},2,15)
+check(G.Score(offhand,combat,R)==12*10.57 and G.Score(offhand,combat,R,16)==12*10.57 and math.abs(G.Score(offhand,combat,R,17)-12*2.93)<1e-9,'hand decides the DPS weight')
+r=G.Compare(offhand,blades,combat)
+check(r.slot==17 and math.abs(r.delta-2*2.93)<1e-9 and math.abs(r.previous-10*2.93)<1e-9 and r.verdict=='clear' and math.abs(r.pct-0.2)<1e-9,'off-hand compared at the off-hand weight')
+-- A two-hander displaces both: the off-hand it removes is counted at the off-hand weight.
+r=G.Compare(item(113,'INVTYPE_2HWEAPON',{[DPS]=30},2,5),blades,ctx('WARRIOR',2))
+check(math.abs(r.previous-(20*12.59+10*2.66))<1e-9,'two-hander against main hand plus off-hand')
+-- An estimate has no off-hand weight of its own, so both hands score alike.
+local young=NS.gearStarter.ROGUE
+check(young.weights.dps2==nil and NS.GearWeight(young,'dps2')==young.weights.dps and G.Score(offhand,combat,young,17)==G.Score(offhand,combat,young,16),'estimates score both hands alike')
+
+-- Your own weights ------------------------------------------------------------------------------
+local saved={}; local rescans=0
+G.Schedule=function() rescans=rescans+1 end
+NS.SetGearWeights(saved); check(NS.gearCustom==saved,'saved table adopted')
+local armsBase=NS.gearProfiles.WARRIOR[1]
+check(NS.GearProfile('WARRIOR',1,'damage',30)==armsBase,'no changes: the default profile itself')
+local sta=item(120,nil,{[STR]=50,[STA]=10})
+check(G.Compare(sta,worn,arms).verdict~='clear','ten Stamina is no clear upgrade for Arms by default')
+rescans=0; G.pending=false
+check(NS.GearSetWeight(armsBase,'stamina',5)==true and saved['WARRIOR:1'].stamina==5 and rescans==1 and G.pending,'a change is saved and rescans')
+local mine=NS.GearProfile('WARRIOR',1,'damage',30)
+check(mine~=armsBase and mine.custom and mine.base==armsBase and mine.weights.stamina==5 and armsBase.weights.stamina==0.25,'a customised copy; defaults untouched')
+check(mine.weights.strength==2.2 and mine.sim=='Pre-BiS Arms' and NS.GearSourceText(mine)=='Weights: your own weights','the rest keeps its defaults')
+check(NS.GearProfile('WARRIOR',1,'damage',30)==mine,'the copy is reused until something changes')
+check(NS.GearOrderText(mine):find('Hit > Stamina > Crit',1,true),'the order follows your weights')
+r=G.Compare(sta,worn,arms); check(r.verdict=='clear' and math.abs(r.pct-50/110)<1e-9 and r.why=='Better because it has more Stamina.','your weights decide the verdict')
+check(NS.GearProfile('WARRIOR',2,'damage',30)==NS.gearProfiles.WARRIOR[2],'other trees keep theirs')
+-- Another tree's alternatives use that tree's own (customised) weights.
+check(NS.GearSetWeight(mine,'armor',0.5) and NS.GearProfile('WARRIOR',1,'damage',30).armorRanked and NS.GearOrderText(NS.GearProfile('WARRIOR',1,'damage',30)):find('Armour',1,true),'armour you weigh becomes one of your stats')
+check(NS.GearSetWeight(mine,'armor',nil) and saved['WARRIOR:1'].armor==nil and not NS.GearProfile('WARRIOR',1,'damage',30).armorRanked,'nil removes one change')
+-- Out-of-range and unknown values are refused.
+for _,bad in ipairs({-1,1000,0/0,math.huge,'5'}) do check(NS.GearSetWeight(mine,'stamina',bad)==false and saved['WARRIOR:1'].stamina==5,'refused '..tostring(bad)) end
+check(NS.GearSetWeight(mine,'bogus',1)==false and NS.GearSetWeight(mine,'wand',1)==false and NS.GearSetWeight(nil,'stamina',1)==false,'unknown stats refused')
+check(NS.GearSetWeight(mine,'stamina',0)==true and NS.GearProfile('WARRIOR',1,'damage',30).weights.stamina==0,'zero ignores a stat')
+-- Setting the default value back removes the change, and an empty set is dropped.
+check(NS.GearSetWeight(mine,'stamina',0.25)==true and saved['WARRIOR:1']==nil and NS.GearProfile('WARRIOR',1,'damage',30)==armsBase,'back to the default')
+NS.GearSetWeight(armsBase,'stamina',5); NS.GearSetWeight(armsBase,'hit',1); rescans=0
+NS.GearResetWeights(NS.GearProfile('WARRIOR',1,'damage',30)); check(saved['WARRIOR:1']==nil and rescans==1 and NS.GearProfile('WARRIOR',1,'damage',30)==armsBase,'reset')
+-- Each focus keeps its own changes, and the spec-dependent check uses them.
+local threat=NS.gearFocus.PALADIN[2].byKey.threat.profile
+check(threat.id=='PALADIN:2:threat' and NS.gearProfiles.PALADIN[2].id=='PALADIN:2' and NS.gearStarter.PALADIN.id=='PALADIN:0','profile ids')
+NS.GearSetWeight(threat,'spell',0)
+check(NS.GearFocusProfile('PALADIN',2,'threat').custom and NS.GearFocusProfile('PALADIN',2,nil)==NS.gearProfiles.PALADIN[2],'only that focus changes')
+local plainChest=empty(); plainChest[5]=item(30,nil,{[STA]=20},4,3)
+G.focus=nil; r=G.Compare(item(31,nil,{[SP]=20},4,3),plainChest,prot)
+check(r.altLabel~='Tank Threat','Threat no longer wants spell power once you zero it')
+NS.GearResetWeights(threat)
+r=G.Compare(item(31,nil,{[SP]=20},4,3),plainChest,prot); check(r.verdict=='spec' and r.altLabel=='Tank Threat','and wants it again after a reset')
+-- Starters and the off-hand weight can be changed too.
+local starter=NS.gearStarter.WARRIOR
+NS.GearSetWeight(starter,'dps2',1); local early=NS.GearProfile('WARRIOR',1,'damage',5)
+check(early.custom and early.starter and early.weights.dps2==1 and early.weights.dps==starter.weights.dps,'starter off-hand weight')
+NS.GearResetWeights(early)
+-- Damaged saved data is ignored rather than trusted.
+NS.SetGearWeights({['WARRIOR:1']={stamina='lots',bogus=3,strength=math.huge,hit=-2},['MAGE:2']='x'})
+check(NS.GearProfile('WARRIOR',1,'damage',30)==armsBase and NS.GearProfile('MAGE',2,'damage',30)==NS.gearProfiles.MAGE[2],'bad saved weights ignored')
+NS.SetGearWeights('nonsense'); check(NS.gearCustom==nil and NS.GearSetWeight(armsBase,'stamina',5)==false,'no table, no changes')
+NS.SetGearWeights({}); G.Schedule=nil; G.focus=nil
+print('Gear verdicts: '..checks..' checks on tiers, unusable, spell power, weapon DPS, rings/trinkets, focus profiles, shields, two-handers, Feral, rescans, simulator weights, off-hand weapons and custom weights passed')
 `);
