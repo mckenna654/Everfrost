@@ -303,3 +303,18 @@ November 24, 2026: v0.9.0 (merge 3a4133e) generated CurseForge file #9784693
 (`Everfrost-Source-v0.9.0.zip`) as a Release for Forever 1.60.1, Under Review when
 checked. Its file notes came from the changelog automatically. The ZIP was not downloaded
 and checked this time.
+
+## 0.10.0 — November 25, 2026
+
+Released simulator stat weights, the upgrade percentage and the stat weights page from PR #11
+as GitHub latest v0.10.0, annotated tag at 5ea44bc on main, at the user's request ("merge and
+release") and without an in-game check. GitHub Actions passed on main before tagging; npm ci,
+npm test, luacheck and npm run build passed locally, and all 18 packaged files match source byte
+for byte. Release ZIP SHA-256 matches the locally built archive:
+fc274873701c243e1a7dea5c5eab86a4b673d31f252008e21b4d352361d8b41b.
+The CurseForge webhook returned HTTP 200. The author console shows v0.10.0 as a Release for
+1.60.1, Under Review when checked. The public description was updated in Markdown mode to match
+docs/CURSEFORGE.md (checked by SHA-256 of the editor text before saving, allowing only
+CurseForge's `*   ` list bullets) and the project page shows "What's new in 0.10.0". wowsims was
+rechecked before tagging: still at commit d45287b, so the weights are current. Not done:
+downloading the generated ZIP to compare its contents with the tag.
