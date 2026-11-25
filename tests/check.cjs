@@ -826,6 +826,29 @@ print('Legacy native settings registration and missing minimap fallback: passed'
   console.log('Guide spell IDs: no new English-only spells: passed');
 }
 
+// Forever's own controller navigation (Blizzard_GamepadSmartNavigation) hooks CreateFrame and
+// re-scans an open window when a frame is created under it, in the caller's context. From addon
+// code that can taint its state and leave the controller's navigation bindings on until /reload.
+// So Everfrost never creates a frame under a game window: marks on talent, bag, roll, quest and
+// vendor buttons are textures and font strings. It also never assigns the UISpecialFrames global
+// (only inserts into it), which the game reads whenever windows are closed.
+{
+  for (const [name, source] of Object.entries(sources)) {
+    assert(!/UISpecialFrames\s*=[^=]/.test(source), name + ' assigns the UISpecialFrames global');
+  }
+  assert(!/CreateFrame\s*\(/.test(sources['Talents.lua'].replace(/--[^\n]*/g, '')), 'Talents.lua must not create frames');
+  const gearFrames = [...sources['GearUI.lua'].replace(/--[^\n]*/g, '').matchAll(/CreateFrame\s*\(([^)]*)\)/g)].map(m => m[1].trim());
+  assert.deepEqual(gearFrames, ['"Frame"'], 'GearUI.lua may only create its own parentless event frame');
+  // Every other frame hangs off UIParent, the minimap or another Everfrost frame.
+  const parents = new Set();
+  for (const name of ['Main.lua', 'Settings.lua', 'HUD.lua']) {
+    for (const m of sources[name].replace(/--[^\n]*/g, '').matchAll(/CreateFrame\s*\(\s*"[A-Za-z]+"\s*,\s*[^,)]+\s*,\s*([A-Za-z_.]+)/g)) parents.add(m[1]);
+  }
+  const allowed = new Set(['UIParent', 'Minimap', 'parent', 'catcher', 'menu', 'frame', 'window', 'window.inset', 'weights', 'b']);
+  assert.deepEqual([...parents].filter(p => !allowed.has(p)), [], 'a frame is created under an unexpected parent');
+  console.log('Controller safety: no frames created inside game windows, UISpecialFrames only appended to: passed');
+}
+
 const packageVersion = require('../package.json').version;
 for (const toc of ['addon/Everfrost/Everfrost.toc', 'Everfrost-Source.toc']) {
   const metadata = require('fs').readFileSync(toc, 'utf8');

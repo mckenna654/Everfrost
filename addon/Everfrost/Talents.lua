@@ -417,82 +417,81 @@ end
 -- The next pick is hard to miss: a thick ice-blue outline just outside the button's edge, a
 -- pulsing glow around it and the word NEXT above it. Ice blue, because Forever's own talent
 -- window puts a gold border on every talent with points in it, and the first, thin gold outline
--- disappeared among those. The outline and label stay solid; only the glow pulses. Everything
--- sits outside the icon and the rank counter and takes no mouse input, so the native tooltip
--- and clicks are left alone.
+-- disappeared among those. The outline and label stay solid; only the glow pulses.
+--
+-- Everything is drawn with textures and a font string on the talent button itself. No frame is
+-- ever created inside the talent window: Forever's controller navigation hooks CreateFrame, and a
+-- frame an addon makes under an open, controller-focused window re-runs the game's button scan
+-- from addon code (Blizzard_GamepadSmartNavigation: UpdateParent, RefreshButtonGroups), which its
+-- own comments warn can spread taint and leave the controller's navigation bindings switched on.
+-- Textures take no mouse input, so the native tooltip and clicks are left alone.
 local ICE={0.35,0.90,1.00}
 T.highlightColor=ICE
 local GLOW_TEXTURE="Interface\\Buttons\\UI-ActionButton-Border"
 local function overlayFor(button)
  local overlay=overlays[button]
- if overlay or type(CreateFrame)~="function" then return overlay end
- overlay=CreateFrame("Frame",nil,button)
- if overlay.EnableMouse then overlay:EnableMouse(false) end
- overlay:SetPoint("TOPLEFT",button,"TOPLEFT",-3,3)
- overlay:SetPoint("BOTTOMRIGHT",button,"BOTTOMRIGHT",3,-3)
- local level=number(first(button.GetFrameLevel,button))
- if level and overlay.SetFrameLevel then overlay:SetFrameLevel(level+3) end
- local function edge(from,to,horizontal)
-  local line=overlay:CreateTexture(nil,"OVERLAY")
+ if overlay or type(button.CreateTexture)~="function" then return overlay end
+ overlay={regions={},pulses={},shown=false}
+ local function region(made) overlay.regions[#overlay.regions+1]=made; made:Hide(); return made end
+ local function edge(from,to,x1,y1,x2,y2,horizontal)
+  local line=region(button:CreateTexture(nil,"OVERLAY",nil,7))
   line:SetColorTexture(ICE[1],ICE[2],ICE[3],1)
-  line:SetPoint(from,overlay,from); line:SetPoint(to,overlay,to)
+  line:SetPoint(from,button,from,x1,y1); line:SetPoint(to,button,to,x2,y2)
   if horizontal then line:SetHeight(3) else line:SetWidth(3) end
  end
- edge("TOPLEFT","TOPRIGHT",true); edge("BOTTOMLEFT","BOTTOMRIGHT",true)
- edge("TOPLEFT","BOTTOMLEFT",false); edge("TOPRIGHT","BOTTOMRIGHT",false)
- -- The glow: the action-button border art drawn twice around the button, on its own frame so
- -- it can pulse while the outline stays solid.
- local glow=CreateFrame("Frame",nil,overlay)
- if glow.EnableMouse then glow:EnableMouse(false) end
- glow:SetPoint("TOPLEFT",overlay,"TOPLEFT"); glow:SetPoint("BOTTOMRIGHT",overlay,"BOTTOMRIGHT")
+ -- Three pixels thick, just outside the button: top and bottom run the full width.
+ edge("TOPLEFT","TOPRIGHT",-3,3,3,3,true); edge("BOTTOMLEFT","BOTTOMRIGHT",-3,-3,3,-3,true)
+ edge("TOPLEFT","BOTTOMLEFT",-3,0,-3,0,false); edge("TOPRIGHT","BOTTOMRIGHT",3,0,3,0,false)
+ -- The glow: the action-button border art drawn twice around the button, each with its own pulse.
  local width=number(first(button.GetWidth,button))
  width=width and width>0 and width or 37
- for _,share in ipairs({0.32,0.48}) do
-  local halo=glow:CreateTexture(nil,"ARTWORK")
+ overlay.halos={}
+ for index,share in ipairs({0.32,0.48}) do
+  local halo=region(button:CreateTexture(nil,"OVERLAY",nil,6))
   halo:SetTexture(GLOW_TEXTURE); halo:SetBlendMode("ADD"); halo:SetVertexColor(ICE[1],ICE[2],ICE[3],1)
   local pad=math.floor(width*share+0.5)
   halo:SetPoint("TOPLEFT",button,"TOPLEFT",-pad,pad); halo:SetPoint("BOTTOMRIGHT",button,"BOTTOMRIGHT",pad,-pad)
+  overlay.halos[index]=halo
+  if halo.CreateAnimationGroup then
+   local pulse=halo:CreateAnimationGroup()
+   pulse:SetLooping("BOUNCE")
+   local fade=pulse:CreateAnimation("Alpha")
+   fade:SetFromAlpha(1); fade:SetToAlpha(0.4); fade:SetDuration(0.7)
+   if fade.SetSmoothing then fade:SetSmoothing("IN_OUT") end
+   overlay.pulses[index]=pulse
+  end
  end
- overlay.glow=glow
- if glow.CreateAnimationGroup then
-  local pulse=glow:CreateAnimationGroup()
-  pulse:SetLooping("BOUNCE")
-  local fade=pulse:CreateAnimation("Alpha")
-  fade:SetFromAlpha(1); fade:SetToAlpha(0.4); fade:SetDuration(0.7)
-  if fade.SetSmoothing then fade:SetSmoothing("IN_OUT") end
-  overlay.pulse=pulse
- end
+ overlay.pulse=overlay.pulses[1]
  -- NEXT, on a dark strip so it reads over the tree's artwork.
- local label=overlay.CreateFontString and overlay:CreateFontString(nil,"OVERLAY","GameFontNormalSmall")
- if label then
-  label:SetPoint("BOTTOM",overlay,"TOP",0,2); label:SetText("NEXT"); label:SetTextColor(ICE[1],ICE[2],ICE[3])
-  local strip=overlay:CreateTexture(nil,"BACKGROUND")
+ if type(button.CreateFontString)=="function" then
+  local label=region(button:CreateFontString(nil,"OVERLAY","GameFontNormalSmall"))
+  label:SetPoint("BOTTOM",button,"TOP",0,5); label:SetText("NEXT"); label:SetTextColor(ICE[1],ICE[2],ICE[3])
+  local strip=region(button:CreateTexture(nil,"ARTWORK"))
   strip:SetColorTexture(0,0,0,0.75)
   strip:SetPoint("TOPLEFT",label,"TOPLEFT",-3,2); strip:SetPoint("BOTTOMRIGHT",label,"BOTTOMRIGHT",3,-2)
-  overlay.label=label
+  overlay.label,overlay.strip=label,strip
  end
- overlay:Hide()
  overlays[button]=overlay
  return overlay
+end
+local function hideOverlay(overlay)
+ for _,pulse in ipairs(overlay.pulses) do pulse:Stop() end
+ for _,made in ipairs(overlay.regions) do made:Hide() end
+ overlay.shown=false
 end
 local function setOverlay(button,shown)
  local overlay=shown and overlayFor(button) or overlays[button]
  if not overlay then return end
  if shown then
-  overlay:Show()
-  if overlay.pulse and not overlay.pulse:IsPlaying() then overlay.pulse:Play() end
- else
-  if overlay.pulse then overlay.pulse:Stop() end
-  overlay:Hide()
- end
+  for _,made in ipairs(overlay.regions) do made:Show() end
+  for _,pulse in ipairs(overlay.pulses) do if not pulse:IsPlaying() then pulse:Play() end end
+  overlay.shown=true
+ else hideOverlay(overlay) end
 end
 T.Overlay=function(button) return overlays[button] end
 -- Hides every highlight, for a closed window or recommendations turned off.
 function T.Clear()
- for _,overlay in pairs(overlays) do
-  if overlay.pulse then overlay.pulse:Stop() end
-  overlay:Hide()
- end
+ for _,overlay in pairs(overlays) do hideOverlay(overlay) end
 end
 -- Repaints after the window changes (a point spent or staged, a respec, the tree reloading).
 -- Batched to the next frame where the client can, so a burst of updates is one repaint.
@@ -570,10 +569,7 @@ function T.Paint()
  local state=T.state
  local wanted=T.enabled and state and state.pick and not state.waiting and showsOwnConfig() and state.pick.key or nil
  for button,overlay in pairs(overlays) do
-  if not active[button] then
-   if overlay.pulse then overlay.pulse:Stop() end
-   overlay:Hide()
-  end
+  if not active[button] then hideOverlay(overlay) end
  end
  for button in pairs(active) do
   setOverlay(button,wanted~=nil and buttonItem(button)==wanted)
