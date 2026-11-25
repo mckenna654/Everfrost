@@ -278,39 +278,47 @@ end
 test('Talent window: one overlay per button, reused after reopening, cleaned up on hide and refresh', `
 setup('WARRIOR'); local T=NS.Talents; local plan=T.Plan('WARRIOR',1)
 local buttons,frame=window(); points=1
+local framesBefore=#created
 T.Refresh('WARRIOR',1,10,'Arms'); T.Show()
 local rend=buttons[byName['Improved Rend']]
 local overlay=T.Overlay(rend)
-assert(overlay and overlay.shown and overlay.pulse.playing and overlaysOf(rend)==1)
+assert(overlay and overlay.shown and overlay.pulse.playing)
+-- No frame is ever created inside the talent window. Forever's controller navigation hooks
+-- CreateFrame, and an addon frame made under an open window runs the game's button scan from
+-- addon code, which can leave the controller's navigation bindings switched on. The highlight
+-- is textures and a font string on the button itself.
+assert(#created==framesBefore and overlaysOf(rend)==0)
+assert(type(overlay.Show)=='nil' and #overlay.regions==8)
+for _,made in ipairs(overlay.regions) do assert(made:IsShown()) end
 -- Hard to miss: a solid 3-pixel ice-blue outline (not gold, which the game uses for talents
 -- with points in them), a glow drawn twice around the button, and the word NEXT above it.
--- No mouse, above the button.
-assert(#overlay.textures==5 and overlay.mouse==false and overlay.level==8)
 local ice=T.highlightColor; assert(ice[1]==0.35 and ice[2]==0.90 and ice[3]==1.00)
 for index=1,4 do
- local line=overlay.textures[index]
+ local line=overlay.regions[index]
  assert(line.color[1]==ice[1] and line.color[3]==ice[3] and line.color[4]==1 and (line.height==3 or line.width==3))
+ -- Just outside the button's edge, anchored to the button.
+ for _,point in ipairs(line.points) do assert(point[2]==rend and math.abs(point[4])==3 and (point[5]==0 or math.abs(point[5])==3)) end
 end
-assert(overlay.points[1][4]==-3 and overlay.points[1][5]==3)
-local glow=overlay.glow
-assert(glow.parent==overlay and glow.mouse==false and #glow.textures==2 and overlay.pulse==glow.groups[1] and #overlay.groups==0)
-for _,halo in ipairs(glow.textures) do
+assert(#overlay.halos==2 and #overlay.pulses==2 and overlay.pulse==overlay.pulses[1])
+for index,halo in ipairs(overlay.halos) do
  assert(halo.texture=='Interface\\\\Buttons\\\\UI-ActionButton-Border' and halo.blend=='ADD' and halo.vertex[2]==ice[2] and halo.vertex[4]==1)
+ -- Only the glow pulses, and never below 40%: the outline and label stay solid.
+ local pulse=overlay.pulses[index]
+ assert(pulse==halo.groups[1] and pulse.playing and pulse.animation.from==1 and pulse.animation.to==0.4 and pulse.animation.duration==0.7)
 end
-assert(glow.textures[2].points[1][4]<glow.textures[1].points[1][4])
--- Only the glow pulses, and never below 40%: the outline and label stay solid.
-assert(overlay.pulse.animation.from==1 and overlay.pulse.animation.to==0.4 and overlay.pulse.animation.duration==0.7)
-assert(overlay.label.text=='NEXT' and overlay.label.textColor[3]==1 and overlay.label.points[1][1]=='BOTTOM' and overlay.label.points[1][3]=='TOP')
-assert(overlay.textures[5].color[4]==0.75)
--- Reopening the window many times and refreshing never adds frames.
-local before=#created
+assert(overlay.halos[2].points[1][4]<overlay.halos[1].points[1][4])
+assert(overlay.label.text=='NEXT' and overlay.label.textColor[3]==1 and overlay.label.points[1][1]=='BOTTOM' and overlay.label.points[1][2]==rend and overlay.label.points[1][3]=='TOP')
+assert(overlay.strip.color[4]==0.75)
+-- Reopening the window many times and refreshing never adds frames or regions.
+local before,regionsBefore=#created,#rend.textures
 for _=1,5 do
  for _,fn in ipairs(frame.hooks.OnHide) do fn(frame) end
- assert(not overlay.shown and not overlay.pulse.playing)
+ assert(not overlay.shown and not overlay.pulses[1].playing and not overlay.pulses[2].playing)
+ for _,made in ipairs(overlay.regions) do assert(not made:IsShown()) end
  for _,fn in ipairs(frame.hooks.OnShow) do fn(frame) end
  T.Refresh('WARRIOR',1,10,'Arms'); T.Show()
 end
-assert(#created==before and overlaysOf(rend)==1 and overlay.shown)
+assert(#created==before and #created==framesBefore and #rend.textures==regionsBefore and T.Overlay(rend)==overlay and overlay.shown)
 assert(#frame.hooks.OnShow==1 and #frame.hooks.OnHide==1 and #rend.hooks.OnEnter==1)
 -- Only one button glows at a time, and the old one is cleared when the pick moves.
 take('Improved Rend',1); points=1; T.Refresh('WARRIOR',1,11,'Arms'); T.Show()

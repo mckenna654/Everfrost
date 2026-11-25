@@ -12,7 +12,7 @@ Everfrost is a lightweight, standalone Lua addon for **WoW Forever**. It display
 
 **Built with AI assistance.** Everfrost was first written with OpenAI Codex and is now developed with Claude Code. Automated tests run against a simulated client; each release is also checked in the game against the [in-game checklist](docs/INGAME_CHECKLIST.md), and the release notes say what was and wasn't seen.
 
-[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.10.1](https://github.com/mckenna654/Everfrost/releases/tag/v0.10.1) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
+[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.10.2](https://github.com/mckenna654/Everfrost/releases/tag/v0.10.2) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
 
 CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distribution is enabled. New version tags trigger automatic packaging; file processing and moderation can delay availability.
 
@@ -20,13 +20,13 @@ CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distributio
 
 | Item | Current status |
 | --- | --- |
-| Addon version | **0.10.1** |
+| Addon version | **0.10.2** |
 | Supported levels | **1–60** |
 | Class coverage | Nine classes, 27 talent trees, and nine general levelling profiles |
 | Target interface | `16001` — compatibility with the actual Forever client remains unverified |
 | Runtime | Lua 5.1-compatible syntax; no third-party addon libraries required |
 | Validation | Lua syntax checks, a luacheck globals check and mocked-client regression tests, run automatically on GitHub Actions |
-| In-game verification | Selected gear/glow/settings behavior confirmed by user in earlier versions. On 24 November 2026 the 0.9.0 settings, HUD (out of combat), gear tooltips and talent tooltips were seen rendering in game; HUD behaviour in combat, the enemy estimate and controller layouts are still untested. Nothing new in 0.10.0 (simulator stat weights, the upgrade percentage, the stat weights page) or 0.10.1 (layout placing, bolder roll and talent marks) has been seen in game |
+| In-game verification | Selected gear/glow/settings behavior confirmed by user in earlier versions. On 24 November 2026 the 0.9.0 settings, HUD (out of combat), gear tooltips and talent tooltips were seen rendering in game; HUD behaviour in combat, the enemy estimate and controller layouts are still untested. Nothing new in 0.10.0 (simulator stat weights, the upgrade percentage, the stat weights page) 0.10.1 (layout placing, bolder roll and talent marks) or 0.10.2 (the talent highlight drawn without frames) has been seen in game |
 
 Everfrost is an independent project. It is not an official Icy Veins, Blizzard, or OpenAI addon and is not affiliated with or endorsed by those organizations.
 
@@ -125,7 +125,7 @@ Use `/everfrost gear` to print your current stat order, `/everfrost gear off` to
 
 ## Installation
 
-1. Download **`Everfrost-0.10.1.zip`** from the [v0.10.1 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.10.1).
+1. Download **`Everfrost-0.10.2.zip`** from the [v0.10.2 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.10.2).
 2. Exit WoW Forever.
 3. Extract the archive's `Everfrost` folder into your Forever client's `Interface/AddOns` directory.
 4. Confirm the resulting path is `Interface/AddOns/Everfrost/Everfrost.toc`.
@@ -256,7 +256,7 @@ The packaging command uses Node.js and works on Windows, macOS and Linux:
 npm run build
 ```
 
-It creates `dist/Everfrost-0.10.1.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
+It creates `dist/Everfrost-0.10.2.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
 
 When releasing a new version, update `addon/Everfrost/Everfrost.toc` and `package.json` together, keep lockfile metadata synchronized, run the tests, and verify the archive contents before uploading.
 

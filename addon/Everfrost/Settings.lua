@@ -444,6 +444,8 @@ function NS.CreateSettings(controller)
  talents.summary=label(talents,"",12,0,-64,500)
  label(talents,"Open the talent window with a point to spend: the next talent glows, and every talent's tooltip shows its place in the build.",11,0,-270,500):SetTextColor(0.8,0.8,0.8)
  window.status=label(window,"",11,16,-409,520); window.status:SetTextColor(0.6,0.6,0.6)
- UISpecialFrames=UISpecialFrames or {}; UISpecialFrames[#UISpecialFrames+1]="EverfrostSettingsWindow"
+ -- Escape closes it. Only the entry is added: assigning the global itself from addon code would
+ -- taint the list the game reads whenever it closes windows, the controller's B button included.
+ if type(UISpecialFrames)=="table" then table.insert(UISpecialFrames,"EverfrostSettingsWindow") end
  createMinimap(); registerSettings(); S:Refresh()
 end

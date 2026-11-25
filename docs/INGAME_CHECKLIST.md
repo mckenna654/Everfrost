@@ -111,3 +111,7 @@ nameplates on** (Interface > Names, or V).
     keyboard HUD, somewhere else. Now fight with the controller, then with keyboard and mouse:
     the HUD sits where each was placed and never jumps to the middle of the screen. `/reload`:
     both positions are still there.
+31. **Controller after the talent window.** Playing with a controller, with a talent point to
+    spend: open talents, look at the NEXT highlight, spend the point, close the window with the
+    controller. Movement, the D-pad and the face buttons all still work, and no "Interface action
+    failed because of an AddOn" line appears in chat. Repeat after closing bags and a vendor.

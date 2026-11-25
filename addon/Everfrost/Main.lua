@@ -384,7 +384,9 @@ local function createGuideMenu()
  catcher:SetScript("OnClick",function() menu:Hide() end)
  catcher:SetScript("OnHide",function() menu:Hide() end)
  frame.guideMenu=menu; frame.guideCatcher=catcher
- UISpecialFrames=UISpecialFrames or {}; UISpecialFrames[#UISpecialFrames+1]="EverfrostGuideMenu"
+ -- Escape closes it. Only the entry is added: assigning the global itself from addon code would
+ -- taint the list the game reads whenever it closes windows, the controller's B button included.
+ if type(UISpecialFrames)=="table" then table.insert(UISpecialFrames,"EverfrostGuideMenu") end
  menu:Hide()
 end
 local function createUI()
