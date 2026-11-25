@@ -35,8 +35,10 @@ labels as beta, or is named in the changelog as not seen.
 13. **Levels 31–60.** On a higher-level character, the new abilities show once learned and plate or mail counts as wearable from 40.
 14. **Key bindings and new characters.** Key Bindings > AddOns > Everfrost: show/hide the HUD, step through modes, and AUTO/ST/CLV/AOE each work. A new character starts with the size, opacity and HUD layout last used on another.
 15. **Talent window.** Open talents (N) with a point to spend.
-    - One talent has a thin gold outline that pulses gently. It is the next point of the Icy Veins
-      build you can actually take. The icon and its rank number stay clear, and the game's own
+    - One talent is impossible to miss: a thick ice-blue outline, a pulsing ice-blue glow around
+      it and the word NEXT above it, clearly different from the game's gold border on talents
+      you already have points in. NEXT doesn't hide a neighbouring talent or its rank number.
+      It is the next point of the Icy Veins build you can actually take. The icon and its rank number stay clear, and the game's own
       tooltip and clicks work as normal. `/everfrost talents` names the same talent.
     - Hover it: Everfrost lines say how many points the build puts there, at which levels, and
       "Your next point goes here" with its build pick number. Hover a talent you have finished,
@@ -99,3 +101,13 @@ nameplates on** (Interface > Names, or V).
     estimate. Type a new Stamina value and press Enter: the label turns gold, bag marks change,
     and the Gear & Loot page says "your own weights". Escape abandons an edit. Reset to defaults
     restores it. `/reload`: a saved change is still there.
+29. **Need and Greed.** On a group loot roll for an upgrade, the Need button has a bright green
+    glowing ring (pulsing for a clear upgrade) that you notice at once, and the item's icon in the
+    roll window shows a green border and percentage. For an item you wouldn't wear, Greed has a
+    steady gold ring. The rings sit around the buttons and don't spill over the item's name.
+30. **Placing each layout.** Settings > Controller: the page fits (five rows of controls, nothing
+    overlapping). Press Place controller HUD: the HUD grows to controller size and can be dragged
+    with the mouse even if it is locked; drag it somewhere, press Done. Do the same with Place
+    keyboard HUD, somewhere else. Now fight with the controller, then with keyboard and mouse:
+    the HUD sits where each was placed and never jumps to the middle of the screen. `/reload`:
+    both positions are still there.

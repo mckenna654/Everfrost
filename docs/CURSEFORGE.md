@@ -4,14 +4,23 @@
 
 A lightweight, standalone addon for **WoW Forever 1.60.1**, covering **levels 1–60, nine classes and 27 talent trees**. Built with AI assistance. No third-party addon libraries are required.
 
-## What's new in 0.10.0
+## What's new in 0.10.1
+
+- **The HUD no longer jumps to the middle of the screen when you pick up a controller.** The controller layout starts where you put the keyboard one.
+- **Place each layout separately:** Settings → Controller has **Place keyboard HUD** and **Place controller HUD** buttons. Pick one and drag the HUD with the mouse; it stays on that layout until you press Done or close settings.
+- **Much bolder Need and Greed marks:** a bright green glowing ring on Need for an upgrade (pulsing for a clear one) and a gold ring on Greed for an item you wouldn't wear. The item's icon in the roll window shows the same green border and percentage as an upgrade in your bags.
+- **A talent pick you can't miss:** the next talent in the build has a thick ice-blue outline, a pulsing glow and the word NEXT above it, instead of a thin gold outline that looked like the game's own border.
+
+Nothing new in 0.10.1 has been checked in game yet; please report anything odd.
+
+## Included from 0.10.0
 
 - **Measured stat weights:** gear is now scored with numeric stat weights for your spec instead of a simple "this stat beats that one" order. Seventeen talent trees use the weights published by the [wowsims Forever simulator](https://wowsims.com/forever): Arms, Fury and Protection Warrior, all Rogue and Hunter trees, Retribution, all Priest trees, Balance, Feral (Cat and Bear), Elemental and Enhancement. They are level 60 raid values, so treat them as a guide while levelling; Everfrost adds a small allowance for Stamina and armour. No simulator publishes weights yet for Mage, Warlock, Holy and Protection Paladin, Restoration Druid or Restoration Shaman, so those keep an estimate from the Icy Veins stat order, and say so.
 - **A green percentage replaces the upgrade arrow:** bag, vendor and quest-reward upgrades show how much better they are, such as **+48%**, in the icon's corner. An item for an empty slot says **NEW**.
 - **Your own stat weights:** Settings → Gear & Loot → Stat weights (or `/everfrost weights`) lists the value of every stat for your spec, says where the numbers come from, and lets you change them. Changes save per character and per spec; Reset to defaults undoes them.
 - Off-hand weapons are scored at the off-hand's own value where the simulator gives one. Hit, Crit, Haste, Dodge and Parry are valued per 1%, as items show them.
 
-Nothing new in 0.10.0 has been checked in game yet; please report anything odd.
+The 0.10.0 changes have not been checked in game yet either.
 
 ## Included from 0.9.0
 
@@ -28,7 +37,7 @@ The 0.9.0 settings, HUD (out of combat) and tooltips have been seen in game; the
 
 ## Included from 0.8.0
 
-- **Talent recommendations:** Everfrost now knows the Icy Veins levelling talent build for all 27 trees, point by point from level 10 to 60. In the talent window the talent to take next glows gold, and each talent's tooltip says how many points the build puts there and at which levels. The panel's hover text, the Specialisation settings page and `/everfrost talents` name your next talent. `/everfrost talents off` turns it off. Everfrost never spends points for you.
+- **Talent recommendations:** Everfrost now knows the Icy Veins levelling talent build for all 27 trees, point by point from level 10 to 60. In the talent window the talent to take next is highlighted, and each talent's tooltip says how many points the build puts there and at which levels. The panel's hover text, the Specialisation settings page and `/everfrost talents` name your next talent. `/everfrost talents off` turns it off. Everfrost never spends points for you.
 - **Resizable panel:** drag the corner of the rotation panel to make it bigger or smaller.
 
 ## Included from 0.7.0
@@ -131,9 +140,9 @@ Left-click the minimap logo for settings, right-click to show or hide the HUD, o
 
 The original **0.5.0** introduced gear guidance. Consolidated **0.5.1** includes the guide selector and complete weapon-pair comparisons. **0.6.0** adds the settings window, rarity-colour pulse, clearer tooltips, level-10 guidance and native talent-detection fixes. **0.6.1** adds panel opacity controls and native WoW panel styling. **0.6.2** tidies the specialisation picker into a compact single-line menu. **0.6.3** fixes Subtlety Rogue Attack Power scoring and reduces background bag scans; it reached CurseForge as **0.6.4** after a packaging fix. **0.6.5** tidies status text, grey text and repeated tooltip notes. **0.6.6** counts more armour as a tie-break and adds a green up arrow to bag upgrades. **0.6.7** fixes Need/Greed highlights on Forever's loot-roll buttons, bag tracking and several gear-score cases. **0.6.8** adds starter priorities below level 10, quest reward and merchant marks, plain-word tooltips and empty slot reminders. **0.6.9** clarifies the spec menu note below level 10.
 
-**0.7.0** extends guides and gear hints to level 60, counts armour and Equip effects, and tidies the upgrade highlight. **0.8.0** adds talent recommendations in the talent window and a resizable panel. **0.9.0** replaces the panel with a rotation HUD (automatic single target, cleave and AoE; controller layouts; a defensive row), re-reads all 27 rotations, reworks gear marks and fixes talent highlights. **0.10.0** scores gear with simulator stat weights, shows upgrades as a green percentage and adds a stat weights page.
+**0.7.0** extends guides and gear hints to level 60, counts armour and Equip effects, and tidies the upgrade highlight. **0.8.0** adds talent recommendations in the talent window and a resizable panel. **0.9.0** replaces the panel with a rotation HUD (automatic single target, cleave and AoE; controller layouts; a defensive row), re-reads all 27 rotations, reworks gear marks and fixes talent highlights. **0.10.0** scores gear with simulator stat weights, shows upgrades as a green percentage and adds a stat weights page. **0.10.1** lets you place the keyboard and controller HUD separately and makes the Need/Greed and talent marks much bolder.
 
-Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse, settings layout, armour tie-break and the earlier green arrow. The 0.10.0 stat weights, upgrade percentage and stat weights page, the 0.9.0 HUD in combat, the 0.8.0 talent recommendations and resize corner, the 0.7.0 changes (levels 31–60, armour and Equip-effect scoring, the new highlight) and the 0.6.8 quest and merchant marks have not yet been checked in game. English guidance; some Forever-specific spells depend on English spellbook names.
+Lua 5.1 syntax and simulated-client regression tests pass. User testing confirmed the passive-equipment glow fix, rarity pulse, settings layout, armour tie-break and the earlier green arrow. The 0.10.1 layout placing and bolder marks, the 0.10.0 stat weights, upgrade percentage and stat weights page, the 0.9.0 HUD in combat, the 0.8.0 talent recommendations and resize corner, the 0.7.0 changes (levels 31–60, armour and Equip-effect scoring, the new highlight) and the 0.6.8 quest and merchant marks have not yet been checked in game. English guidance; some Forever-specific spells depend on English spellbook names.
 
 **MIT licensed. Third-party addon-manager distribution is enabled.** Everfrost is independent and is not affiliated with or endorsed by Blizzard, Icy Veins or OpenAI.
 

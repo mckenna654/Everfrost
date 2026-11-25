@@ -34,12 +34,23 @@ function methods:EnableMouse(v) self.mouse=v end
 function methods:HookScript(name,fn) self.hooks[name]=self.hooks[name] or {}; table.insert(self.hooks[name],fn) end
 function methods:CreateTexture() local t=newObject(); self.textures[#self.textures+1]=t; return t end
 function methods:SetColorTexture(r,g,b,a) self.color={r,g,b,a} end
+function methods:SetVertexColor(r,g,b,a) self.vertex={r,g,b,a} end
+function methods:SetTexture(path) self.texture=path end
+function methods:SetBlendMode(mode) self.blend=mode end
+function methods:SetHeight(v) self.height=v end
+function methods:SetWidth(v) self.width=v end
+function methods:SetText(v) self.text=v end
+function methods:SetTextColor(r,g,b) self.textColor={r,g,b} end
+function methods:SetFromAlpha(v) self.from=v end
+function methods:SetToAlpha(v) self.to=v end
+function methods:SetDuration(v) self.duration=v end
+function methods:CreateFontString(_,layer,template) local t=newObject(); t.template=template; self.fontStrings=self.fontStrings or {}; self.fontStrings[#self.fontStrings+1]=t; return t end
 function methods:CreateAnimationGroup()
  local g=newObject(); self.groups[#self.groups+1]=g
  function g:Play() self.playing=true end
  function g:Stop() self.playing=false end
  function g:IsPlaying() return self.playing==true end
- function g:CreateAnimation() return newObject() end
+ function g:CreateAnimation() local a=newObject(); self.animation=a; return a end
  return g
 end
 function newObject() return setmetatable({points={},hooks={},textures={},groups={},shown=true},{__index=function(_,k) if methods[k] then return methods[k] end; if type(k)=='string' and k:match('^%u') then return function() end end end}) end
@@ -270,14 +281,32 @@ local buttons,frame=window(); points=1
 T.Refresh('WARRIOR',1,10,'Arms'); T.Show()
 local rend=buttons[byName['Improved Rend']]
 local overlay=T.Overlay(rend)
-assert(overlay and overlay.shown and overlay.groups[1].playing and overlaysOf(rend)==1)
--- Thin lines around the edge, no mouse, above the button.
-assert(#overlay.textures==4 and overlay.mouse==false and overlay.level==8)
+assert(overlay and overlay.shown and overlay.pulse.playing and overlaysOf(rend)==1)
+-- Hard to miss: a solid 3-pixel ice-blue outline (not gold, which the game uses for talents
+-- with points in them), a glow drawn twice around the button, and the word NEXT above it.
+-- No mouse, above the button.
+assert(#overlay.textures==5 and overlay.mouse==false and overlay.level==8)
+local ice=T.highlightColor; assert(ice[1]==0.35 and ice[2]==0.90 and ice[3]==1.00)
+for index=1,4 do
+ local line=overlay.textures[index]
+ assert(line.color[1]==ice[1] and line.color[3]==ice[3] and line.color[4]==1 and (line.height==3 or line.width==3))
+end
+assert(overlay.points[1][4]==-3 and overlay.points[1][5]==3)
+local glow=overlay.glow
+assert(glow.parent==overlay and glow.mouse==false and #glow.textures==2 and overlay.pulse==glow.groups[1] and #overlay.groups==0)
+for _,halo in ipairs(glow.textures) do
+ assert(halo.texture=='Interface\\\\Buttons\\\\UI-ActionButton-Border' and halo.blend=='ADD' and halo.vertex[2]==ice[2] and halo.vertex[4]==1)
+end
+assert(glow.textures[2].points[1][4]<glow.textures[1].points[1][4])
+-- Only the glow pulses, and never below 40%: the outline and label stay solid.
+assert(overlay.pulse.animation.from==1 and overlay.pulse.animation.to==0.4 and overlay.pulse.animation.duration==0.7)
+assert(overlay.label.text=='NEXT' and overlay.label.textColor[3]==1 and overlay.label.points[1][1]=='BOTTOM' and overlay.label.points[1][3]=='TOP')
+assert(overlay.textures[5].color[4]==0.75)
 -- Reopening the window many times and refreshing never adds frames.
 local before=#created
 for _=1,5 do
  for _,fn in ipairs(frame.hooks.OnHide) do fn(frame) end
- assert(not overlay.shown and not overlay.groups[1].playing)
+ assert(not overlay.shown and not overlay.pulse.playing)
  for _,fn in ipairs(frame.hooks.OnShow) do fn(frame) end
  T.Refresh('WARRIOR',1,10,'Arms'); T.Show()
 end

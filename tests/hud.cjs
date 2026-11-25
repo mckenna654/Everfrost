@@ -347,7 +347,10 @@ fire('INPUT_DEVICE_INTERFACE_TRANSITION',1)
 assert(NS.Input.device=='kbm')                         -- debouncing
 clock=clock+1; flush()
 assert(NS.Input.device=='pad' and f.hud.now.width==60 and f.hud.queue[1].width==44)
-assert(f.point[1]=='CENTER' and f.point[5]==-120 and f.scale==1)
+-- Never moved, so it starts where the keyboard layout was put (the same spot on screen: the
+-- offsets are converted from the keyboard size, 1.3, to the controller size, 1), not in the middle.
+assert(f.scale==1 and f.point[1]==EverfrostDB.point and f.point[3]==EverfrostDB.relativePoint)
+assert(math.abs(f.point[4]-EverfrostDB.x*1.3)<1e-9 and math.abs(f.point[5]-EverfrostDB.y*1.3)<1e-9 and EverfrostDB.hud.pad==nil)
 SlashCmdList.EVERFROST('scale 1.5'); assert(EverfrostDB.hud.padScale==1.5 and EverfrostDB.scale==1.3)
 f.moving=true; f.StopDrag(); assert(EverfrostDB.hud.pad.x==12 and EverfrostDB.x==5)
 fire('INPUT_DEVICE_INTERFACE_TRANSITION',0); clock=clock+1; flush()
@@ -359,7 +362,55 @@ fire('INPUT_DEVICE_INTERFACE_TRANSITION',1); clock=clock+1; flush(); assert(NS.I
 EverfrostDB.hud.autoSwitch=true
 -- Reset puts this layout back to its default spot and size.
 SlashCmdList.EVERFROST('reset'); assert(EverfrostDB.scale==1 and EverfrostDB.point==nil and f.point[5]==-190)
-print('Input layouts in the HUD: debounced automatic switch, separate positions and sizes, forced layouts, auto-switch off, reset: passed')
+-- With neither layout placed, the controller layout uses its own default, clear of the gamepad bars;
+-- once it has a place of its own it keeps it, and resetting it follows the keyboard position again.
+EverfrostDB.hud.pad=nil; SlashCmdList.EVERFROST('input pad'); assert(f.point[1]=='CENTER' and f.point[5]==-120)
+EverfrostDB.hud.pad={point='TOP',relativePoint='TOP',x=3,y=-40}; EverfrostDB.point,EverfrostDB.relativePoint,EverfrostDB.x,EverfrostDB.y='LEFT','LEFT',50,20
+SlashCmdList.EVERFROST('input pad'); assert(f.point[1]=='TOP' and f.point[4]==3 and f.point[5]==-40)
+SlashCmdList.EVERFROST('reset'); assert(EverfrostDB.hud.pad==nil and f.point[1]=='LEFT' and f.point[4]==50 and f.point[5]==20)
+EverfrostDB.point,EverfrostDB.relativePoint,EverfrostDB.x,EverfrostDB.y=nil,nil,nil,nil; SlashCmdList.EVERFROST('input auto')
+assert(f.point[5]==-190)
+-- Placing: Settings > Controller holds the HUD on one layout so the mouse can drag it there.
+-- Without this the mouse switches the HUD to the keyboard layout before the controller one can be moved.
+local settingsWindow=NS.Settings.window; local inputPage=settingsWindow.pages.Input
+NS.Settings.page='Input'; NS.Settings:Open()
+assert(NS.Input.device=='kbm' and NS.Input.placing==nil and inputPage.placeNote.text=='' and not inputPage.placeDone.enabled)
+EverfrostDB.point,EverfrostDB.relativePoint,EverfrostDB.x,EverfrostDB.y='LEFT','LEFT',50,20; EverfrostDB.hud.pad=nil
+EverfrostDB.hud.padScale=1.5; EverfrostDB.locked=true
+inputPage.placePad.scripts.OnClick()
+assert(NS.Input.placing=='pad' and NS.Input.device=='kbm' and f.scale==1.5 and f.hud.now.width==60)
+assert(inputPage.placeNote.text:find('Placing the controller layout',1,true) and inputPage.current.text:find('controller layout (held while you place it)',1,true))
+assert(not inputPage.placePad.enabled and inputPage.placeKbm.enabled and inputPage.placeDone.enabled)
+-- Not placed yet, so it sits where the keyboard layout is (same spot on screen at its own size).
+assert(f.point[1]=='LEFT' and math.abs(f.point[4]-50/1.5)<1e-9 and math.abs(f.point[5]-20/1.5)<1e-9)
+-- A locked HUD can still be dragged while it is being placed, and the drag is saved to the
+-- controller layout although the mouse (keyboard device) is doing it.
+assert(f.grip:IsShown() and f.mouse==true)
+f.StartDrag(); assert(f.moving==true); f.StopDrag()
+assert(EverfrostDB.hud.pad.point=='CENTER' and EverfrostDB.hud.pad.x==12 and EverfrostDB.hud.pad.y==34 and EverfrostDB.x==50 and EverfrostDB.point=='LEFT')
+-- The game reporting keyboard and mouse does not pull the HUD off the layout being placed.
+fire('INPUT_DEVICE_INTERFACE_TRANSITION',0); clock=clock+1; flush(); assert(NS.Input.placing=='pad' and f.scale==1.5 and f.hud.now.width==60)
+-- Placing the keyboard layout, then Done: back to the device in use, each layout where it was put.
+inputPage.placeKbm.scripts.OnClick(); assert(NS.Input.placing=='kbm' and f.scale==1 and f.point[1]=='LEFT' and f.point[4]==50)
+assert(inputPage.placeNote.text:find('Placing the keyboard layout',1,true))
+inputPage.placeDone.scripts.OnClick(); assert(NS.Input.placing==nil and inputPage.placeNote.text=='' and f.point[4]==50)
+-- Locked again once placing ends.
+f.StartDrag(); assert(f.moving~=true and not f.grip:IsShown())
+-- The controller layout now has its own place and keeps it when the controller is picked up.
+fire('INPUT_DEVICE_INTERFACE_TRANSITION',1); clock=clock+1; flush()
+assert(NS.Input.device=='pad' and f.scale==1.5 and f.point[1]=='CENTER' and f.point[4]==12 and f.point[5]==34)
+fire('INPUT_DEVICE_INTERFACE_TRANSITION',0); clock=clock+1; flush(); assert(f.point[1]=='LEFT' and f.point[4]==50)
+-- Closing settings ends placing too.
+inputPage.placePad.scripts.OnClick(); assert(NS.Input.placing=='pad')
+settingsWindow:Hide(); assert(NS.Input.placing==nil and f.scale==1 and f.point[4]==50)
+-- One position for both: there is no separate controller layout to place.
+NS.Settings:Open(); SlashCmdList.EVERFROST('input custom'); NS.Settings:Refresh()
+assert(not inputPage.placePad.enabled and inputPage.placeNote.text:find('One position',1,true))
+inputPage.placePad.scripts.OnClick(); assert(NS.Input.placing==nil)
+SlashCmdList.EVERFROST('input auto'); settingsWindow:Hide()
+EverfrostDB.locked=nil; EverfrostDB.hud.pad=nil; EverfrostDB.hud.padScale=1
+EverfrostDB.point,EverfrostDB.relativePoint,EverfrostDB.x,EverfrostDB.y=nil,nil,nil,nil; SlashCmdList.EVERFROST('input auto')
+print('Input layouts in the HUD: debounced automatic switch, separate positions and sizes, forced layouts, auto-switch off, reset, placing each layout from settings: passed')
 
 -- Settings: the new pages drive the same saved values.
 local window=NS.Settings.window

@@ -21,16 +21,19 @@ end
 -- edge, never past it and never over the whole icon; a clear upgrade's border is a little
 -- thicker and brighter than a minor one's. Both show how much better the item is as a small
 -- green percentage in the icon's bottom-right corner, where a stack count would sit.
--- Round loot-roll buttons get a faint ring instead, since a square around a round button reads
--- as a stray box; only a clear upgrade's Need ring breathes, slowly. Sidegrades get no mark.
+-- Round loot-roll buttons get a bright glowing ring instead, since a square around a round
+-- button reads as a stray box: green on Need for an upgrade (pulsing for a clear one), gold on
+-- Greed for an item you would not wear. The ring is drawn twice, the second a little larger, so
+-- it reads as a thick glow rather than a hairline. Sidegrades get no mark.
 NS.gearMarkStyles={
  clear={color={0.30,0.90,0.35},alpha=0.95,line=2,gain={0.10,1.00,0.10}},
  minor={color={0.45,0.80,0.50},alpha=0.70,line=1,gain={0.55,0.90,0.55}},
  sell={color={1,0.82,0},alpha=0.75,line=1},
- -- Roll buttons.
- needClear={color={0.30,0.90,0.35},alpha=0.70,ring=true,pulse={from=0.55,to=1,seconds=1.6}},
- needMinor={color={0.45,0.80,0.50},alpha=0.45,ring=true},
- greedHint={color={0.60,0.60,0.60},alpha=0.30,ring=true},
+ -- Roll buttons. halo is the outer ring's strength; the user found the first, fainter set
+ -- (70%, 45% and a 30% grey) too easy to miss.
+ needClear={color={0.20,1.00,0.30},alpha=1,ring=true,halo=0.8,pulse={from=0.5,to=1,seconds=0.7}},
+ needMinor={color={0.20,1.00,0.30},alpha=0.85,ring=true,halo=0.5},
+ greedHint={color={1.00,0.82,0.10},alpha=0.85,ring=true,halo=0.5},
 }
 local STYLE=NS.gearMarkStyles
 local RING_TEXTURE="Interface\\Buttons\\UI-ActionButton-Border"
@@ -40,7 +43,9 @@ local function hide(button)
  if not m then return end
  for _,edge in ipairs(m.edges) do edge:Hide() end
  if m.ring then m.ring:Hide() end
+ if m.halo then m.halo:Hide() end
  if m.pulse then m.pulse:Stop() end
+ if m.haloPulse then m.haloPulse:Stop() end
  if m.gain then m.gain:Hide() end
  if m.label then m.label:Hide() end
  m.style=nil
@@ -77,22 +82,30 @@ end
 local function ring(button,m,style)
  if not m.ring then
   if InCombatLockdown() then return nil end
-  local texture=button:CreateTexture(nil,"OVERLAY",nil,6)
-  texture:SetTexture(RING_TEXTURE); texture:SetBlendMode("ADD")
-  -- The border art's ring sits about a third of the way in, so the overhang follows the button.
   local width=first(button.GetWidth,button)
-  local pad=public(width,"number") and width>0 and math.floor(width*0.32+0.5) or 12
-  texture:SetPoint("TOPLEFT",button,"TOPLEFT",-pad,pad)
-  texture:SetPoint("BOTTOMRIGHT",button,"BOTTOMRIGHT",pad,-pad)
-  m.ring=texture
+  width=public(width,"number") and width>0 and width or 37
+  -- The border art's ring sits about a third of the way in, so the overhang follows the button.
+  -- The halo is the same art a little larger: together they make one thick glow.
+  local function layer(share)
+   local texture=button:CreateTexture(nil,"OVERLAY",nil,6)
+   texture:SetTexture(RING_TEXTURE); texture:SetBlendMode("ADD")
+   local pad=math.floor(width*share+0.5)
+   texture:SetPoint("TOPLEFT",button,"TOPLEFT",-pad,pad)
+   texture:SetPoint("BOTTOMRIGHT",button,"BOTTOMRIGHT",pad,-pad)
+   return texture
+  end
+  m.ring=layer(0.32); m.halo=layer(0.46)
  end
  if style.pulse and not m.pulse and m.ring.CreateAnimationGroup and not InCombatLockdown() then
-  local group=m.ring:CreateAnimationGroup()
-  local alpha=group:CreateAnimation("Alpha")
-  alpha:SetFromAlpha(style.pulse.from); alpha:SetToAlpha(style.pulse.to); alpha:SetDuration(style.pulse.seconds)
-  if alpha.SetSmoothing then alpha:SetSmoothing("IN_OUT") end
-  group:SetLooping("BOUNCE")
-  m.pulse=group
+  local function breathe(texture)
+   local group=texture:CreateAnimationGroup()
+   local alpha=group:CreateAnimation("Alpha")
+   alpha:SetFromAlpha(style.pulse.from); alpha:SetToAlpha(style.pulse.to); alpha:SetDuration(style.pulse.seconds)
+   if alpha.SetSmoothing then alpha:SetSmoothing("IN_OUT") end
+   group:SetLooping("BOUNCE")
+   return group
+  end
+  m.pulse=breathe(m.ring); m.haloPulse=breathe(m.halo)
  end
  return m.ring
 end
@@ -110,13 +123,16 @@ local function mark(button,style,target,label,labelColor,gain)
   local texture=ring(button,m,style)
   if texture then
    texture:SetVertexColor(c[1],c[2],c[3],style.alpha); texture:Show()
-   if m.pulse then
-    if style.pulse then if not m.pulse:IsPlaying() then m.pulse:Play() end else m.pulse:Stop() end
+   if style.halo then m.halo:SetVertexColor(c[1],c[2],c[3],style.alpha*style.halo); m.halo:Show() else m.halo:Hide() end
+   for _,group in ipairs({m.pulse,m.haloPulse}) do
+    if style.pulse then if not group:IsPlaying() then group:Play() end else group:Stop() end
    end
   end
  else
   if m.ring then m.ring:Hide() end
+  if m.halo then m.halo:Hide() end
   if m.pulse then m.pulse:Stop() end
+  if m.haloPulse then m.haloPulse:Stop() end
   layoutEdges(m,style.line or 1)
   for _,edge in ipairs(m.edges) do edge:SetVertexColor(c[1],c[2],c[3],style.alpha); edge:Show() end
  end
@@ -294,14 +310,21 @@ local function rollButton(frame,name)
  local holder=frame.LootButtonContainer
  return frame[name] or (holder and holder[name]) or (frame.GetName and _G[(frame:GetName() or "")..name])
 end
+-- The roll frame's item icon, where the client has one: it gets the same border and green
+-- percentage as an upgrade in the bags, so the roll says how much better the item is.
+local function rollIcon(frame)
+ local icon=frame.IconFrame
+ return type(icon)=="table" and icon or nil
+end
 function G.PaintRoll(frame)
  if not frame then return end
  local need=rollButton(frame,"NeedButton")
  local greed=rollButton(frame,"GreedButton")
+ local icon=rollIcon(frame)
  local id=frame.rollID
- if not G.enabled or G.pending or not public(id,"number") then hide(need); hide(greed); return end
+ if not G.enabled or G.pending or not public(id,"number") then hide(need); hide(greed); hide(icon); return end
  local data=G.rolls[id]
- if not data then hide(need); hide(greed); return end
+ if not data then hide(need); hide(greed); hide(icon); return end
  local result=data.result
  local function available(button)
   if not button then return false end
@@ -316,6 +339,7 @@ function G.PaintRoll(frame)
  local greedStyle=result.kind=="greed" and (result.verdict=="downgrade" or result.verdict=="unusable") and
   data.canGreed and available(greed) and STYLE.greedHint or nil
  mark(need,needStyle); mark(greed,greedStyle)
+ mark(icon,itemStyle(result),nil,nil,nil,G.GainText(result))
 end
 function G.TrackRoll(frame)
  if not frame then return end
@@ -325,7 +349,7 @@ function G.TrackRoll(frame)
   if frame.HookScript then
    frame:HookScript("OnHide",function(self)
     -- Hiding the whole UI also lands here, so only the loot events end a roll.
-    hide(rollButton(self,"NeedButton")); hide(rollButton(self,"GreedButton"))
+    hide(rollButton(self,"NeedButton")); hide(rollButton(self,"GreedButton")); hide(rollIcon(self))
    end)
    frame:HookScript("OnShow",function(self) G.PaintRoll(self); G.Schedule() end)
   end

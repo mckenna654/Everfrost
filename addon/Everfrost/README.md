@@ -1,4 +1,4 @@
-# Everfrost — v0.10.0
+# Everfrost — v0.10.1
 
 A rotation HUD and gear and talent hints for WoW Forever, covering levels 1–60, all nine classes and 27 talent trees. Everfrost detects your class, level, talent tree and learned spell ranks. It never casts, rolls, equips or clicks anything for you.
 
@@ -25,15 +25,15 @@ The mode text on the HUD reads `AUTO · ST ~1`. In AUTO, Everfrost estimates eng
 
 ### Controller and keyboard
 
-The HUD follows the game's input style (gamepad mode, Steam Deck, ConsolePort). With a controller it moves above the gamepad bars with bigger icons; each layout keeps its own position and size. Unlock the HUD and move or resize it while using each layout.
+The HUD follows the game's input style (gamepad mode, Steam Deck, ConsolePort). With a controller it gets bigger icons; each layout keeps its own position and size. Set them under Settings → Controller → Position each layout; until placed, the controller layout sits where the keyboard one is. Unlock the HUD and move or resize it while using each layout.
 
 ## Gear, loot and quests
 
-One scoring engine marks bag upgrades (a thin green border and how much better the item is as a green percentage; fainter for minor upgrades), loot rolls (a faint ring on Need or Greed) and quest rewards (**Recommended** on the best one). Tanks and Feral can choose a scoring focus such as Balanced Tank, Survivability, Threat or Solo Levelling on the Gear & Loot page. A two-hander is compared with your weapon and shield together. Procs and Use effects are named, never given a made-up score. Below level 10, gear uses a simple starter priority for your class. Full method: https://github.com/mckenna654/Everfrost/blob/main/docs/GEAR.md
+One scoring engine marks bag upgrades (a thin green border and how much better the item is as a green percentage; fainter for minor upgrades), loot rolls (a bright glowing ring: green on Need for an upgrade, gold on Greed for something you wouldn't wear) and quest rewards (**Recommended** on the best one). Tanks and Feral can choose a scoring focus such as Balanced Tank, Survivability, Threat or Solo Levelling on the Gear & Loot page. A two-hander is compared with your weapon and shield together. Procs and Use effects are named, never given a made-up score. Below level 10, gear uses a simple starter priority for your class. Full method: https://github.com/mckenna654/Everfrost/blob/main/docs/GEAR.md
 
 ## Talents
 
-From level 10, the next talent in the Icy Veins levelling build that you can actually take has a thin gold outline in the talent window. Its tooltip shows its place in the build, and a locked build pick says why (a prerequisite, points needed in the tree, or your level).
+From level 10, the next talent in the Icy Veins levelling build that you can actually take has a thick ice-blue outline, a pulsing glow and the word NEXT above it in the talent window. Its tooltip shows its place in the build, and a locked build pick says why (a prerequisite, points needed in the tree, or your level).
 
 ## Commands
 

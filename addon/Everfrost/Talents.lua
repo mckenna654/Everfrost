@@ -357,7 +357,6 @@ local overlays=setmetatable({},{__mode="k"})
 local legacyNames=setmetatable({},{__mode="k"})
 local active={}
 local windows={}
-local GOLD={1,0.82,0}
 local function buttonItem(button)
  local state=T.state
  if not state or not state.snap then return nil end
@@ -415,32 +414,62 @@ local function tooltip(button)
  end
  GameTooltip:Show()
 end
--- A thin gold outline just outside the button's edge, pulsing gently. It sits outside the icon
--- and the rank counter, takes no mouse input, and so leaves the native tooltip and clicks alone.
+-- The next pick is hard to miss: a thick ice-blue outline just outside the button's edge, a
+-- pulsing glow around it and the word NEXT above it. Ice blue, because Forever's own talent
+-- window puts a gold border on every talent with points in it, and the first, thin gold outline
+-- disappeared among those. The outline and label stay solid; only the glow pulses. Everything
+-- sits outside the icon and the rank counter and takes no mouse input, so the native tooltip
+-- and clicks are left alone.
+local ICE={0.35,0.90,1.00}
+T.highlightColor=ICE
+local GLOW_TEXTURE="Interface\\Buttons\\UI-ActionButton-Border"
 local function overlayFor(button)
  local overlay=overlays[button]
  if overlay or type(CreateFrame)~="function" then return overlay end
  overlay=CreateFrame("Frame",nil,button)
  if overlay.EnableMouse then overlay:EnableMouse(false) end
- overlay:SetPoint("TOPLEFT",button,"TOPLEFT",-2,2)
- overlay:SetPoint("BOTTOMRIGHT",button,"BOTTOMRIGHT",2,-2)
+ overlay:SetPoint("TOPLEFT",button,"TOPLEFT",-3,3)
+ overlay:SetPoint("BOTTOMRIGHT",button,"BOTTOMRIGHT",3,-3)
  local level=number(first(button.GetFrameLevel,button))
  if level and overlay.SetFrameLevel then overlay:SetFrameLevel(level+3) end
  local function edge(from,to,horizontal)
   local line=overlay:CreateTexture(nil,"OVERLAY")
-  line:SetColorTexture(GOLD[1],GOLD[2],GOLD[3],0.95)
+  line:SetColorTexture(ICE[1],ICE[2],ICE[3],1)
   line:SetPoint(from,overlay,from); line:SetPoint(to,overlay,to)
-  if horizontal then line:SetHeight(2) else line:SetWidth(2) end
+  if horizontal then line:SetHeight(3) else line:SetWidth(3) end
  end
  edge("TOPLEFT","TOPRIGHT",true); edge("BOTTOMLEFT","BOTTOMRIGHT",true)
  edge("TOPLEFT","BOTTOMLEFT",false); edge("TOPRIGHT","BOTTOMRIGHT",false)
- if overlay.CreateAnimationGroup then
-  local pulse=overlay:CreateAnimationGroup()
+ -- The glow: the action-button border art drawn twice around the button, on its own frame so
+ -- it can pulse while the outline stays solid.
+ local glow=CreateFrame("Frame",nil,overlay)
+ if glow.EnableMouse then glow:EnableMouse(false) end
+ glow:SetPoint("TOPLEFT",overlay,"TOPLEFT"); glow:SetPoint("BOTTOMRIGHT",overlay,"BOTTOMRIGHT")
+ local width=number(first(button.GetWidth,button))
+ width=width and width>0 and width or 37
+ for _,share in ipairs({0.32,0.48}) do
+  local halo=glow:CreateTexture(nil,"ARTWORK")
+  halo:SetTexture(GLOW_TEXTURE); halo:SetBlendMode("ADD"); halo:SetVertexColor(ICE[1],ICE[2],ICE[3],1)
+  local pad=math.floor(width*share+0.5)
+  halo:SetPoint("TOPLEFT",button,"TOPLEFT",-pad,pad); halo:SetPoint("BOTTOMRIGHT",button,"BOTTOMRIGHT",pad,-pad)
+ end
+ overlay.glow=glow
+ if glow.CreateAnimationGroup then
+  local pulse=glow:CreateAnimationGroup()
   pulse:SetLooping("BOUNCE")
   local fade=pulse:CreateAnimation("Alpha")
-  fade:SetFromAlpha(1); fade:SetToAlpha(0.35); fade:SetDuration(0.9)
+  fade:SetFromAlpha(1); fade:SetToAlpha(0.4); fade:SetDuration(0.7)
   if fade.SetSmoothing then fade:SetSmoothing("IN_OUT") end
   overlay.pulse=pulse
+ end
+ -- NEXT, on a dark strip so it reads over the tree's artwork.
+ local label=overlay.CreateFontString and overlay:CreateFontString(nil,"OVERLAY","GameFontNormalSmall")
+ if label then
+  label:SetPoint("BOTTOM",overlay,"TOP",0,2); label:SetText("NEXT"); label:SetTextColor(ICE[1],ICE[2],ICE[3])
+  local strip=overlay:CreateTexture(nil,"BACKGROUND")
+  strip:SetColorTexture(0,0,0,0.75)
+  strip:SetPoint("TOPLEFT",label,"TOPLEFT",-3,2); strip:SetPoint("BOTTOMRIGHT",label,"BOTTOMRIGHT",3,-2)
+  overlay.label=label
  end
  overlay:Hide()
  overlays[button]=overlay

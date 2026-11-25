@@ -12,7 +12,7 @@ Everfrost is a lightweight, standalone Lua addon for **WoW Forever**. It display
 
 **Built with AI assistance.** Everfrost was first written with OpenAI Codex and is now developed with Claude Code. Automated tests run against a simulated client; each release is also checked in the game against the [in-game checklist](docs/INGAME_CHECKLIST.md), and the release notes say what was and wasn't seen.
 
-[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.10.0](https://github.com/mckenna654/Everfrost/releases/tag/v0.10.0) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
+[CurseForge](https://www.curseforge.com/wow/addons/everfrost) · [Download v0.10.1](https://github.com/mckenna654/Everfrost/releases/tag/v0.10.1) · [Report an issue](https://github.com/mckenna654/Everfrost/issues) · [Guide sources](addon/Everfrost/SOURCES.md)
 
 CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distribution is enabled. New version tags trigger automatic packaging; file processing and moderation can delay availability.
 
@@ -20,13 +20,13 @@ CurseForge targets WoW Forever **1.60.1**. Third-party addon-manager distributio
 
 | Item | Current status |
 | --- | --- |
-| Addon version | **0.10.0** |
+| Addon version | **0.10.1** |
 | Supported levels | **1–60** |
 | Class coverage | Nine classes, 27 talent trees, and nine general levelling profiles |
 | Target interface | `16001` — compatibility with the actual Forever client remains unverified |
 | Runtime | Lua 5.1-compatible syntax; no third-party addon libraries required |
 | Validation | Lua syntax checks, a luacheck globals check and mocked-client regression tests, run automatically on GitHub Actions |
-| In-game verification | Selected gear/glow/settings behavior confirmed by user in earlier versions. On 24 November 2026 the 0.9.0 settings, HUD (out of combat), gear tooltips and talent tooltips were seen rendering in game; HUD behaviour in combat, the enemy estimate and controller layouts are still untested. Nothing new in 0.10.0 (simulator stat weights, the upgrade percentage, the stat weights page) has been seen in game |
+| In-game verification | Selected gear/glow/settings behavior confirmed by user in earlier versions. On 24 November 2026 the 0.9.0 settings, HUD (out of combat), gear tooltips and talent tooltips were seen rendering in game; HUD behaviour in combat, the enemy estimate and controller layouts are still untested. Nothing new in 0.10.0 (simulator stat weights, the upgrade percentage, the stat weights page) or 0.10.1 (layout placing, bolder roll and talent marks) has been seen in game |
 
 Everfrost is an independent project. It is not an official Icy Veins, Blizzard, or OpenAI addon and is not affiliated with or endorsed by those organizations.
 
@@ -81,7 +81,7 @@ Open any screenshot for its full-size view. Player names have been cropped out.
 - Provides native-style settings (Rotation, HUD, Controller, Detection, Gear & Loot, Talents), plus a draggable minimap button.
 - Saves HUD positions, mode and specialisation per character; size, opacity, lock, minimap button, gear highlights and HUD layout choices carry over to new characters.
 - Has key bindings (Key Bindings > AddOns > Everfrost) to show or hide the HUD and to change rotation mode, and a corner you can drag to resize it.
-- Shows the Icy Veins levelling talent build in the talent window: a glow on the talent to take next, and each talent's planned points and levels in its tooltip.
+- Shows the Icy Veins levelling talent build in the talent window: a thick ice-blue outline, a pulsing glow and the word NEXT on the talent to take next (ice blue because the game's own border for talents with points in them is gold), and each talent's planned points and levels in its tooltip.
 - Counts armour for every spec, and plate or mail from level 40.
 - Refreshes spellbook and talent metadata outside combat, deferring changes until combat ends when necessary.
 
@@ -105,7 +105,7 @@ The count is an estimate and is shown as one (`~3`). Forever hides the combat lo
 
 ### Controller and keyboard layouts
 
-Everfrost follows the game's own input style: switch to a controller (native gamepad mode, Steam Deck, or ConsolePort, which uses the same game setting) and the HUD moves to its controller position with larger icons (60 px NOW, 44 px upcoming, against 48 and 36 px with keyboard and mouse), without a reload. A connected controller alone doesn't count; the game has to say it's in use, and a 0.75-second pause stops flicker when you touch the mouse. Each layout keeps its own position and size: move or resize the HUD while using that layout. Settings can force one layout or use a single position for both.
+Everfrost follows the game's own input style: switch to a controller (native gamepad mode, Steam Deck, or ConsolePort, which uses the same game setting) and the HUD moves to its controller position with larger icons (60 px NOW, 44 px upcoming, against 48 and 36 px with keyboard and mouse), without a reload. A connected controller alone doesn't count; the game has to say it's in use, and a 0.75-second pause stops flicker when you touch the mouse. Each layout keeps its own position and size. **Settings → Controller → Position each layout** (0.10.1) has **Place keyboard HUD** and **Place controller HUD** buttons: pick one and drag the HUD with the mouse, and it stays on that layout until you press Done or close settings. (Dragging needs the mouse, which would otherwise switch the HUD to the keyboard layout before you could move the controller one.) A controller layout you haven't placed sits where the keyboard one is; up to 0.10.0 it started in the middle of the screen. Settings can force one layout or use a single position for both.
 
 Everfrost never casts, rolls, equips or clicks anything for you.
 
@@ -115,7 +115,7 @@ Gear hints are enabled by default. Every mark comes from one scoring engine, whi
 
 **Complete weapon comparisons:** when replacing an equipped two-hander, Everfrost searches your carried bags for a usable one-hand/off-hand pair. Each candidate is compared together with its best valid partner; an estimated pair upgrade can highlight both bag items. The tooltip names the partner and makes clear that you must equip both. Loot candidates use partners you already carry. Shields, held off-hands and learned Dual Wield are supported; an incomplete or unresolved pair stays unscored.
 
-On standard dungeon or raid group-loot windows, a faint ring marks **Need** for an upgrade (pulsing slowly only for a clear one) and a faint grey ring marks **Greed** for a downgrade or an item you can't use. Sidegrades get no mark. Disabled roll options are respected. You still choose and click the roll, following your group's loot rules. Missing or restricted data produces no highlight.
+On standard dungeon or raid group-loot windows, a bright green glowing ring marks **Need** for an upgrade (pulsing for a clear one, steady for a minor one) and a gold ring marks **Greed** for a downgrade or an item you can't use. Where the roll window has an item icon, it shows the same green border and percentage as an upgrade in your bags. Sidegrades get no mark. Disabled roll options are respected. You still choose and click the roll, following your group's loot rules. Missing or restricted data produces no highlight.
 
 **Where the weights come from.** Seventeen talent trees use the stat weights the open-source [wowsims Forever simulator](https://wowsims.com/forever) publishes with its presets (read on November 25, 2026): Arms, Fury and Protection Warrior, all three Rogue and Hunter trees, Retribution, all three Priest trees, Balance and Feral (Cat and Bear), Elemental and Enhancement. They are level 60 values measured against a raid boss, so treat them as a guide while levelling; Everfrost adds a small allowance for Stamina and armour, which a damage simulator values at nothing. No simulator publishes weights yet for Mage, Warlock, Holy and Protection Paladin, Restoration Druid or Restoration Shaman, so those keep an Everfrost estimate built from the stat order of their Icy Veins Forever guide (checked **November 11, 2026**). **Settings → Gear & Loot → Stat weights** (or `/everfrost weights`) shows every number, says where it came from, and lets you type your own; the changes save per character and per spec, and **Reset to defaults** undoes them. Scores are estimates, not guaranteed best-in-slot results. Weapon speed, dual-wield damage penalties, procs, set bonuses, on-use effects, sockets, enchants, professions and hit caps can change the real result. See [gear scoring and all 27 priorities](docs/GEAR.md) for the formula and limits.
 
@@ -125,7 +125,7 @@ Use `/everfrost gear` to print your current stat order, `/everfrost gear off` to
 
 ## Installation
 
-1. Download **`Everfrost-0.10.0.zip`** from the [v0.10.0 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.10.0).
+1. Download **`Everfrost-0.10.1.zip`** from the [v0.10.1 release](https://github.com/mckenna654/Everfrost/releases/tag/v0.10.1).
 2. Exit WoW Forever.
 3. Extract the archive's `Everfrost` folder into your Forever client's `Interface/AddOns` directory.
 4. Confirm the resulting path is `Interface/AddOns/Everfrost/Everfrost.toc`.
@@ -160,7 +160,7 @@ Type **`/everfrost`**, `/everfrost settings`, or `/everfrost config` to open the
 
 - **Rotation:** choose Automatic, Levelling or a specialisation; the rotation mode; whether NOW comes from Blizzard's rotation assistant; how many upcoming icons; the defensive row (tanks only, on or off); any role view.
 - **HUD:** layout, show/hide, combat only, preview, lock, animation, minimap button, size and opacity, reset position and size, and reset all HUD settings.
-- **Controller:** automatic, controller, keyboard or one shared position; automatic switching on or off; reset this layout's position.
+- **Controller:** automatic, controller, keyboard or one shared position; automatic switching on or off; place each layout's position; reset this layout's position.
 - **Detection:** automatic detection and the enemy estimate on or off; the cleave and AoE thresholds for the current spec; how long before stepping down and how long an unseen enemy is remembered.
 - **Gear & Loot:** upgrade highlights, the current stat order, where its weights come from, the scoring focus, and a fresh bag scan outside combat. **Stat weights** opens a page listing the value of each stat for your spec, which you can change or reset.
 - **Talents:** talent highlights on or off, the next talent and the next few by level.
@@ -256,7 +256,7 @@ The packaging command uses Node.js and works on Windows, macOS and Linux:
 npm run build
 ```
 
-It creates `dist/Everfrost-0.10.0.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
+It creates `dist/Everfrost-0.10.1.zip`, containing only the installable `Everfrost` folder. It does not install the addon or publish a release.
 
 When releasing a new version, update `addon/Everfrost/Everfrost.toc` and `package.json` together, keep lockfile metadata synchronized, run the tests, and verify the archive contents before uploading.
 
