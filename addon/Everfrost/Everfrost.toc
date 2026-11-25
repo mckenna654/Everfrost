@@ -3,7 +3,7 @@
 ## IconTexture: Interface\AddOns\Everfrost\Media\Icon.tga
 ## Notes: Rotation HUD with automatic single-target, cleave and AoE modes, plus gear and talent hints for levels 1-60.
 ## Author: mckenna654
-## Version: 0.9.0
+## Version: 0.10.0
 ## SavedVariables: EverfrostAccountDB
 ## SavedVariablesPerCharacter: EverfrostDB
 Profiles.lua
