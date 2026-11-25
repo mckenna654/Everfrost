@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- **The HUD no longer jumps to the middle of the screen when you pick up a controller.** The controller layout has its own position, and until now it started in the middle whatever you had done with the HUD. It now starts where you put the keyboard layout, and only moves somewhere else once you move it with the controller in use.
+- **The HUD no longer jumps to the middle of the screen when you pick up a controller.** The controller layout has its own position, and until now it started in the middle whatever you had done with the HUD. It now starts where you put the keyboard layout.
+- **Place each layout separately.** Settings → Controller has **Place keyboard HUD** and **Place controller HUD** buttons. Pick one and drag the HUD with the mouse: it stays on that layout, unlocked, until you press Done or close settings. Before this, touching the mouse switched the HUD to the keyboard layout, so the controller layout could not be moved on its own.
 - **Much bolder Need and Greed marks.** The Need button gets a bright green glowing ring for an upgrade (pulsing for a clear one), and Greed a gold ring for an item you wouldn't wear. The item's icon in the roll window shows the same green border and percentage as an upgrade in your bags.
 - **A talent pick you can't miss.** The next talent in the build now has a thick ice-blue outline, a pulsing glow and the word NEXT above it. The old thin gold outline looked like the game's own gold border on talents you already have points in.
 

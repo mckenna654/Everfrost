@@ -154,7 +154,15 @@ function S:Refresh()
  choiceRow(input.modes,hud.input)
  input.autoSwitch:SetChecked(hud.autoSwitch~=false)
  input.current:SetText("Using now: "..(state.layout=="pad" and "controller layout" or "keyboard and mouse layout")..
-  (hud.input=="auto" and " (switches by itself)" or hud.input=="custom" and " (one position for both)" or " (fixed)"))
+  (state.placing and " (held while you place it)" or hud.input=="auto" and " (switches by itself)" or hud.input=="custom" and " (one position for both)" or " (fixed)"))
+ -- One position for both means there is only the keyboard position to place.
+ local shared=hud.input=="custom"
+ input.placeKbm:SetEnabled(state.placing~="kbm"); input.placePad:SetEnabled(not shared and state.placing~="pad")
+ input.placeDone:SetEnabled(state.placing~=nil)
+ input.placeNote:SetText(state.placing=="pad" and "Placing the controller layout: drag the HUD to where you want it with a controller."
+  or state.placing=="kbm" and "Placing the keyboard layout: drag the HUD to where you want it with keyboard and mouse."
+  or shared and "One position is used for both, so there is only the keyboard layout to place."
+  or "")
  -- Detection
  local detect=window.pages.Detect
  detect.auto:SetChecked(hud.autoDetect~=false); detect.count:SetChecked(hud.enemyCount~=false)
@@ -250,7 +258,11 @@ function NS.CreateSettings(controller)
  window:Hide()
  -- The HUD shows while settings are open, so changes can be seen as they're made.
  window:SetScript("OnShow",function() if NS.UpdateHUD then NS.UpdateHUD() end end)
- window:SetScript("OnHide",function() if NS.UpdateHUD then NS.UpdateHUD() end end)
+ -- Closing the window ends any layout placing, so the HUD goes back to following the device in use.
+ window:SetScript("OnHide",function()
+  if api and api.PlaceLayout then api.PlaceLayout(nil) end
+  if NS.UpdateHUD then NS.UpdateHUD() end
+ end)
  local drag=CreateFrame("Frame",nil,window)
  drag:SetPoint("TOPLEFT",8,-1); drag:SetPoint("TOPRIGHT",-30,-1); drag:SetHeight(24)
  drag:EnableMouse(true); drag:RegisterForDrag("LeftButton")
@@ -324,12 +336,20 @@ function NS.CreateSettings(controller)
  end)
  -- Controller: which layout, and whether it follows the device in use.
  local input=window.pages.Input
- label(input,"Each layout keeps its own position and size. The controller layout starts where you put the keyboard one; move the HUD while using a controller to give it a place of its own.",11,0,-24,500):SetTextColor(0.8,0.8,0.8)
- input.modes=choices(input,-58,{{"auto","Automatic"},{"pad","Controller"},{"kbm","Keyboard"},{"custom","One position"}},function(mode) command("input "..mode) end,112)
- input.autoSwitch=check(input,"Switch as soon as the game changes input style",-92,function(on) hudSet("autoSwitch",on) end)
- input.current=label(input,"",12,0,-124,500)
- label(input,"Automatic follows the game's own input style (gamepad mode and ConsolePort use it). A connected controller on its own isn't treated as in use. Controller layout: larger icons (60 px NOW, 44 px upcoming), placed above the gamepad action bars. Keyboard layout: 48 px and 36 px, below your character.",11,0,-150,500):SetTextColor(0.8,0.8,0.8)
- input.reset=button(input,"Reset this layout's position",0,-230,220,function() command("reset") end)
+ label(input,"The controller and keyboard layouts each keep their own position and size.",11,0,-24,500):SetTextColor(0.8,0.8,0.8)
+ input.modes=choices(input,-44,{{"auto","Automatic"},{"pad","Controller"},{"kbm","Keyboard"},{"custom","One position"}},function(mode) command("input "..mode) end,112)
+ input.autoSwitch=check(input,"Switch as soon as the game changes input style",-72,function(on) hudSet("autoSwitch",on) end)
+ input.current=label(input,"",12,0,-102,500)
+ label(input,"Automatic follows the game's own input style (gamepad mode and ConsolePort use it). A connected controller on its own isn't treated as in use. Controller layout: larger icons (60 px NOW, 44 px upcoming). Keyboard layout: 48 px and 36 px.",11,0,-122,500):SetTextColor(0.8,0.8,0.8)
+ -- Placing: dragging needs the mouse, and the mouse switches the HUD to the keyboard layout,
+ -- so the controller layout is held in place here while it is dragged.
+ label(input,"Position each layout",12,0,-172):SetTextColor(1,0.82,0)
+ label(input,"Pick a layout, then drag the HUD with the mouse. It stays on that layout, unlocked, until you press Done or close this window. A controller layout you haven't placed sits where the keyboard one is.",11,0,-190,500):SetTextColor(0.8,0.8,0.8)
+ input.placeKbm=button(input,"Place keyboard HUD",0,-234,160,function() api.PlaceLayout("kbm"); S:Refresh() end)
+ input.placePad=button(input,"Place controller HUD",166,-234,160,function() api.PlaceLayout("pad"); S:Refresh() end)
+ input.placeDone=button(input,"Done",332,-234,80,function() api.PlaceLayout(nil); S:Refresh() end)
+ input.placeNote=label(input,"",11,0,-262,500); input.placeNote:SetTextColor(1,0.82,0)
+ input.reset=button(input,"Reset this layout's position",0,-284,220,function() command("reset") end)
  -- Detection: when automatic mode switches.
  local detect=window.pages.Detect
  detect.auto=check(detect,"Detect single target, cleave and AoE automatically",-24,function(on) hudSet("autoDetect",on) end)

@@ -105,3 +105,9 @@ nameplates on** (Interface > Names, or V).
     glowing ring (pulsing for a clear upgrade) that you notice at once, and the item's icon in the
     roll window shows a green border and percentage. For an item you wouldn't wear, Greed has a
     steady gold ring. The rings sit around the buttons and don't spill over the item's name.
+30. **Placing each layout.** Settings > Controller: the page fits (five rows of controls, nothing
+    overlapping). Press Place controller HUD: the HUD grows to controller size and can be dragged
+    with the mouse even if it is locked; drag it somewhere, press Done. Do the same with Place
+    keyboard HUD, somewhere else. Now fight with the controller, then with keyboard and mouse:
+    the HUD sits where each was placed and never jumps to the middle of the screen. `/reload`:
+    both positions are still there.

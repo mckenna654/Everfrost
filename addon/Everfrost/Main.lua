@@ -137,7 +137,12 @@ local function panelShown() return not db.hidden and (not pastGuide() or db.show
 -------------------------------------------------------------------------------
 -- Layout: controller or keyboard and mouse, each with its own position and size.
 -------------------------------------------------------------------------------
-local function layoutKey() return NS.Input.Layout(db.hud.input) end
+-- While a layout is being placed from Settings > Controller (NS.Input.placing), the HUD stays
+-- on that layout whatever device is in use: dragging needs the mouse, and the mouse would
+-- otherwise switch the HUD back to the keyboard layout before the controller one could be moved.
+local function layoutKey() return NS.Input.placing or NS.Input.Layout(db.hud.input) end
+-- The HUD can be dragged and resized when unlocked, and always while a layout is being placed.
+local function movable() return not db.locked or NS.Input.placing~=nil end
 local function layoutScale() return layoutKey()=="pad" and db.hud.padScale or db.scale end
 local defaultPositions={
  -- Below the character, above the standard action bars.
@@ -265,7 +270,7 @@ local function updateHUD()
  frame.caption:SetText(caption)
  -- Locked, the HUD lets clicks through to the world; in combat its icons do too (tooltips
  -- work out of combat). The mode button stays clickable.
- frame:EnableMouse(not db.locked)
+ frame:EnableMouse(movable())
  NS.HUD.SetInteractive(frame,not inCombat)
  if not visible then return end
  local width,height=NS.HUD.Apply(frame,{layout=db.hud.layout,device=layoutKey(),upcoming=db.hud.upcoming,
@@ -285,9 +290,9 @@ render=function()
   if not db.hidden then say("You've outlevelled Everfrost's level 1-"..NS.maxLevel.." guides, so the HUD is now hidden. Type /everfrost show to bring it back.") end
  end
  rememberLook()
- frame.grip:SetShown(not db.locked)
- frame.backdropShown=not db.locked
- frame.bg:SetShown(not db.locked)
+ frame.grip:SetShown(movable())
+ frame.backdropShown=movable()
+ frame.bg:SetShown(movable())
  local role=effectiveRole()
  if NS.Gear then
   -- The scoring focus chosen for this spec (Balanced Tank, Survivability, ...), if any.
@@ -391,7 +396,7 @@ local function createUI()
  frame.bg=frame:CreateTexture(nil,"BACKGROUND"); frame.bg:SetPoint("TOPLEFT",-6,6); frame.bg:SetPoint("BOTTOMRIGHT",6,-6)
  frame.bg:SetColorTexture(0.05,0.08,0.12,0.45)
  frame:SetAlpha(db.opacity)
- frame.StartDrag=function() if not db.locked and not InCombatLockdown() then frame.moving=true; frame:StartMoving() end end
+ frame.StartDrag=function() if movable() and not InCombatLockdown() then frame.moving=true; frame:StartMoving() end end
  frame.StopDrag=function()
   if frame.moving~=true then return end
   frame.moving=false; frame:StopMovingOrSizing()
@@ -458,7 +463,7 @@ local function createUI()
   if NS.Settings then NS.Settings:Refresh() end
  end
  grip:SetScript("OnMouseDown",function(self)
-  if db.locked or InCombatLockdown() then return end
+  if not movable() or InCombatLockdown() then return end
   local scale,left,top=frame:GetScale(),frame:GetLeft(),frame:GetTop()
   local x,y=cursor()
   if not (x and type(left)=="number" and type(top)=="number") then return end
@@ -709,6 +714,13 @@ events:SetScript("OnEvent",function(_,event,value)
    NS.CreateSettings({DB=function() return db end,Command=function(message) SlashCmdList.EVERFROST(message) end,
     SelectGuide=selectGuide,ToggleRole=toggleRole,CloseGuide=function() frame.guideMenu:Hide() end,
     SetMode=setMode,Redraw=function() applyPosition(); render() end,
+    -- Hold the HUD on one layout ("kbm" or "pad") so it can be dragged into place; nil lets go.
+    PlaceLayout=function(key)
+     if key~="kbm" and key~="pad" then key=nil end
+     if key and db.hud.input=="custom" then key=nil end
+     if NS.Input.placing==key then return end
+     NS.Input.placing=key; applyPosition(); render()
+    end,
     ResetHUD=function() db.hud=sanitiseHUD(nil,false); NS.Modes.Reset(); applyPosition(); render() end,
     State=function()
      local p=NS.profiles[class] and NS.profiles[class][spec]
@@ -725,7 +737,7 @@ events:SetScript("OnEvent",function(_,event,value)
       emptySlots=emptySlotText(),panelShown=panelShown(),
       levelingHint=NS.gearLevelNote.." Levelling uses your dominant talent tree for gear.",
       talents=NS.Talents and NS.Talents.Summary() or nil,
-      layout=layoutKey(),layoutScale=layoutScale(),activeMode=activeMode,specKey=specKey(),
+      layout=layoutKey(),layoutScale=layoutScale(),placing=NS.Input.placing,activeMode=activeMode,specKey=specKey(),
       cleave=cleave,aoe=aoe,tank=NS.IsTank(class,spec,role) and true or false,
       assistReason=NS.Rotation.AssistReason()}
     end})

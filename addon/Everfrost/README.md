@@ -25,7 +25,7 @@ The mode text on the HUD reads `AUTO · ST ~1`. In AUTO, Everfrost estimates eng
 
 ### Controller and keyboard
 
-The HUD follows the game's input style (gamepad mode, Steam Deck, ConsolePort). With a controller it gets bigger icons; each layout keeps its own position and size, and the controller layout starts where you put the keyboard one. Unlock the HUD and move or resize it while using each layout.
+The HUD follows the game's input style (gamepad mode, Steam Deck, ConsolePort). With a controller it gets bigger icons; each layout keeps its own position and size. Set them under Settings → Controller → Position each layout; until placed, the controller layout sits where the keyboard one is. Unlock the HUD and move or resize it while using each layout.
 
 ## Gear, loot and quests
 

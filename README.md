@@ -105,7 +105,7 @@ The count is an estimate and is shown as one (`~3`). Forever hides the combat lo
 
 ### Controller and keyboard layouts
 
-Everfrost follows the game's own input style: switch to a controller (native gamepad mode, Steam Deck, or ConsolePort, which uses the same game setting) and the HUD moves to its controller position with larger icons (60 px NOW, 44 px upcoming, against 48 and 36 px with keyboard and mouse), without a reload. A connected controller alone doesn't count; the game has to say it's in use, and a 0.75-second pause stops flicker when you touch the mouse. Each layout keeps its own position and size: move or resize the HUD while using that layout. Until you move it with a controller in use, the controller layout sits where you put the keyboard one (from the next version; in 0.10.0 it started in the middle of the screen). Settings can force one layout or use a single position for both.
+Everfrost follows the game's own input style: switch to a controller (native gamepad mode, Steam Deck, or ConsolePort, which uses the same game setting) and the HUD moves to its controller position with larger icons (60 px NOW, 44 px upcoming, against 48 and 36 px with keyboard and mouse), without a reload. A connected controller alone doesn't count; the game has to say it's in use, and a 0.75-second pause stops flicker when you touch the mouse. Each layout keeps its own position and size. From the next version, **Settings → Controller → Position each layout** has **Place keyboard HUD** and **Place controller HUD** buttons: pick one and drag the HUD with the mouse, and it stays on that layout until you press Done or close settings. (Dragging needs the mouse, which would otherwise switch the HUD to the keyboard layout before you could move the controller one.) A controller layout you haven't placed sits where the keyboard one is; in 0.10.0 it started in the middle of the screen. Settings can force one layout or use a single position for both.
 
 Everfrost never casts, rolls, equips or clicks anything for you.
 
@@ -160,7 +160,7 @@ Type **`/everfrost`**, `/everfrost settings`, or `/everfrost config` to open the
 
 - **Rotation:** choose Automatic, Levelling or a specialisation; the rotation mode; whether NOW comes from Blizzard's rotation assistant; how many upcoming icons; the defensive row (tanks only, on or off); any role view.
 - **HUD:** layout, show/hide, combat only, preview, lock, animation, minimap button, size and opacity, reset position and size, and reset all HUD settings.
-- **Controller:** automatic, controller, keyboard or one shared position; automatic switching on or off; reset this layout's position.
+- **Controller:** automatic, controller, keyboard or one shared position; automatic switching on or off; place each layout's position; reset this layout's position.
 - **Detection:** automatic detection and the enemy estimate on or off; the cleave and AoE thresholds for the current spec; how long before stepping down and how long an unseen enemy is remembered.
 - **Gear & Loot:** upgrade highlights, the current stat order, where its weights come from, the scoring focus, and a fresh bag scan outside combat. **Stat weights** opens a page listing the value of each stat for your spec, which you can change or reset.
 - **Talents:** talent highlights on or off, the next talent and the next few by level.
