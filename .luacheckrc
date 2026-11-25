@@ -24,7 +24,7 @@ read_globals = {
   "C_ClassTalents", "C_Container", "C_Item", "C_SpecializationInfo",
   "C_Spell", "C_SpellBook", "C_TooltipInfo", "C_Traits",
   "ContainerFrameCombinedBags", "ContainerFrameItemButtonMixin",
-  "CreateFrame", "Enum", "GameTooltip",
+  "CreateFrame", "Enum", "GameTooltip", "NumberFontNormalSmall",
   "GetActiveTalentGroup", "GetContainerItemLink", "GetContainerNumSlots",
   "GetCursorPosition", "GetInventoryItemLink",
   "GetLootRollItemInfo", "GetLootRollItemLink",

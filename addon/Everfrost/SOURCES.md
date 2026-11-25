@@ -63,6 +63,21 @@ All nine classes and 27 trees were checked. Changes include corrections to exist
 
 Stat/gearing sections of all 27 linked guides were rechecked for the new gear feature. Their orders are stored separately in GearProfiles.lua; rotation rules retain their October 15 review. Gear scores use Everfrost ordinal estimates, not numeric weights published by Icy Veins. Missing item data remains unscored; loot choices are manual. Full stat table, scoring formula and limitations: https://github.com/mckenna654/Everfrost/blob/main/docs/GEAR.md
 
+## November 25 gear stat weights
+
+Seventeen talent trees now score gear with numeric stat weights from the **wowsims WoW Forever simulator** instead of rank weights: https://wowsims.com/forever, source https://github.com/wowsims/forever (MIT licence; the project asks for a visible link back, which the README, the settings page and tooltips carry). Values were copied on November 25, 2026 from commit `d45287b64a140010800d631852ccc1f1a1bf91e2` (November 24):
+
+- `ui/specs/warrior/dps/presets.ts` (Pre-BiS Arms, Pre-BiS Fury), `ui/specs/warrior/protection/presets.ts` (Pre-BiS Balanced, Pre-BiS Offensive)
+- `ui/specs/rogue/dps/presets.ts` (Assassination, Combat Sinister, Subtlety)
+- `ui/specs/hunter/dps/presets.ts` (Turret, Melee)
+- `ui/specs/paladin/retribution/presets.ts` (Unsealed Wrath)
+- `ui/specs/priest/healer/presets.ts` (Disc Single-Target, Holy Single-Target), `ui/specs/priest/dps/presets.ts` (Shadow)
+- `ui/specs/druid/balance/presets.ts` (Pre-BiS), `ui/specs/druid/feral_ep.ts` (Cat, Bear)
+- `ui/specs/shaman/elemental/presets.ts` (Default), `ui/specs/shaman/enhancement/presets.ts` (Pre-BiS)
+- `ui/sim/constants/mechanics.ts` for rating per 1% (Hit 10, Crit 14, Haste 10, Expertise 10, Dodge 12, Parry 15, Block 5)
+
+At that commit the simulator had no weights for Mage, Warlock, Holy Paladin, Protection Paladin, Restoration Druid or Restoration Shaman (`epWeights: new Stats()` in their `spec.ts`). Wowhead's Forever stat pages for those specs were read in the browser the same day: they give a stat order without numbers, and the Fire Mage page describes its order as speculative. Those ten trees keep the Icy Veins order as an Everfrost estimate. Other Forever tools that publish weights (Pawn's defaults, MythicSim, several small addons) were found but not used: wowsims is the only one with open, per-preset measurements and a licence that allows copying. Check the simulator again before each release; presets change as it is corrected. The full table and how the numbers are converted are in docs/GEAR.md.
+
 ## November 11 level 60 update
 
 WoW Forever launched on November 4, 2026 with a level cap of 60, and all 27 guides were updated for it (pages dated November 4 to 9). The Rotation, Stats and Milestones sections of every levelling guide (`https://www.icy-veins.com/wow-forever/<spec>-<class>-leveling`) and the priority table of every stat page were read on November 11.

@@ -187,6 +187,10 @@ function methods:Hide() if self.shown~=false then self.shown=false; if self.scri
 function methods:IsShown() return self.shown~=false end
 function methods:SetShown(v) if v then self:Show() else self:Hide() end end
 function methods:SetText(v) self.text=v end
+function methods:GetText() return self.text end
+function methods:SetTextColor(r,g,b) self.textColor={r,g,b} end
+function methods:ClearFocus() self.focus=nil end
+function methods:HasFocus() return self.focus==true end
 function methods:SetWidth(v) self.width=v end
 function methods:SetHeight(v) self.height=v end
 function methods:SetSize(w,h) self.width=w; self.height=h end
@@ -386,7 +390,9 @@ assert(window.pages.Gear.priorityTitle.text=='Stat priority: Enhancement (talent
 assert(window.pages.Gear.priority.text:find('Weapon DPS',1,true)==1)
 talentPoints={4,2,0}; fire('PLAYER_TALENT_UPDATE')
 assert(lastGearContext[2]==1 and window.pages.Gear.priorityTitle.text=='Stat priority: Elemental (talents)')
-assert(window.pages.Gear.priority.text:find('Spell power',1,true)==1)
+-- Elemental's order comes from the simulator's weights: Haste and Hit lead per point, then Spell power.
+assert(window.pages.Gear.priority.text==NS.GearPriorityText(NS.gearProfiles.SHAMAN[1]) and window.pages.Gear.priority.text:find('Haste > Hit > Spell power',1,true)==1)
+assert(window.pages.Gear.source.text=='Weights: wowsims Forever simulator (Default).')
 cmd('spec 3'); assert(lastGearContext[2]==3 and EverfrostDB.spec==3)
 cmd('spec leveling'); assert(lastGearContext[2]==1 and EverfrostDB.spec==0)
 cmd('spec auto'); cmd('spec levelling'); assert(lastGearContext[2]==1 and EverfrostDB.spec==0)
@@ -703,6 +709,73 @@ SlashCmdList.EVERFROST('spec 2'); assert(lastGearContext[2]==2)
 SlashCmdList.EVERFROST('status')
 C_Traits=nil; C_SpecializationInfo=nil
 print('Forever traits integration: native totals drive settings, automatic/Leveling gear, active-group changes, delayed data and combat refresh: passed')
+`);
+
+run(`
+-- Stat weights: a page of Gear & Loot that lists the active profile's numbers and saves changes.
+C_Traits=nil; C_SpecializationInfo=nil
+GetTalentTabInfo=function(i) return 'Tree',nil,({0,9,0})[i] end
+currentClass='WARRIOR'; currentLevel=30; EverfrostDB={spec=2,gearWeights='corrupt'}; fire('PLAYER_LOGIN')
+local settings=NS.Settings; local window=settings.window; local gear=window.pages.Gear; local page=window.pages.Weights
+assert(type(EverfrostDB.gearWeights)=='table' and next(EverfrostDB.gearWeights)==nil and NS.gearCustom==EverfrostDB.gearWeights)
+assert(gear.source.text=='Weights: wowsims Forever simulator (Pre-BiS Fury).' and gear.weights.enabled)
+gear.weights.scripts.OnClick(); assert(settings.page=='Weights' and page:IsShown() and not gear:IsShown())
+-- The page has no tab of its own: Gear & Loot stays the selected tab.
+assert(window.tabs.Gear.isSelected and not window.tabs.Guide.isSelected and window.tabs.Weights==nil)
+assert(page.title.text=='Stat weights: Fury' and #page.rows==21 and #page.rows==#NS.gearWeightRows)
+assert(page.source.text:find('wowsims Forever simulator, Pre-BiS Fury preset (wowsims.com/forever)',1,true))
+assert(page.changed.text=='Using the defaults.' and not page.reset.enabled)
+local function row(key) for _,r in ipairs(page.rows) do if r.key==key then return r end end end
+-- Values are shown per point as items show them: 1% Hit is ten of the simulator's rating points.
+assert(row('strength').box.text=='2.2' and row('dps').box.text=='12.59' and row('dps2').box.text=='2.66')
+assert(row('hit').box.text=='16.9' and row('crit').box.text=='31.64' and row('healing').box.text=='0')
+assert(row('stamina').box.text=='0.25' and row('armor').box.text=='0.02')
+local function type_(key,text)
+ local r=row(key); r.box.focus=true; r.box:SetText(text)
+ r.box.scripts.OnEnterPressed(r.box); assert(not r.box:HasFocus()); r.box.scripts.OnEditFocusLost(r.box)
+ return r
+end
+local r=type_('strength','3')
+assert(EverfrostDB.gearWeights['WARRIOR:2'].strength==3 and r.box.text=='3' and r.label.textColor[2]==0.82)
+assert(page.changed.text:find('^1 changed') and page.reset.enabled and gearScheduled)
+assert(NS.gearProfiles.WARRIOR[2].weights.strength==2.2)
+-- A decimal comma is accepted; anything that is not a number from 0 to 999 puts the old value back.
+r=type_('agility','2,5'); assert(EverfrostDB.gearWeights['WARRIOR:2'].agility==2.5 and r.box.text=='2.5')
+for _,bad in ipairs({'abc','','-1','1000','1e999'}) do
+ r=type_('agility',bad); assert(EverfrostDB.gearWeights['WARRIOR:2'].agility==2.5 and r.box.text=='2.5')
+end
+-- Escape abandons the edit.
+r=row('stamina'); r.box.focus=true; r.box:SetText('9'); r.box.scripts.OnEscapePressed(r.box); r.box.scripts.OnEditFocusLost(r.box)
+assert(r.box.text=='0.25' and EverfrostDB.gearWeights['WARRIOR:2'].stamina==nil)
+-- A number still being typed is not overwritten by a refresh.
+r.box.focus=true; r.box:SetText('7'); settings:Refresh(); assert(r.box.text=='7'); r.box.focus=nil; settings:Refresh(); assert(r.box.text=='0.25')
+-- Typing the default back removes that change; the Gear page says whose weights are in use.
+type_('agility','1.7'); assert(EverfrostDB.gearWeights['WARRIOR:2'].agility==nil and page.changed.text:find('^1 changed'))
+page.back.scripts.OnClick(); assert(settings.page=='Gear' and gear:IsShown() and not page:IsShown())
+assert(gear.source.text=='Weights: your own weights.' and gear.priority.text:find('Strength',1,true))
+-- Saved weights come back at the next login, and only for the profile they were set on.
+fire('PLAYER_LOGIN'); assert(EverfrostDB.gearWeights['WARRIOR:2'].strength==3 and NS.Settings.window.pages.Gear.source.text=='Weights: your own weights.')
+window=NS.Settings.window; page=window.pages.Weights; gear=window.pages.Gear
+SlashCmdList.EVERFROST('spec 1'); assert(gear.source.text=='Weights: wowsims Forever simulator (Pre-BiS Arms).')
+SlashCmdList.EVERFROST('spec 2')
+-- The slash command opens the page; reset brings the defaults back.
+window:Hide(); SlashCmdList.EVERFROST('weights'); assert(window:IsShown() and NS.Settings.page=='Weights' and page:IsShown())
+assert(page.reset.enabled); page.reset.scripts.OnClick()
+assert(EverfrostDB.gearWeights['WARRIOR:2']==nil and page.changed.text=='Using the defaults.' and not page.reset.enabled)
+type_('hit','40'); assert(EverfrostDB.gearWeights['WARRIOR:2'].hit==40)
+SlashCmdList.EVERFROST('weights reset'); assert(EverfrostDB.gearWeights['WARRIOR:2']==nil)
+-- An estimate says so, and a starter profile can be edited too.
+SlashCmdList.EVERFROST('spec 3'); NS.Gear.focus='survival'; NS.Settings:Refresh()
+assert(page.title.text=='Stat weights: Protection / Tank Survivability' and page.source.text:find('Everfrost estimate from the Icy Veins stat order',1,true))
+NS.Gear.focus=nil
+currentLevel=5; EverfrostDB={}; fire('PLAYER_LOGIN'); window=NS.Settings.window; page=window.pages.Weights
+assert(page.title.text=='Stat weights: WARRIOR starter (levels 1-9)' and page.source.text:find('starter estimate',1,true))
+-- With no tree to score, the page explains instead of listing numbers.
+currentLevel=30; talentPoints={0,0,0}; GetTalentTabInfo=function(i) return 'Tree',nil,0 end; EverfrostDB={spec=0}; fire('PLAYER_LOGIN')
+window=NS.Settings.window; page=window.pages.Weights
+assert(page.title.text=='Stat weights' and page.source.text:find('No talent points',1,true) and not page.rows[1].box:IsShown() and not window.pages.Gear.weights.enabled)
+NS.Settings.page='Guide'; NS.Settings:Refresh(); window:Hide()
+print('Stat weights page: simulator defaults per point, edits saved per profile, invalid input, escape, reset, slash command, estimates and starters: passed')
 `);
 
 run(`

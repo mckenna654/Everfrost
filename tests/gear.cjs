@@ -84,7 +84,8 @@ assert(G.Compare(item(7,'INVTYPE_SHIELD',{ITEM_MOD_STAMINA_SHORT=20},4,6),equipm
 assert(G.Compare(item(7,'INVTYPE_RELIC',{},4,7),equipment,ctx('DRUID',1)).kind=='greed')
 -- The same two items reverse order under the current Arcane/Fire priorities.
 -- Arcane ranks Intellect above Crit; Fire ranks Crit above Intellect.
-equipment=empty(); equipment[5]=item(10,nil,{ITEM_MOD_CRIT_RATING_SHORT=10})
+-- Crit is written on items as a percentage: 1% here.
+equipment=empty(); equipment[5]=item(10,nil,{ITEM_MOD_CRIT_RATING_SHORT=1})
 local power=item(11,nil,{ITEM_MOD_INTELLECT_SHORT=10})
 assert(G.Compare(power,equipment,ctx('MAGE',1)).kind=='need')
 assert(G.Compare(power,equipment,ctx('MAGE',2)).kind=='greed')
@@ -158,8 +159,10 @@ sword.stats.spell=25
 assert(G.Compare(sword,equipment,caster,{mainEntry,plain},mainEntry).kind=='need')
 sword.stats.spell=12
 -- Dual wield needs the learned skill and two physical copies, not one cached item twice.
-local warrior=ctx('WARRIOR',1)
-local weapon=item(57,'INVTYPE_WEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=12},2,7)
+-- Fury's simulated weights value an off-hand's DPS at about a fifth of a main hand's, so the
+-- pair needs 18 DPS each to beat a 20 DPS two-hander.
+local warrior=ctx('WARRIOR',2)
+local weapon=item(57,'INVTYPE_WEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=18},2,7)
 local a={item=weapon}; local b={item=weapon}
 equipment[16]=item(58,'INVTYPE_2HWEAPON',{ITEM_MOD_DAMAGE_PER_SECOND_SHORT=20},2,8)
 assert(G.Compare(weapon,equipment,warrior,{a,b},a).kind=='unknown')
@@ -203,12 +206,15 @@ assert(G.Score(apItem,subtlety,subProfile)==10*subProfile.weights.attack)
 assert(G.Score(agilityItem,subtlety,subProfile)>G.Score(apItem,subtlety,subProfile))
 local subEquip=empty(); subEquip[5]=apItem
 assert(G.Compare(agilityItem,subEquip,subtlety).kind=='need')
--- Melee specs without an Attack Power rank use half their higher Strength or Agility weight.
+-- Simulated profiles carry Attack Power's own measured weight.
 local combatProfile=NS.gearProfiles.ROGUE[2]
-assert(G.Score(apItem,ctx('ROGUE',2),combatProfile)==10*combatProfile.weights.agility/2)
--- The warrior guides rank Attack Power beside Strength, so it scores at that rank in full.
-assert(G.Score(apItem,ctx('WARRIOR',1),NS.gearProfiles.WARRIOR[1])==10*NS.gearProfiles.WARRIOR[1].weights.attack)
-assert(NS.gearProfiles.WARRIOR[1].weights.attack==NS.gearProfiles.WARRIOR[1].weights.strength)
+assert(combatProfile.sim=='Combat Sinister' and G.Score(apItem,ctx('ROGUE',2),combatProfile)==10*combatProfile.weights.attack)
+local arms=NS.gearProfiles.WARRIOR[1]
+assert(G.Score(apItem,ctx('WARRIOR',1),arms)==10*arms.weights.attack and arms.weights.strength==2.2 and arms.weights.attack==1)
+-- An estimate that leaves Attack Power out uses half its higher Strength or Agility weight.
+local starterRogue=NS.gearStarter.ROGUE
+assert(not starterRogue.sim and starterRogue.weights.attack==starterRogue.weights.agility/2)
+assert(G.Score(apItem,ctx('ROGUE',0),starterRogue)==10*starterRogue.weights.agility/2)
 local apRing=item(45,'INVTYPE_FINGER',{ITEM_MOD_ATTACK_POWER_SHORT=20}); local agiRing=item(46,'INVTYPE_FINGER',{ITEM_MOD_AGILITY_SHORT=6})
 local ringEquip=empty(); ringEquip[11]=agiRing; ringEquip[12]=agiRing
 assert(G.Compare(apRing,ringEquip,ctx('ROGUE',2)).kind=='need')
@@ -267,14 +273,18 @@ assert(G.Compare(item(86,nil,{RESISTANCE0_NAME=20,ITEM_MOD_INTELLECT_SHORT=3}),r
 -- Armour counts for every spec: a clearly better-armoured piece wins over a small stat loss,
 -- says so, and reports how much of the score it was.
 worn[6]=belt(92,2,18,{ITEM_MOD_STRENGTH_SHORT=4})
-local sturdy=G.Compare(belt(93,3,150,{ITEM_MOD_STRENGTH_SHORT=3}),worn,ret)
-assert(sturdy.kind=='need' and not sturdy.armorOnly and sturdy.reason:find('outweighs',1,true) and sturdy.reason:find('+132',1,true))
-local strengthWeight=NS.gearProfiles.PALADIN[3].weights.strength
-assert(math.abs(sturdy.armorCredit-13.2)<0.001 and math.abs(sturdy.delta-(13.2-strengthWeight))<0.001)
+local sturdy=G.Compare(belt(93,3,318,{ITEM_MOD_STRENGTH_SHORT=3}),worn,ret)
+assert(sturdy.kind=='need' and not sturdy.armorOnly and sturdy.reason:find('outweighs',1,true) and sturdy.reason:find('+300',1,true))
+-- Retribution's weights are simulated, so its armour is Everfrost's levelling allowance: extra
+-- credit at the profile's own rate, never one of its ranked stats.
+local retProfile=NS.gearProfiles.PALADIN[3]
+local strengthWeight,armorRate=retProfile.weights.strength,retProfile.weights.armor
+assert(retProfile.sim and not retProfile.armorRanked and armorRate==0.02)
+assert(math.abs(sturdy.armorCredit-300*armorRate)<0.001 and math.abs(sturdy.delta-(300*armorRate-strengthWeight))<0.001)
 -- A little more armour does not buy back a real stat loss.
 assert(G.Compare(belt(94,3,50,{ITEM_MOD_STRENGTH_SHORT=3}),worn,ret).kind=='greed')
--- Less armour counts against a piece too: one more Strength no longer beats 100 lost armour.
-worn[6]=belt(95,3,150,{ITEM_MOD_STRENGTH_SHORT=3})
+-- Less armour counts against a piece too: one more Strength does not beat 200 lost armour.
+worn[6]=belt(95,3,250,{ITEM_MOD_STRENGTH_SHORT=3})
 assert(G.Compare(belt(96,2,50,{ITEM_MOD_STRENGTH_SHORT=4}),worn,ret).kind=='greed')
 -- At 40 Warriors and Paladins can wear plate, and Hunters and Shamans mail; not a level sooner.
 local function at(class,spec,level) local c=ctx(class,spec); c.level=level; return c end
@@ -417,8 +427,9 @@ assert(G.equipment[1]==false and G.equipment[5].link=='item:100')
 assert(G.ReadItem('item:101').usable==true and itemUseCalls==0)
 assert(G.bags[0][1].result.kind=='need' and G.bags[0][1].result.verdict=='clear')
 local bag=widget(); G.TrackBag(bag,0,1)
--- A clear upgrade: a thin green border flush inside the slot, plus the native arrow. No glow,
--- no ring, no pulse and nothing drawn past the button's edge.
+-- A clear upgrade: a thin green border flush inside the slot, plus its gain as a green
+-- percentage where a stack count would sit. No arrow, no glow, no ring, no pulse and nothing
+-- drawn past the button's edge.
 assert(styleOf(bag)==STYLE.clear and edgesShown(bag) and #bag.EverfrostMark.edges==4)
 assert(not bag.EverfrostMark.ring and not bag.EverfrostMark.pulse)
 for index,edge in ipairs(bag.EverfrostMark.edges) do
@@ -426,8 +437,14 @@ for index,edge in ipairs(bag.EverfrostMark.edges) do
  for _,point in ipairs(edge.points) do assert(point[4]==0 and math.abs(point[5])<=2) end
  assert(edge.vertex[1]==0.30 and edge.vertex[2]==0.90 and edge.vertex[4]==0.95)
 end
-local arrow=bag.EverfrostMark.arrow
-assert(arrow and arrow:IsShown() and arrow.atlas=='bags-greenarrow' and arrow.atlasSize==true)
+local gain=bag.EverfrostMark.gain
+assert(not bag.EverfrostMark.arrow and gain and gain:IsShown() and gain.text=='+200%' and gain.template=='GameFontNormalSmall')
+assert(gain.textColor[1]==0.10 and gain.textColor[2]==1.00 and gain.textColor[3]==0.10)
+assert(gain.points[1][1]=='BOTTOMRIGHT' and gain.points[1][3]=='BOTTOMRIGHT')
+-- The label is the result's gain: a percentage, capped past 200%, or NEW with nothing to beat.
+assert(G.GainText(G.bags[0][1].result)=='+200%' and G.GainText({kind='need',pct=0.484,previous=40})=='+48%')
+assert(G.GainText({kind='need',pct=2.6,previous=40})=='>200%' and G.GainText({kind='need',pct=9,previous=0,empty=true})=='NEW')
+assert(G.GainText({kind='need',pct=5,previous=0.2})=='NEW' and G.GainText({kind='greed',pct=-0.2,previous=40})==nil and G.GainText(nil)==nil)
 -- Repainting reuses every widget: no duplicates on reuse, and rarity no longer recolours it.
 local made=created; G.PaintBag(bag); G.PaintBag(bag); assert(created==made)
 itemInfo['item:101'][3]=4; G.items={}; G.Refresh(); assert(styleOf(bag)==STYLE.clear and created==made)
@@ -444,21 +461,23 @@ local lineCount=#GameTooltip.lines; bag.hooks.OnEnter(bag); assert(#GameTooltip.
 GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
 assert(#GameTooltip.lines==lineCount and tooltipRegistrations==1)
 -- A downgrade gets no mark in bags.
-G.TrackBag(bag,0,2); assert(not shown(bag) and edgesHidden(bag) and not arrow:IsShown())
+G.TrackBag(bag,0,2); assert(not shown(bag) and edgesHidden(bag) and not gain:IsShown())
 GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
 assert(lines():find('Everfrost: Downgrade',1,true) and lines():find('No useful stats',1,true))
-G.TrackBag(bag,0,1); assert(styleOf(bag)==STYLE.clear and arrow:IsShown() and bag.EverfrostMark.arrow==arrow)
-G.TrackBag(bag,-1,1); assert(not shown(bag) and not arrow:IsShown())
+G.TrackBag(bag,0,1); assert(styleOf(bag)==STYLE.clear and gain:IsShown() and bag.EverfrostMark.gain==gain)
+G.TrackBag(bag,-1,1); assert(not shown(bag) and not gain:IsShown())
 G.TrackBag(bag,0,1); bag.hooks.OnEnter(bag); assert(#GameTooltip.lines>0)
--- A minor upgrade (5% here) is a thinner, softer border with no arrow.
+-- A minor upgrade (3.9% here: Stamina is a small levelling allowance on Arms' simulated
+-- weights) is a thinner, softer border with its own, softer percentage.
 local function legs(link,stats) fixture(link,stats); itemInfo[link][9]='INVTYPE_LEGS' end
-legs('item:106',{ITEM_MOD_STRENGTH_SHORT=20}); inventory[7]='item:106'
-legs('item:103',{ITEM_MOD_STRENGTH_SHORT=20,ITEM_MOD_STAMINA_SHORT=2}); bagLinks[2]='item:103'; fire('BAG_UPDATE',0); tick()
+legs('item:106',{ITEM_MOD_STRENGTH_SHORT=20,ITEM_MOD_STAMINA_SHORT=30}); inventory[7]='item:106'
+legs('item:103',{ITEM_MOD_STRENGTH_SHORT=20,ITEM_MOD_STAMINA_SHORT=38}); bagLinks[2]='item:103'; fire('BAG_UPDATE',0); tick()
 local minorBag=widget(); G.TrackBag(minorBag,0,2)
 assert(G.bags[0][2].result.verdict=='minor' and styleOf(minorBag)==STYLE.minor and not minorBag.EverfrostMark.arrow)
+assert(minorBag.EverfrostMark.gain.text=='+4%' and minorBag.EverfrostMark.gain.textColor[1]==0.55)
 for index,edge in ipairs(minorBag.EverfrostMark.edges) do assert((index<=2 and edge.height or edge.width)==1) end
--- A sidegrade (2.5% here) has no mark, and its tooltip names the trade-off.
-legs('item:104',{ITEM_MOD_STRENGTH_SHORT=20,ITEM_MOD_STAMINA_SHORT=1}); bagLinks[2]='item:104'; fire('BAG_UPDATE',0); tick()
+-- A sidegrade (0.5% here, and under 3% for Protection too) has no mark.
+legs('item:104',{ITEM_MOD_STRENGTH_SHORT=20,ITEM_MOD_STAMINA_SHORT=31}); bagLinks[2]='item:104'; fire('BAG_UPDATE',0); tick()
 assert(G.bags[0][2].result.verdict=='sidegrade' and G.bags[0][2].result.kind=='greed' and not shown(minorBag) and edgesHidden(minorBag))
 GameTooltip.owner=minorBag; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
 assert(lines():find('Everfrost: Sidegrade',1,true))
@@ -468,7 +487,8 @@ fire('START_LOOT_ROLL',1); tick()
 local frame=GroupLootFrame1
 local need=frame.NeedButton
 assert(styleOf(need)==STYLE.needClear and need.EverfrostMark.ring:IsShown() and edgesHidden(need))
-assert(not need.EverfrostMark.arrow and not shown(frame.GreedButton))
+-- Round roll buttons carry no percentage; the tooltip has it.
+assert(not need.EverfrostMark.gain and not shown(frame.GreedButton))
 local pulse=need.EverfrostMark.pulse
 assert(pulse:IsPlaying() and pulse.looping=='BOUNCE' and pulse.animation.from==0.55 and pulse.animation.to==1 and pulse.animation.duration==1.6 and pulse.animation.smoothing=='IN_OUT')
 assert(need.EverfrostMark.ring.vertex[4]==0.70 and need.EverfrostMark.ring.texture=='Interface\\\\Buttons\\\\UI-ActionButton-Border')
@@ -492,7 +512,7 @@ fixture('item:999',{ITEM_MOD_STRENGTH_SHORT=12}); fire('GET_ITEM_INFO_RECEIVED',
 assert(styleOf(need)==STYLE.needClear and pulse:IsPlaying())
 -- Combat events do not read item APIs or modify protected roll actions.
 local before=metadataCalls; combat=true; fire('PLAYER_REGEN_DISABLED'); fire('BAG_UPDATE',0); tick()
-assert(G.pending and metadataCalls==before and not shown(bag) and edgesHidden(bag) and not arrow:IsShown())
+assert(G.pending and metadataCalls==before and not shown(bag) and edgesHidden(bag) and not gain:IsShown())
 GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip); assert(#GameTooltip.lines==0)
 assert(not shown(need) and not pulse:IsPlaying())
 combat=false; fire('PLAYER_REGEN_ENABLED'); tick(); assert(styleOf(need)==STYLE.needClear)
@@ -692,9 +712,9 @@ GameTooltip.owner=r2; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
 assert(lines():find("close call with 1 other reward",1,true))
 GameTooltip.owner=r1; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
 assert(lines():find('Close to the recommended reward',1,true))
--- With no upgrade on offer, the best sell value gets a gold border labelled as gold, no arrow.
+-- With no upgrade on offer, the best sell value gets a gold border labelled as gold, no percentage.
 inventory[5]='item:401'; questLinks={'item:402','item:403'}; fire('BAG_UPDATE',0); tick()
-assert(styleOf(r2)==STYLE.sell and r2.EverfrostMark.label.text=='Best sell value' and not r2.EverfrostMark.arrow:IsShown())
+assert(styleOf(r2)==STYLE.sell and r2.EverfrostMark.label.text=='Best sell value' and not r2.EverfrostMark.gain:IsShown())
 assert(r2.EverfrostMark.edges[1].vertex[1]==1 and r2.EverfrostMark.edges[1].vertex[2]==0.82)
 assert(not shown(r1))
 GameTooltip.owner=r2; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)
@@ -756,7 +776,7 @@ local shopLinks={[11]='item:400',[12]='item:401',[13]='item:402'}; local afforda
 function GetMerchantItemLink(index) return shopLinks[index] end
 function CanAffordMerchantItem(index) return affordable[index] end
 hooks.MerchantFrame_Update(); tick()
-assert(styleOf(MerchantItem1ItemButton)==STYLE.clear and MerchantItem1ItemButton.EverfrostMark.arrow:IsShown())
+assert(styleOf(MerchantItem1ItemButton)==STYLE.clear and MerchantItem1ItemButton.EverfrostMark.gain:IsShown() and MerchantItem1ItemButton.EverfrostMark.gain.text:find('%%$'))
 assert(not MerchantItem1ItemButton.EverfrostMark.label)
 assert(not MerchantItem2ItemButton.EverfrostMark and not MerchantItem3ItemButton.EverfrostMark)
 GameTooltip.owner=MerchantItem2ItemButton; GameTooltip:ClearLines(); itemTooltipPostCall(GameTooltip)

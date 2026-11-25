@@ -97,6 +97,11 @@ local function registerSettings()
  if type(InterfaceOptions_AddCategory)=="function" then NS.Call(InterfaceOptions_AddCategory,panel) end
 end
 local function pct(value) return string.format("%d%%",math.floor((value or 1)*100+0.5)) end
+-- A weight as short as it can be written: 2.2, 0.06, 50.3, 12.
+local function weightText(value)
+ local text=string.format("%.2f",value or 0):gsub("%.?0+$","")
+ return text=="" and "0" or text
+end
 local function choiceRow(row,current)
  for _,b in ipairs(row) do b:SetEnabled(b.value~=current) end
 end
@@ -106,7 +111,9 @@ function S:Refresh()
  window.status:SetText(state.className.." / Level "..state.level..(state.pending and " / Changes after combat" or ""))
  for name,page in pairs(window.pages) do
   page:SetShown(name==self.page)
-  window.tabs[name]:SetTabSelected(name==self.page)
+  -- The stat weights page has no tab of its own: it belongs to Gear & Loot.
+  local tab=window.tabs[name]
+  if tab then tab:SetTabSelected(name==self.page or (name=="Gear" and self.page=="Weights")) end
  end
  -- Rotation
  local guide=window.pages.Guide
@@ -163,8 +170,39 @@ function S:Refresh()
  gear.enabled:SetChecked(db.gear~=false)
  gear.priorityTitle:SetText(state.gearTitle or "Current stat priority")
  gear.priority:SetText(state.priority or state.gearReason or "Choose a specialisation or spend talent points to score gear.")
+ gear.source:SetText(state.gearSource and (state.gearSource..".") or "")
  gear.empty:SetText(state.emptySlots or "")
  gear.rescan:SetEnabled(not InCombatLockdown())
+ gear.weights:SetEnabled(state.gearProfile~=nil)
+ -- Stat weights: the active profile's numbers, yours in gold.
+ local weights=window.pages.Weights
+ local p=state.gearProfile
+ weights.profile=p
+ local base=p and (p.base or p)
+ local changed=0
+ for _,row in ipairs(weights.rows) do
+  row.box:SetShown(p~=nil); row.label:SetShown(p~=nil)
+  if p then
+   local value=NS.GearWeight(p,row.key)
+   local mine=math.abs(value-NS.GearWeight(base,row.key))>1e-9
+   if mine then changed=changed+1; row.label:SetTextColor(1,0.82,0) else row.label:SetTextColor(1,1,1) end
+   -- Never overwrite a number while it is being typed.
+   if not row.box:HasFocus() then row.box:SetText(weightText(value)) end
+  end
+ end
+ if p then
+  weights.title:SetText("Stat weights: "..(p.starter and (state.className.." starter (levels 1-9)") or ((p.specName or "")..(p.focusLabel and (" / "..p.focusLabel) or ""))))
+  local origin=base.sim and ("Defaults: "..NS.gearWeightSource.name.." simulator, "..base.sim.." preset ("..NS.gearWeightSource.url.."). Level 60 raid values; Stamina and armour are Everfrost's levelling allowance.")
+   or base.starter and "Defaults: an Everfrost starter estimate from your class's usual stats."
+   or "Defaults: an Everfrost estimate from the Icy Veins stat order. No simulator publishes weights for this spec yet."
+  weights.source:SetText(origin)
+  weights.changed:SetText(changed==0 and "Using the defaults." or (changed.." changed (gold). Reset brings back the defaults."))
+ else
+  weights.title:SetText("Stat weights")
+  weights.source:SetText(state.gearReason or "Choose a specialisation or spend talent points to score gear.")
+  weights.changed:SetText("")
+ end
+ weights.reset:SetEnabled(p~=nil and changed>0)
  local choices=NS.GearFocusChoices and NS.GearFocusChoices(state.class,state.gearSpec or 0)
  gear.focus:SetShown(choices~=nil and #choices>1)
  if choices and #choices>1 then
@@ -311,11 +349,12 @@ function NS.CreateSettings(controller)
  -- Gear
  local gear=window.pages.Gear
  gear.enabled=check(gear,"Highlight gear upgrades (bags, loot rolls, quest rewards, vendors)",-30,function(on) command(on and "gear on" or "gear off") end)
- label(gear,"A thin green border marks an upgrade. Hover an item for its comparison and any required weapon partner. Everfrost never rolls, equips or picks a reward for you.",11,0,-62,500):SetTextColor(0.8,0.8,0.8)
+ label(gear,"A thin green border marks an upgrade, with how much better it is as a green percentage. Hover an item for its comparison and any required weapon partner. Everfrost never rolls, equips or picks a reward for you.",11,0,-62,500):SetTextColor(0.8,0.8,0.8)
  gear.levelNote=label(gear,NS.gearLevelNote,11,0,-98,500); gear.levelNote:SetTextColor(1,0.82,0)
  gear.priorityTitle=label(gear,"Current stat priority",12,0,-132,500); gear.priorityTitle:SetTextColor(1,0.82,0)
  gear.priority=label(gear,"",12,0,-154,500); gear.priority:SetHeight(48)
- gear.empty=label(gear,"",11,0,-206,500); gear.empty:SetTextColor(0.8,0.8,0.8)
+ gear.source=label(gear,"",11,0,-203,500); gear.source:SetTextColor(0.8,0.8,0.8)
+ gear.empty=label(gear,"",11,0,-217,500); gear.empty:SetTextColor(0.8,0.8,0.8)
  gear.rescan=button(gear,"Rescan bags",0,-232,124,function() command("refresh") end)
  gear.rescan:SetScript("OnEnter",function(self)
   GameTooltip:SetOwner(self,"ANCHOR_RIGHT"); GameTooltip:SetText("Rescan bags",1,1,1)
@@ -335,6 +374,50 @@ function NS.CreateSettings(controller)
   db.gearFocus[key]=nextKey
   command("refresh")
  end)
+ gear.weights=button(gear,"Stat weights",384,-232,126,function() S.page="Weights"; S:Refresh() end)
+ gear.weights:SetScript("OnEnter",function(self)
+  GameTooltip:SetOwner(self,"ANCHOR_RIGHT"); GameTooltip:SetText("Stat weights",1,1,1)
+  GameTooltip:AddLine("See the value Everfrost gives each stat for your spec, where the numbers come from, and change any of them.",0.8,0.8,0.8,true)
+  GameTooltip:Show()
+ end)
+ gear.weights:SetScript("OnLeave",function() GameTooltip:Hide() end)
+ -- Stat weights: a page of Gear & Loot, reached from its button rather than a tab.
+ local weights=CreateFrame("Frame",nil,window.inset)
+ weights:SetPoint("TOPLEFT",16,-14); weights:SetSize(510,310)
+ window.pages.Weights=weights
+ weights.title=label(weights,"Stat weights",14,0,0)
+ weights.source=label(weights,"",11,0,-22,500); weights.source:SetTextColor(0.8,0.8,0.8)
+ weights.rows={}
+ local function commit(row)
+  local p=weights.profile
+  if not p then return end
+  local text=row.box:GetText()
+  local value=type(text)=="string" and tonumber((text:gsub(",","."))) or nil
+  -- Anything that isn't a number from 0 to the limit is dropped and the old value comes back.
+  if value then NS.GearSetWeight(p,row.key,value) end
+  S:Refresh()
+ end
+ for index,entry in ipairs(NS.gearWeightRows or {}) do
+  local column,line=math.floor((index-1)/7),(index-1)%7
+  local x,y=column*172,-58-line*24
+  local row={key=entry[1]}
+  row.label=label(weights,entry[2],12,x,y-4,118)
+  local box=CreateFrame("EditBox",nil,weights,"InputBoxTemplate")
+  box:SetSize(42,20); box:SetPoint("TOPLEFT",x+124,y); box:SetAutoFocus(false); box:SetMaxLetters(6)
+  box:SetScript("OnEnterPressed",function(self) self:ClearFocus() end)
+  box:SetScript("OnEscapePressed",function(self) row.cancelled=true; self:ClearFocus() end)
+  box:SetScript("OnEditFocusLost",function()
+   if row.cancelled then row.cancelled=nil; S:Refresh() else commit(row) end
+  end)
+  row.box=box; weights.rows[index]=row
+ end
+ label(weights,"The value of one point of each stat, or of 1% where marked. Only the sizes relative to each other matter. Type a number and press Enter; 0 ignores a stat.",11,0,-230,500):SetTextColor(0.8,0.8,0.8)
+ weights.changed=label(weights,"",11,0,-262,500); weights.changed:SetTextColor(1,0.82,0)
+ weights.reset=button(weights,"Reset to defaults",0,-284,150,function()
+  if weights.profile then NS.GearResetWeights(weights.profile) end
+  S:Refresh()
+ end)
+ weights.back=button(weights,"Back to Gear & Loot",160,-284,170,function() S.page="Gear"; S:Refresh() end)
  -- Talents
  local talents=window.pages.Talents
  talents.enabled=check(talents,"Highlight the next talent in the Icy Veins build",-30,function(on) command(on and "talents on" or "talents off") end)
