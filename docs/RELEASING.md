@@ -318,3 +318,18 @@ docs/CURSEFORGE.md (checked by SHA-256 of the editor text before saving, allowin
 CurseForge's `*   ` list bullets) and the project page shows "What's new in 0.10.0". wowsims was
 rechecked before tagging: still at commit d45287b, so the weights are current. Not done:
 downloading the generated ZIP to compare its contents with the tag.
+
+## 0.10.1 — November 25, 2026
+
+Released layout placing, the controller position fix and the bolder Need/Greed and talent marks
+from PR #12 as GitHub latest v0.10.1, annotated tag at 0965b91 on main, at the user's request
+("merge and push release") and without an in-game check. GitHub Actions passed on main before
+tagging; npm ci, npm test, luacheck and npm run build passed locally, and all 18 packaged files
+match source byte for byte. Release ZIP SHA-256 matches the locally built archive:
+e9053e81dc228f884d6c55adaa189e2474cafb7dd981741a800910dde07f4514.
+The CurseForge webhook returned HTTP 200. The author console shows v0.10.1 as a Release for
+1.60.1, Processing when checked; v0.10.0 had moved to Approved. The public description was
+updated in Markdown mode to match docs/CURSEFORGE.md (checked by SHA-256 before saving) and the
+project page shows "What's new in 0.10.1". wowsims had two new commits since d45287b (now
+589c7a5), none touching a spec preset or the rating constants, so the weights are current.
+Not done: downloading the generated ZIP to compare its contents with the tag.
