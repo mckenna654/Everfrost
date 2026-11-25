@@ -1,4 +1,4 @@
-# Everfrost — v0.10.0
+# Everfrost — v0.10.1
 
 A rotation HUD and gear and talent hints for WoW Forever, covering levels 1–60, all nine classes and 27 talent trees. Everfrost detects your class, level, talent tree and learned spell ranks. It never casts, rolls, equips or clicks anything for you.
 
