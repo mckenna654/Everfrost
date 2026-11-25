@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.10.2 — Safer with a controller
 
 - **Safer with a controller.** The talent highlight no longer creates anything inside the game's talent window; it is drawn directly on the talent button instead. Forever's built-in controller navigation reacts when an addon adds a frame to an open window, and the game's own code warns this can leave the controller stuck in menu navigation until a reload. Everfrost also no longer replaces the game's list of windows that Escape and the controller's back button close; it only adds to it.
+
+Simulated-client tests and the Lua lint pass. Not seen in game, and not confirmed as the cause of any controller lock-up.
 
 ## 0.10.1 — Layout placing and bolder marks
 
