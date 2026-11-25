@@ -333,3 +333,17 @@ updated in Markdown mode to match docs/CURSEFORGE.md (checked by SHA-256 before 
 project page shows "What's new in 0.10.1". wowsims had two new commits since d45287b (now
 589c7a5), none touching a spec preset or the rating constants, so the weights are current.
 Not done: downloading the generated ZIP to compare its contents with the tag.
+
+## 0.10.2 — November 25, 2026
+
+Released the controller-safety change from PR #13 (talent highlight drawn without frames,
+UISpecialFrames only appended to) as GitHub latest v0.10.2, annotated tag at 16eb98e on main, at
+the user's request ("merge and publish") and without an in-game check. GitHub Actions passed on
+main before tagging; npm ci, npm test, luacheck and npm run build passed locally, and all 18
+packaged files match source byte for byte. Release ZIP SHA-256 matches the locally built archive:
+84eec967c3edd6ce573c8e9b8dd49eea137786a1d991228808b38d7d1e0da3fa.
+The CurseForge webhook returned HTTP 200. The author console shows v0.10.2 as a Release for
+1.60.1, Under Review when checked; v0.10.1 had moved to Approved. The public description was
+updated in Markdown mode to match docs/CURSEFORGE.md (checked by SHA-256 before saving) and the
+project page shows "What's new in 0.10.2". wowsims: no spec preset or rating constant changed
+since d45287b. Not done: downloading the generated ZIP to compare its contents with the tag.
