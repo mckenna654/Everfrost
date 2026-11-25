@@ -347,7 +347,10 @@ fire('INPUT_DEVICE_INTERFACE_TRANSITION',1)
 assert(NS.Input.device=='kbm')                         -- debouncing
 clock=clock+1; flush()
 assert(NS.Input.device=='pad' and f.hud.now.width==60 and f.hud.queue[1].width==44)
-assert(f.point[1]=='CENTER' and f.point[5]==-120 and f.scale==1)
+-- Never moved, so it starts where the keyboard layout was put (the same spot on screen: the
+-- offsets are converted from the keyboard size, 1.3, to the controller size, 1), not in the middle.
+assert(f.scale==1 and f.point[1]==EverfrostDB.point and f.point[3]==EverfrostDB.relativePoint)
+assert(math.abs(f.point[4]-EverfrostDB.x*1.3)<1e-9 and math.abs(f.point[5]-EverfrostDB.y*1.3)<1e-9 and EverfrostDB.hud.pad==nil)
 SlashCmdList.EVERFROST('scale 1.5'); assert(EverfrostDB.hud.padScale==1.5 and EverfrostDB.scale==1.3)
 f.moving=true; f.StopDrag(); assert(EverfrostDB.hud.pad.x==12 and EverfrostDB.x==5)
 fire('INPUT_DEVICE_INTERFACE_TRANSITION',0); clock=clock+1; flush()
@@ -359,6 +362,14 @@ fire('INPUT_DEVICE_INTERFACE_TRANSITION',1); clock=clock+1; flush(); assert(NS.I
 EverfrostDB.hud.autoSwitch=true
 -- Reset puts this layout back to its default spot and size.
 SlashCmdList.EVERFROST('reset'); assert(EverfrostDB.scale==1 and EverfrostDB.point==nil and f.point[5]==-190)
+-- With neither layout placed, the controller layout uses its own default, clear of the gamepad bars;
+-- once it has a place of its own it keeps it, and resetting it follows the keyboard position again.
+EverfrostDB.hud.pad=nil; SlashCmdList.EVERFROST('input pad'); assert(f.point[1]=='CENTER' and f.point[5]==-120)
+EverfrostDB.hud.pad={point='TOP',relativePoint='TOP',x=3,y=-40}; EverfrostDB.point,EverfrostDB.relativePoint,EverfrostDB.x,EverfrostDB.y='LEFT','LEFT',50,20
+SlashCmdList.EVERFROST('input pad'); assert(f.point[1]=='TOP' and f.point[4]==3 and f.point[5]==-40)
+SlashCmdList.EVERFROST('reset'); assert(EverfrostDB.hud.pad==nil and f.point[1]=='LEFT' and f.point[4]==50 and f.point[5]==20)
+EverfrostDB.point,EverfrostDB.relativePoint,EverfrostDB.x,EverfrostDB.y=nil,nil,nil,nil; SlashCmdList.EVERFROST('input auto')
+assert(f.point[5]==-190)
 print('Input layouts in the HUD: debounced automatic switch, separate positions and sizes, forced layouts, auto-switch off, reset: passed')
 
 -- Settings: the new pages drive the same saved values.

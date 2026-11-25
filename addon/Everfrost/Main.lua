@@ -150,10 +150,22 @@ local function applyPosition()
  local key=layoutKey()
  frame:SetScale(layoutScale())
  frame:ClearAllPoints()
- local saved
- if key=="pad" then saved=db.hud.pad
- elseif db.point then saved={point=db.point,relativePoint=db.relativePoint,x=db.x,y=db.y} end
- if saved and saved.point and saved.relativePoint and type(saved.x)=="number" and type(saved.y)=="number" then
+ local function placed(spot)
+  return spot and spot.point and spot.relativePoint and type(spot.x)=="number" and type(spot.y)=="number" and spot or nil
+ end
+ local keyboard=placed(db.point and {point=db.point,relativePoint=db.relativePoint,x=db.x,y=db.y})
+ local saved=keyboard
+ if key=="pad" then
+  saved=placed(db.hud.pad)
+  -- A controller layout that has never been moved starts where the keyboard layout was put,
+  -- not back in the middle of the screen. Offsets are in the frame's own scale, so they are
+  -- converted to keep the same spot on screen at the controller size.
+  if not saved and keyboard then
+   local ratio=(db.scale or 1)/layoutScale()
+   saved={point=keyboard.point,relativePoint=keyboard.relativePoint,x=keyboard.x*ratio,y=keyboard.y*ratio}
+  end
+ end
+ if saved then
   frame:SetPoint(saved.point,UIParent,saved.relativePoint,saved.x,saved.y)
  else
   local d=defaultPositions[key]; frame:SetPoint(d[1],UIParent,d[2],d[3],d[4])

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **The HUD no longer jumps to the middle of the screen when you pick up a controller.** The controller layout has its own position, and until now it started in the middle whatever you had done with the HUD. It now starts where you put the keyboard layout, and only moves somewhere else once you move it with the controller in use.
+
 ## 0.10.0 — Measured stat weights and upgrade percentages
 
 - **Measured stat weights.** Gear is now scored with numeric stat weights for your spec instead of a simple "this stat beats that one" order. Seventeen talent trees use the weights published by the [wowsims Forever simulator](https://wowsims.com/forever): Arms, Fury and Protection Warrior, all Rogue and Hunter trees, Retribution, all Priest trees, Balance, Feral (Cat and Bear), Elemental and Enhancement. They are level 60 raid values, so Everfrost adds a small allowance for Stamina and armour while levelling. No simulator publishes weights yet for Mage, Warlock, Holy and Protection Paladin, Restoration Druid or Restoration Shaman; those keep an estimate from the Icy Veins stat order, and say so.

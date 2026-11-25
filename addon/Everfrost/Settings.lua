@@ -324,7 +324,7 @@ function NS.CreateSettings(controller)
  end)
  -- Controller: which layout, and whether it follows the device in use.
  local input=window.pages.Input
- label(input,"Each layout keeps its own position and size. Move the HUD while using a controller to set the controller position.",11,0,-24,500):SetTextColor(0.8,0.8,0.8)
+ label(input,"Each layout keeps its own position and size. The controller layout starts where you put the keyboard one; move the HUD while using a controller to give it a place of its own.",11,0,-24,500):SetTextColor(0.8,0.8,0.8)
  input.modes=choices(input,-58,{{"auto","Automatic"},{"pad","Controller"},{"kbm","Keyboard"},{"custom","One position"}},function(mode) command("input "..mode) end,112)
  input.autoSwitch=check(input,"Switch as soon as the game changes input style",-92,function(on) hudSet("autoSwitch",on) end)
  input.current=label(input,"",12,0,-124,500)

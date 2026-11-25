@@ -105,7 +105,7 @@ The count is an estimate and is shown as one (`~3`). Forever hides the combat lo
 
 ### Controller and keyboard layouts
 
-Everfrost follows the game's own input style: switch to a controller (native gamepad mode, Steam Deck, or ConsolePort, which uses the same game setting) and the HUD moves to its controller position with larger icons (60 px NOW, 44 px upcoming, against 48 and 36 px with keyboard and mouse), without a reload. A connected controller alone doesn't count; the game has to say it's in use, and a 0.75-second pause stops flicker when you touch the mouse. Each layout keeps its own position and size: move or resize the HUD while using that layout. Settings can force one layout or use a single position for both.
+Everfrost follows the game's own input style: switch to a controller (native gamepad mode, Steam Deck, or ConsolePort, which uses the same game setting) and the HUD moves to its controller position with larger icons (60 px NOW, 44 px upcoming, against 48 and 36 px with keyboard and mouse), without a reload. A connected controller alone doesn't count; the game has to say it's in use, and a 0.75-second pause stops flicker when you touch the mouse. Each layout keeps its own position and size: move or resize the HUD while using that layout. Until you move it with a controller in use, the controller layout sits where you put the keyboard one (from the next version; in 0.10.0 it started in the middle of the screen). Settings can force one layout or use a single position for both.
 
 Everfrost never casts, rolls, equips or clicks anything for you.
 
